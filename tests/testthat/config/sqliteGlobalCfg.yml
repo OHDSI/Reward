@@ -1,0 +1,12 @@
+webApiUrl: "https://epi.jnj.com:8443/WebAPI"
+exportPath: "export"
+
+connectionDetails:
+  dbms: "sqlite"
+  server: "testSqliteDb.sqlite"
+
+resultsSchema: "main"
+vocabularySchema: "main"
+
+cemConnectionDetails:
+  apiUrl: https://cem.ohdsi.org

@@ -1,0 +1,170 @@
+{
+  "id": [
+    19321
+  ],
+  "name": [
+    "[EPI844] E8- rituximab infliximab"
+  ],
+  "createdDate": [
+    1604331381971
+  ],
+  "modifiedDate": [
+    1612278578998
+  ],
+  "hasWriteAccess": [
+    false
+  ],
+  "expression": {
+    "cdmVersionRange": [
+      ">=5.0.0"
+    ],
+    "PrimaryCriteria": {
+      "CriteriaList": [
+        {
+          "DrugExposure": {
+            "CodesetId": [
+              5
+            ],
+            "DrugTypeExclude": [
+              false
+            ]
+          }
+        }
+      ],
+      "ObservationWindow": [
+        0,
+        0
+      ],
+      "PrimaryCriteriaLimit": [
+        "All"
+      ]
+    },
+    "ConceptSets": [
+      {
+        "id": [
+          5
+        ],
+        "name": [
+          "rituximab, infliximab"
+        ],
+        "expression": {
+          "items": [
+            {
+              "concept": {
+                "CONCEPT_ID": [
+                  1314273
+                ],
+                "CONCEPT_NAME": [
+                  "rituximab"
+                ],
+                "STANDARD_CONCEPT": [
+                  "S"
+                ],
+                "STANDARD_CONCEPT_CAPTION": [
+                  "Standard"
+                ],
+                "INVALID_REASON": [
+                  "V"
+                ],
+                "INVALID_REASON_CAPTION": [
+                  "Valid"
+                ],
+                "CONCEPT_CODE": [
+                  "121191"
+                ],
+                "DOMAIN_ID": [
+                  "Drug"
+                ],
+                "VOCABULARY_ID": [
+                  "RxNorm"
+                ],
+                "CONCEPT_CLASS_ID": [
+                  "Ingredient"
+                ]
+              },
+              "isExcluded": [
+                false
+              ],
+              "includeDescendants": [
+                true
+              ],
+              "includeMapped": [
+                false
+              ]
+            },
+            {
+              "concept": {
+                "CONCEPT_ID": [
+                  937368
+                ],
+                "CONCEPT_NAME": [
+                  "infliximab"
+                ],
+                "STANDARD_CONCEPT": [
+                  "S"
+                ],
+                "STANDARD_CONCEPT_CAPTION": [
+                  "Standard"
+                ],
+                "INVALID_REASON": [
+                  "V"
+                ],
+                "INVALID_REASON_CAPTION": [
+                  "Valid"
+                ],
+                "CONCEPT_CODE": [
+                  "191831"
+                ],
+                "DOMAIN_ID": [
+                  "Drug"
+                ],
+                "VOCABULARY_ID": [
+                  "RxNorm"
+                ],
+                "CONCEPT_CLASS_ID": [
+                  "Ingredient"
+                ]
+              },
+              "isExcluded": [
+                false
+              ],
+              "includeDescendants": [
+                true
+              ],
+              "includeMapped": [
+                false
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "QualifiedLimit": [
+      "First"
+    ],
+    "ExpressionLimit": [
+      "All"
+    ],
+    "InclusionRules": [],
+    "EndStrategy": {
+      "CustomEra": [
+        5,
+        60,
+        0
+      ]
+    },
+    "CensoringCriteria": [],
+    "CollapseSettings": {
+      "CollapseType": [
+        "ERA"
+      ],
+      "EraPad": [
+        0
+      ]
+    },
+    "CensorWindow": {}
+  },
+  "expressionType": [
+    "SIMPLE_EXPRESSION"
+  ]
+}

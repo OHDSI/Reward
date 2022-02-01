@@ -1,0 +1,116 @@
+[
+  {
+    "name" : "default SCC",
+    "typeId": "scc",
+    "description" : "First exposure/outcome only. full TAR. assumes cohort washout and follow up",
+    "options" : {
+      "firstExposureOnly" : true,
+      "firstOutcomeOnly" : true,
+      "minAge" : "",
+      "maxAge" : "",
+      "studyStartDate" : "",
+      "studyEndDate" : "",
+      "addLengthOfExposureExposed" : true,
+      "riskWindowStartExposed" : 1,
+      "riskWindowEndExposed" : 1,
+      "addLengthOfExposureUnexposed" : true,
+      "riskWindowEndUnexposed" : -1,
+      "riskWindowStartUnexposed" : -1,
+      "hasFullTimeAtRisk" : true,
+      "washoutPeriod" : 0,
+      "followupPeriod" : 0
+    }
+  },
+
+  {
+    "name" : "Any exposure SCC",
+    "typeId": "scc",
+    "description" : "Any outcome/exposure. full TAR. assumes cohort washout and follow up",
+    "options" : {
+      "firstExposureOnly" : false,
+      "firstOutcomeOnly" : false,
+      "minAge" : "",
+      "maxAge" : "",
+      "studyStartDate" : "",
+      "studyEndDate" : "",
+      "addLengthOfExposureExposed" : true,
+      "riskWindowStartExposed" : 1,
+      "riskWindowEndExposed" : 1,
+      "addLengthOfExposureUnexposed" : true,
+      "riskWindowEndUnexposed" : -1,
+      "riskWindowStartUnexposed" : -1,
+      "hasFullTimeAtRisk" : true,
+      "washoutPeriod" : 0,
+      "followupPeriod" : 0
+    }
+  },
+
+  {
+    "name" : "default SCC under 18 only",
+    "typeId": "scc",
+    "description" : "First exposure/outcome only. full TAR. assumes cohort washout and follow up. Subjects aged below 18",
+    "options" : {
+      "firstExposureOnly" : true,
+      "firstOutcomeOnly" : true,
+      "minAge" : "",
+      "maxAge" : 17,
+      "studyStartDate" : "",
+      "studyEndDate" : "",
+      "addLengthOfExposureExposed" : true,
+      "riskWindowStartExposed" : 1,
+      "riskWindowEndExposed" : 1,
+      "addLengthOfExposureUnexposed" : true,
+      "riskWindowEndUnexposed" : -1,
+      "riskWindowStartUnexposed" : -1,
+      "hasFullTimeAtRisk" : true,
+      "washoutPeriod" : 0,
+      "followupPeriod" : 0
+    }
+  },
+
+  {
+    "name" : "default SCC age 18 - 64",
+    "typeId": "scc",
+    "description" : "First exposure/outcome only. full TAR. assumes cohort washout and follow up. Subjects aged 18 - 64",
+    "options" : {
+      "firstExposureOnly" : true,
+      "firstOutcomeOnly" : true,
+      "minAge" : 18,
+      "maxAge" : 64,
+      "studyStartDate" : "",
+      "studyEndDate" : "",
+      "addLengthOfExposureExposed" : true,
+      "riskWindowStartExposed" : 1,
+      "riskWindowEndExposed" : 1,
+      "addLengthOfExposureUnexposed" : true,
+      "riskWindowEndUnexposed" : -1,
+      "riskWindowStartUnexposed" : -1,
+      "hasFullTimeAtRisk" : true,
+      "washoutPeriod" : 0,
+      "followupPeriod" : 0
+    }
+  },
+
+  {
+    "name" : "default SCC Age 65+",
+    "typeId": "scc",
+    "description" : "First exposure/outcome only. full TAR. assumes cohort washout and follow up. Subjects aged 65 +",
+    "options" : {
+      "firstExposureOnly" : true,
+      "firstOutcomeOnly" : true,
+      "minAge" : 65,
+      "maxAge" : "",
+      "studyStartDate" : "",
+      "studyEndDate" : "",
+      "addLengthOfExposureExposed" : true,
+      "riskWindowStartExposed" : 1,
+      "riskWindowEndExposed" : 1,
+      "addLengthOfExposureUnexposed" : true,
+      "riskWindowEndUnexposed" : -1,
+      "riskWindowStartUnexposed" : -1,
+      "hasFullTimeAtRisk" : true,
+      "washoutPeriod" : 0,
+      "followupPeriod" : 0
+    }
+  }
+]
