@@ -1,3 +1,5 @@
+INSERT INTO @schema.reference_version (reward_version_number) VALUES ('@version_number');
+
 /* OUTCOME DEFINITIONS */
 -- Create outcome cohort definitions
 create table #cpt_anc_grp as

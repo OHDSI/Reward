@@ -9,6 +9,12 @@
 {DEFAULT @cohort_concept_set = 'cohort_concept_set'}
 {DEFAULT @analysis_setting = 'analysis_setting'}
 {DEFAULT @include_constraints = ''}
+{DEFAULT @reference_version = 'reference_version'}
+
+create table @schema.@reference_version
+(
+   reward_version_number varchar(100)
+);
 
 /* COHORT DEFINITION TABLE */
 create table @schema.@cohort_definition
@@ -56,8 +62,7 @@ create table @schema.@outcome_cohort (
 
 /* arbitrarily group cohorts together by group */
 create table @schema.@cohort_group_definition (
-    -- TODO create cross platform support for constraint/autoincrement
-    cohort_group_definition_id {@include_constraints != ''} ? {INTEGER PRIMARY KEY AUTOINCREMENT} : {INT},
+    cohort_group_definition_id {@include_constraints != ''} ? {int PRIMARY KEY} : {int},
     cohort_group_parent_id INT,
     group_name varchar(1000)
     {@include_constraints != ''} ? {
@@ -103,8 +108,7 @@ create table @schema.@concept_set_definition
 );
 
 CREATE TABLE @schema.@atlas_cohort_reference (
-    -- TODO create cross platform support for constraint/autoincrement
-    cohort_definition_id {@include_constraints != ''} ? {INTEGER PRIMARY KEY AUTOINCREMENT} : {int},
+    cohort_definition_id {@include_constraints != ''} ? {int PRIMARY KEY} : {int},
     ATLAS_ID BIGINT,
     sql_definition  varchar(max),
     DEFINITION  varchar(max),

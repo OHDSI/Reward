@@ -21,4 +21,5 @@
 #' @importFrom utils packageName
 #' @importFrom RJSONIO fromJSON toJSON
 #' @import dplyr
+#' @import ParallelLogger
 NULL

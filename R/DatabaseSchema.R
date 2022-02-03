@@ -21,6 +21,9 @@
 #' This will also require a CEM schema to be built which uses the OHDSI Common Evidence Model to generate the matrix
 #' of known assocations for OMOP Standard Vocabulary terms. This is required for generating any stats that require negative controls
 #' @param configFilePath                        path to global reward config
+#'
+#' @importFrom utils packageVersion
+#' @import SqlRender
 #' @export
 createRewardSchema <- function(configFilePath) {
   config <- loadGlobalConfiguration(configFilePath)
@@ -47,6 +50,7 @@ createRewardSchema <- function(configFilePath) {
                                            packageName = utils::packageName(),
                                            dbms = connection@dbms,
                                            schema = config$resultsSchema,
+                                           version_number = utils::packageVersion(utils::packageName()),
                                            vocabulary_schema = config$vocabularySchema)
   DatabaseConnector::executeSql(connection, sql)
 
@@ -103,7 +107,7 @@ insertAtlasCohortRef <- function(connection,
     webApiUrl <- config$webApiUrl
   }
 
-  referenceTable <- config$tables$atlasCohortReference
+  referenceTable <- config$referenceTables$atlasCohortReference
 
   # Null is mainly used for test purposes
   if (is.null(cohortDefinition)) {
@@ -128,78 +132,82 @@ insertAtlasCohortRef <- function(connection,
     reference_table = referenceTable
   )
 
-  if (nrow(existingDt) == 0) {
-    ParallelLogger::logInfo(paste("inserting", atlasId))
-    # Create reference and Get last insert as referent ID from sequence
-    insertSql <- "INSERT INTO @schema.@reference_table
-                    (atlas_id, atlas_url, definition, sql_definition)
-                      values (@atlas_id, '@atlas_url', '@definition', '@sql_definition')"
-    # Insert and get newly generated id
-    DatabaseConnector::renderTranslateExecuteSql(
-      connection,
-      sql = insertSql,
-      schema = config$resultsSchema,
-      atlas_id = atlasId,
-      atlas_url = gsub("'", "''", webApiUrl),
-      definition = encodedFormDefinition,
-      sql_definition = encodedFormSql,
-      reference_table = referenceTable
-    )
+  if (nrow(existingDt) != 0) {
+    stop(paste("Cohort", atlasId, "already in database, use removeAtlasCohort to clear entry references"))
+  }
+  ParallelLogger::logInfo(paste("inserting", atlasId, webApiUrl))
 
-    # TODO: make generic, not sqlite specific!
-    newEntry <- DatabaseConnector::renderTranslateQuerySql(connection,
-                                                           "SELECT last_insert_rowid() as id")
-    cohortDefinitionId <- newEntry$ID[[1]]
+  # Note that this is because there isn't a generic implemenation for autoincrementing keys
+  sql <- "SELECT CASE WHEN max(cohort_definition_id) IS NULL THEN 1 ELSE max(cohort_definition_id) + 1 END
+                    as ID FROM @schema.@reference_table"
+  newEntry <- DatabaseConnector::renderTranslateQuerySql(connection,
+                                                         sql,
+                                                         schema = config$resultsSchema,
+                                                         reference_table = referenceTable)
+  cohortDefinitionId <- newEntry$ID[[1]]
 
-    DatabaseConnector::renderTranslateExecuteSql(
-      connection,
-      sql = "INSERT INTO @schema.cohort_definition
+  # Create reference and Get last insert as referent ID from sequence
+  insertSql <- "INSERT INTO @schema.@reference_table
+                    (cohort_definition_id, atlas_id, atlas_url, definition, sql_definition)
+                      values (@cohort_defiinition_id, @atlas_id, '@atlas_url', '@definition', '@sql_definition')"
+  # Insert and get newly generated id
+  DatabaseConnector::renderTranslateExecuteSql(
+    connection,
+    sql = insertSql,
+    schema = config$resultsSchema,
+    cohort_defiinition_id = cohortDefinitionId,
+    atlas_id = atlasId,
+    atlas_url = gsub("'", "''", webApiUrl),
+    definition = encodedFormDefinition,
+    sql_definition = encodedFormSql,
+    reference_table = referenceTable
+  )
+
+  DatabaseConnector::renderTranslateExecuteSql(
+    connection,
+    sql = "INSERT INTO @schema.cohort_definition
                             (cohort_definition_id, cohort_definition_name, short_name, concept_set_id)
                                      values (@cohort_definition_id, '@name', '@name', 99999999)",
-      schema = config$resultsSchema,
-      cohort_definition_id = cohortDefinitionId,
-      name = gsub("'", "''", cohortDefinition$name)
-    )
+    schema = config$resultsSchema,
+    cohort_definition_id = cohortDefinitionId,
+    name = gsub("'", "''", cohortDefinition$name)
+  )
 
-    if (exposure) {
-      DatabaseConnector::renderTranslateExecuteSql(connection,
-                                                   sql = "INSERT INTO @schema.exposure_cohort (cohort_definition_id, atc_flg) values (@cohort_definition_id, -1)",
-                                                   schema = config$resultsSchema,
-                                                   cohort_definition_id = cohortDefinitionId)
-    } else {
-      DatabaseConnector::renderTranslateExecuteSql(connection,
-                                                   sql = "INSERT INTO @schema.outcome_cohort (cohort_definition_id, outcome_type) values (@cohort_definition_id, 3)",
-                                                   schema = config$resultsSchema,
-                                                   cohort_definition_id = cohortDefinitionId)
-    }
+  if (exposure) {
+    DatabaseConnector::renderTranslateExecuteSql(connection,
+                                                 sql = "INSERT INTO @schema.exposure_cohort (cohort_definition_id, atc_flg) values (@cohort_definition_id, -1)",
+                                                 schema = config$resultsSchema,
+                                                 cohort_definition_id = cohortDefinitionId)
+  } else {
+    DatabaseConnector::renderTranslateExecuteSql(connection,
+                                                 sql = "INSERT INTO @schema.outcome_cohort (cohort_definition_id, outcome_type) values (@cohort_definition_id, 3)",
+                                                 schema = config$resultsSchema,
+                                                 cohort_definition_id = cohortDefinitionId)
+  }
 
-    ParallelLogger::logInfo(paste("inserting concept reference", atlasId))
-    results <- data.frame()
-    for (conceptSet in cohortDefinition$expression$ConceptSets) {
-      for (item in conceptSet$expression$items) {
-        if ((!exposure & item$concept$DOMAIN_ID == "Condition") | (exposure & item$concept$DOMAIN_ID == "Drug")) {
-          isExcluded <- if (is.null(item$isExcluded)) 0 else as.integer(item$isExcluded)
-          includeDescendants <- if (is.null(item$includeDescendants)) 0 else as.integer(item$includeDescendants)
-          includeMapped <- if (is.null(item$includeMapped)) 0 else as.integer(item$includeMapped)
-          results <- rbind(results, data.frame(
-            COHORT_DEFINITION_ID = cohortDefinitionId,
-            CONCEPT_ID = item$concept$CONCEPT_ID,
-            IS_EXCLUDED = isExcluded,
-            INCLUDE_MAPPED = includeMapped,
-            include_descendants = includeDescendants
-          )
-          )
-        }
+  ParallelLogger::logInfo(paste("inserting concept reference", atlasId, webApiUrl))
+  results <- data.frame()
+  for (conceptSet in cohortDefinition$expression$ConceptSets) {
+    for (item in conceptSet$expression$items) {
+      if ((!exposure & item$concept$DOMAIN_ID == "Condition") | (exposure & item$concept$DOMAIN_ID == "Drug")) {
+        isExcluded <- if (is.null(item$isExcluded)) 0 else as.integer(item$isExcluded)
+        includeDescendants <- if (is.null(item$includeDescendants)) 0 else as.integer(item$includeDescendants)
+        includeMapped <- if (is.null(item$includeMapped)) 0 else as.integer(item$includeMapped)
+        results <- rbind(results, data.frame(
+          COHORT_DEFINITION_ID = cohortDefinitionId,
+          CONCEPT_ID = item$concept$CONCEPT_ID,
+          IS_EXCLUDED = isExcluded,
+          INCLUDE_MAPPED = includeMapped,
+          include_descendants = includeDescendants
+        )
+        )
       }
     }
-    if (length(results)) {
-      tableName <- paste(config$resultsSchema, config$tables$cohortConceptSet, sep = ".")
-      DatabaseConnector::dbAppendTable(connection, tableName, results)
-    } else {
-      warning("No Condition (outcome cohort) or Drug (exposure) domain references, automated negative control selection will fail for this cohort")
-    }
-
+  }
+  if (length(results)) {
+    tableName <- paste(config$resultsSchema, config$referenceTables$cohortConceptSet, sep = ".")
+    DatabaseConnector::dbAppendTable(connection, tableName, results)
   } else {
-    stop(paste("Cohort", atlasId, "already in database, use removeAtlasCohort to clear entry references"))
+    warning("No Condition (outcome cohort) or Drug (exposure) domain references, automated negative control selection will fail for this cohort")
   }
 }

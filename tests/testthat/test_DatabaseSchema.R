@@ -5,7 +5,7 @@ test_that("Build database schema, add test cohorts", {
 
   # Check tables exist
   with_dbc_connection(connection, {
-    for (table in config$tables) {
+    for (table in config$referenceTables) {
       sql <- "SELECT count(*) FROM @schema.@table"
       result <- DatabaseConnector::renderTranslateQuerySql(connection,
                                                            sql,
@@ -44,5 +44,8 @@ test_that("Build database schema, add test cohorts", {
                            sqlDefinition = sqlDefinition,
                            exposure = TRUE)
     }, regexp = "Cohort 101 already in database, use removeAtlasCohort to clear entry references")
+
+    exportReferenceTables(config, connection)
+    expect_true(file.exists("reward-references.zip"))
   })
 })

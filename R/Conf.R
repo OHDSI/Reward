@@ -67,8 +67,8 @@ loadReportContext <- function(globalConfigPath) {
 
 #' Loads global config
 #' @description
-#' Load reward global config yaml file
-#' @param globalConfigPath path to global yaml
+#' Load reward                                          global config yaml file
+#' @param globalConfigPath                              path to global yaml
 #' @export
 loadGlobalConfiguration <- function(globalConfigPath) {
   config <- yaml::read_yaml(globalConfigPath)
@@ -76,7 +76,8 @@ loadGlobalConfiguration <- function(globalConfigPath) {
   defaults <- list(tables = list())
   config <- .setDefaultOptions(config, defaults)
 
-  defaultTables <- list(
+  referenceTables <- list(
+    referenceVersion = 'reference_version',
     cohortDefinition = 'cohort_definition',
     exposureCohort = 'exposure_cohort',
     outcomeCohort = 'outcome_cohort',
@@ -88,7 +89,7 @@ loadGlobalConfiguration <- function(globalConfigPath) {
     analysisSetting = 'analysis_setting'
   )
 
-  config$tables <- .setDefaultOptions(config$tables, defaultTables)
+  config$referenceTables <- .setDefaultOptions(config$referenceTables, referenceTables)
 
   if (is.null(config$connectionDetails$user)) {
     user <- Sys.getenv("REWARD_DB_USER", "reward_user")

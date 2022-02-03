@@ -9,13 +9,14 @@ License: Apache 2.0
 Encoding: UTF-8
 LazyData: true
 Imports:
-    DatabaseConnector (>= 5.0.0)
+    DatabaseConnector (>= 5.0.0),
+    ParallelLogger,
+    dplyr
 Requires:
     yaml,
     vroom,
     RewardExecutionPackage,
     RJSONIO,
-    dplyr,
     RSQLite,
     keyring,
     base64enc
