@@ -39,7 +39,7 @@ createRewardSchema <- function(configFilePath) {
   DatabaseConnector::executeSql(connection, sql)
 
   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "referenceSchema.sql"),
-                                           packageName = utils::packageName(),
+                                           packageName = "RewardExecutionPackage",
                                            dbms = connection@dbms,
                                            schema = config$resultsSchema,
                                            include_constraints = TRUE)
@@ -60,8 +60,17 @@ createRewardSchema <- function(configFilePath) {
 addAnalysisSetting <- function(connection, config, name, typeId, description, options) {
   jsonStr <- RJSONIO::toJSON(options)
   optionsEnc <- base64enc::base64encode(charToRaw(jsonStr))
-  iSql <- "INSERT INTO @schema.analysis_setting (type_id, analysis_name, description, options)
-  VALUES ('@type_id','@name','@description','@options')"
+  iSql <- "INSERT INTO @schema.analysis_setting (analysis_id, type_id, analysis_name, description, options)
+  SELECT
+      CASE
+        WHEN max(analysis_id) IS NULL THEN 1
+        ELSE max(analysis_id) + 1
+      END as analysis_id,
+      '@type_id' as type_id,
+      '@name' as analysis_name,
+      '@description' as description,
+      '@options' as options
+  FROM @schema.analysis_setting"
   DatabaseConnector::renderTranslateExecuteSql(connection,
                                                iSql,
                                                name = name,
