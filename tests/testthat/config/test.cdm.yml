@@ -1,0 +1,55 @@
+# Values that distinguish this CDM from others
+# Source ID should be unique to avoid confusion
+# See documentation on registering a CDM in REWARD for more details
+sourceId: 0
+database: MyCdmDatabaseName
+name: MyCdmFriendlyName
+
+# If a connection to a REWARD central instance can be established,
+# import data directly rather than waiting for full results to be generated
+performActiveDataTransfer: True
+
+# Where results files are generated
+exportPath: "export"
+# Where reward references are unzipped
+referencePath: "reference_files"
+
+# A connection details object
+connectionDetails:
+  dbms: "sqlite"
+  server: "eunomia_test.sqlite"
+
+# use keyring package for storing database credentials
+useSecurePassword: False
+keyringService: "reward_cdm"
+
+# Use DatabaseConnector bulk upload, where possible
+# See DatabaseConnector documentation for more information
+bulkUpload: True
+
+# Where cohort results are stored
+resultSchema: "main"
+# Where reference files are imported
+referenceSchema: "main"
+# OMOP Common Data Model Schema
+cdmSchema: "main"
+# schema that contains OMOP vocabulary tables
+vocabularySchema: "main"
+
+# Tables to be created and used by REWARD
+tables:
+  sccResult: "scc_result"
+  cohort: "cohort"
+  sccRiskWindows: "scc_risk_windows"
+
+  # Reference table definitions
+  referenceVersion: "reference_version"
+  cohortDefinition: "cohort_definition"
+  exposureCohort: "exposure_cohort"
+  outcomeCohort: "outcome_cohort"
+  cohortGroupDefinition: "cohort_group_definition"
+  cohortGroup: "cohort_group"
+  conceptSetDefinition: "concept_set_definition"
+  atlasCohortReference: "atlas_cohort_reference"
+  cohortConceptSet: "cohort_concept_set"
+

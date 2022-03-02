@@ -57,3 +57,43 @@ with_dbc_connection <- function(connection, code) {
   })
   eval(substitute(code), envir = connection, enclos = parent.frame())
 }
+
+createTestReferences <- function(configPath = "tests/testthat/config/sqliteGlobalCfg.yml",
+                                 vocabularyImportPath = "tests/testthat/test_vocabulary/",
+                                 vocabularySchema = "main",
+                                 outputFile = "reward-references.zip") {
+
+  config <- loadGlobalConfiguration(configPath)
+  unlink(config$connectionDetails$server(), force = TRUE)
+  on.exit(unlink(config$connectionDetails$server(), force = TRUE))
+
+  connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = config$conectionDetails$server())
+  importVocabulary(config$connectionDetails, vocabularyImportPath, vocabularySchema)
+  createRewardSchema(configPath)
+  connection <- DatabaseConnector::connect(config$connectionDetails)
+  with_dbc_connection(connection, {
+    cohortDefinition <- RJSONIO::readJSONStream(file.path("tests", "testthat", "cohorts", "atlasCohort1.json"))
+    sqlDefinition <- readChar(file.path("tests", "testthat", "cohorts", "atlasCohort1.sql"),
+                              file.info(file.path("tests", "testthat", "cohorts", "atlasCohort1.sql"))$size)
+    insertAtlasCohortRef(connection,
+                         config,
+                         100,
+                         webApiUrl = "test_url.com",
+                         cohortDefinition = cohortDefinition,
+                         sqlDefinition = sqlDefinition,
+                         exposure = FALSE)
+
+    cohortDefinition <- RJSONIO::readJSONStream(file.path("tests", "testthat", "cohorts", "atlasExposureCohort19321.json"))
+    sqlDefinition <- readChar(file.path("tests", "testthat", "cohorts", "atlasExposureCohort19321.sql"),
+                              file.info(file.path("tests", "testthat", "cohorts", "atlasExposureCohort19321.sql"))$size)
+    insertAtlasCohortRef(connection,
+                         config,
+                         101,
+                         webApiUrl = "test_url.com",
+                         cohortDefinition = cohortDefinition,
+                         sqlDefinition = sqlDefinition,
+                         exposure = TRUE)
+
+    exportReferenceTables(config, connection, exportZipFile = outputFile)
+  })
+}

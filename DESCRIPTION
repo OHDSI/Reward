@@ -13,15 +13,19 @@ Imports:
     ParallelLogger,
     dplyr
 Requires:
+    CemConnector,
     yaml,
     vroom,
     RewardExecutionPackage,
-    RJSONIO,
+    jsonlite,
     RSQLite,
     keyring,
     base64enc
 Suggests:
-    testthat
+    testthat,
+    Eunomia
 Remotes:
-  ohdsi/RewardExecutionPackage
+  ohdsi/RewardExecutionPackage,
+  ohdsi/CemConnector,
+  ohdsi/Eunomia
 RoxygenNote: 7.1.2

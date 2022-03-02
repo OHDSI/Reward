@@ -1,0 +1,16 @@
+webApiUrl: "https://myAtlasUrl.com:8443/WebAPI" # Atlas url for loading custom cohorts
+exportPath: "export" # folder to find intermediate results
+
+# Database connector connection details for connecting to main reward database
+connectionDetails:
+  dbms: "sqlite"
+  server: "testSqliteDb.sqlite"
+
+# Schema where reward will exist
+resultsSchema: "main"
+# Schema where vocabulary exists (ideally the same as the reward schema, for consistency)
+vocabularySchema: "main"
+
+# Change this only if you're hosting an internal solution for getting negative control outcomes and exposures
+cemConnectionDetails:
+  apiUrl: https://cem.ohdsi.org

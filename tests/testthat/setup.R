@@ -5,6 +5,7 @@ if (dbms == "sqlite") {
   withr::defer({
     unlink(serverPath, recursive = TRUE, force = TRUE)
   }, testthat::teardown_env())
+  unlink(serverPath, recursive = TRUE, force = TRUE)
   connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = serverPath)
   importVocabulary(connectionDetails, "test_vocabulary", "main")
 } else {

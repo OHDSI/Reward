@@ -19,7 +19,7 @@
 
 #' @import DatabaseConnector
 #' @importFrom utils packageName
-#' @importFrom RJSONIO fromJSON toJSON
+#' @importFrom jsonlite fromJSON toJSON
 #' @import dplyr
 #' @import ParallelLogger
 NULL

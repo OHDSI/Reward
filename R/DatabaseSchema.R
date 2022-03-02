@@ -58,7 +58,7 @@ createRewardSchema <- function(configFilePath) {
 }
 
 addAnalysisSetting <- function(connection, config, name, typeId, description, options) {
-  jsonStr <- RJSONIO::toJSON(options)
+  jsonStr <- jsonlite::toJSON(options)
   optionsEnc <- base64enc::base64encode(charToRaw(jsonStr))
   iSql <- "INSERT INTO @schema.analysis_setting (analysis_id, type_id, analysis_name, description, options)
   SELECT
