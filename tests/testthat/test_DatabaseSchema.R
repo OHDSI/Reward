@@ -59,5 +59,19 @@ test_that("Build database schema, add test cohorts", {
     connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cdmConfig$connectionDetails$server())
     on.exit(unlink(cdmConfig$connectionDetails$server()), add = TRUE)
     RewardExecutionPackage::execute(cdmConfigPath, referenceZipFile)
+    resultsZipPath <- file.path(cdmConfig$exportPath, paste0("reward-results-", cdmConfig$database, ".zip"))
+    unlink(config$exportPath, recursive = TRUE, force = TRUE)
+    on.exit(unlink(unlink(config$exportPath), recursive = TRUE, force = TRUE), add = TRUE)
+    importResults(config, resultsZipPath, connection = connection, cleanup = TRUE)
+
+
+    for (table in c("scc_result", "scc_stat")) {
+      sql <- "SELECT count(*) FROM @schema.@table"
+      result <- DatabaseConnector::renderTranslateQuerySql(connection,
+                                                           sql,
+                                                           schema = config$resultsSchema,
+                                                           table = table)
+      expect_true(result >= 0)
+    }
   })
 })

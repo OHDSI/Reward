@@ -1,19 +1,102 @@
 {
   "id": 1,
-  "name": "Pneumonia + Strep Throat",
+  "name": "Gastrointestinal hemorrhage events ",
   "description": null,
   "createdBy": "",
   "createdDate": "2019-10-07 16:40",
   "modifiedBy": "",
   "modifiedDate": "2019-10-24 18:43",
   "expression": {
-    "cdmVersionRange": ">=5.0.0",
+    "ConceptSets": [
+      {
+        "id": 0,
+        "name": "Gastrointestinal hemorrhage",
+        "expression": {
+          "items": [
+            {
+              "concept": {
+                "CONCEPT_CLASS_ID": "Clinical Finding",
+                "CONCEPT_CODE": "414992000",
+                "CONCEPT_ID": 4212456,
+                "CONCEPT_NAME": "Painless rectal bleeding",
+                "DOMAIN_ID": "Condition",
+                "INVALID_REASON": "V",
+                "INVALID_REASON_CAPTION": "Valid",
+                "STANDARD_CONCEPT": "S",
+                "STANDARD_CONCEPT_CAPTION": "Standard",
+                "VOCABULARY_ID": "SNOMED"
+              },
+              "includeDescendants": true
+            },
+            {
+              "concept": {
+                "CONCEPT_CLASS_ID": "Clinical Finding",
+                "CONCEPT_CODE": "74474003",
+                "CONCEPT_ID": 192671,
+                "CONCEPT_NAME": "Gastrointestinal hemorrhage",
+                "DOMAIN_ID": "Condition",
+                "INVALID_REASON": "V",
+                "INVALID_REASON_CAPTION": "Valid",
+                "STANDARD_CONCEPT": "S",
+                "STANDARD_CONCEPT_CAPTION": "Standard",
+                "VOCABULARY_ID": "SNOMED"
+              },
+              "includeDescendants": true
+            },
+            {
+              "concept": {
+                "CONCEPT_CLASS_ID": "Clinical Finding",
+                "CONCEPT_CODE": "414991007",
+                "CONCEPT_ID": 4189790,
+                "CONCEPT_NAME": "Painful rectal bleeding",
+                "DOMAIN_ID": "Condition",
+                "INVALID_REASON": "V",
+                "INVALID_REASON_CAPTION": "Valid",
+                "STANDARD_CONCEPT": "S",
+                "STANDARD_CONCEPT_CAPTION": "Standard",
+                "VOCABULARY_ID": "SNOMED"
+              },
+              "includeDescendants": true
+            },
+            {
+              "concept": {
+                "CONCEPT_CLASS_ID": "ICD10 code",
+                "CONCEPT_CODE": "K29.0",
+                "CONCEPT_ID": 1416741,
+                "CONCEPT_NAME": "Acute haemorrhagic gastritis",
+                "DOMAIN_ID": "Condition",
+                "INVALID_REASON": "V",
+                "INVALID_REASON_CAPTION": "Valid",
+                "STANDARD_CONCEPT": "N",
+                "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+                "VOCABULARY_ID": "ICD10CN"
+              },
+              "includeDescendants": true
+            },
+            {
+              "concept": {
+                "CONCEPT_CLASS_ID": "ICD10 code",
+                "CONCEPT_CODE": "K92.0",
+                "CONCEPT_ID": 45605964,
+                "CONCEPT_NAME": "Haematemesis",
+                "DOMAIN_ID": "Condition",
+                "INVALID_REASON": "V",
+                "INVALID_REASON_CAPTION": "Valid",
+                "STANDARD_CONCEPT": "N",
+                "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+                "VOCABULARY_ID": "ICD10"
+              },
+              "includeDescendants": true
+            }
+          ]
+        }
+      }
+    ],
     "PrimaryCriteria": {
       "CriteriaList": [
         {
           "ConditionOccurrence": {
-            "CodesetId": 0,
-            "ConditionTypeExclude": false
+            "CodesetId": 0
           }
         }
       ],
@@ -22,66 +105,63 @@
         "PostDays": 0
       },
       "PrimaryCriteriaLimit": {
-        "Type": "First"
+        "Type": "All"
       }
     },
-    "ConceptSets": [
-      {
-        "id": 0,
-        "name": "Pneumonia",
-        "expression": {
-          "items": [
-            {
-              "concept": {
-                "CONCEPT_ID": 255848,
-                "CONCEPT_NAME": "Pneumonia",
-                "STANDARD_CONCEPT": "S",
-                "STANDARD_CONCEPT_CAPTION": "Standard",
-                "INVALID_REASON": "V",
-                "INVALID_REASON_CAPTION": "Valid",
-                "CONCEPT_CODE": "",
-                "DOMAIN_ID": "Condition",
-                "VOCABULARY_ID": "SNOMED",
-                "CONCEPT_CLASS_ID": "Clinical Finding"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            },
-            {
-              "concept": {
-                "CONCEPT_ID": 28060,
-                "CONCEPT_NAME": "Streptococcal sore throat",
-                "STANDARD_CONCEPT": "S",
-                "STANDARD_CONCEPT_CAPTION": "Standard",
-                "INVALID_REASON": "V",
-                "INVALID_REASON_CAPTION": "Valid",
-                "CONCEPT_CODE": "",
-                "DOMAIN_ID": "Condition",
-                "VOCABULARY_ID": "SNOMED",
-                "CONCEPT_CLASS_ID": "Clinical Finding"
-              },
-              "isExcluded": false,
-              "includeDescendants": true,
-              "includeMapped": false
-            }
-          ]
-        }
-      }
-    ],
     "QualifiedLimit": {
       "Type": "First"
     },
     "ExpressionLimit": {
       "Type": "All"
     },
-    "InclusionRules": [],
+    "InclusionRules": [
+      {
+        "name": "No Gastrointestinal Hemorrhage events in prior 30 days",
+        "expression": {
+          "Type": "ALL",
+          "CriteriaList": [
+            {
+              "Criteria": {
+                "ConditionOccurrence": {
+                  "CodesetId": 0
+                }
+              },
+              "StartWindow": {
+                "Start": {
+                  "Days": 30,
+                  "Coeff": -1
+                },
+                "End": {
+                  "Days": 1,
+                  "Coeff": -1
+                },
+                "UseEventEnd": false
+              },
+              "IgnoreObservationPeriod": true,
+              "Occurrence": {
+                "Type": 0,
+                "Count": 0
+              }
+            }
+          ],
+          "DemographicCriteriaList": [],
+          "Groups": []
+        }
+      }
+    ],
+    "EndStrategy": {
+      "DateOffset": {
+        "DateField": "EndDate",
+        "Offset": 29
+      }
+    },
     "CensoringCriteria": [],
     "CollapseSettings": {
       "CollapseType": "ERA",
       "EraPad": 0
     },
-    "CensorWindow": {}
+    "CensorWindow": {},
+    "cdmVersionRange": ">=5.0.0"
   },
   "expressionType": "SIMPLE_EXPRESSION"
 }

@@ -1,5 +1,5 @@
 webApiUrl: "https://epi.jnj.com:8443/WebAPI"
-exportPath: "export"
+exportPath: "resultsImport"
 
 connectionDetails:
   dbms: "sqlite"

@@ -5,13 +5,13 @@ CREATE TABLE #Codesets (
 ;
 
 INSERT INTO #Codesets (codeset_id, concept_id)
-SELECT 5 as codeset_id, c.concept_id FROM (select distinct I.concept_id FROM
+SELECT 0 as codeset_id, c.concept_id FROM (select distinct I.concept_id FROM
 (
-  select concept_id from @vocabulary_database_schema.CONCEPT where concept_id in (1314273,937368)
+  select concept_id from @vocabulary_database_schema.CONCEPT where concept_id in (1118084)
 UNION  select c.concept_id
   from @vocabulary_database_schema.CONCEPT c
   join @vocabulary_database_schema.CONCEPT_ANCESTOR ca on c.concept_id = ca.descendant_concept_id
-  and ca.ancestor_concept_id in (1314273,937368)
+  and ca.ancestor_concept_id in (1118084)
   and c.invalid_reason is null
 
 ) I
@@ -37,7 +37,7 @@ from
 (
   select de.*
   FROM @cdm_database_schema.DRUG_EXPOSURE de
-JOIN #Codesets codesets on ((de.drug_concept_id = codesets.concept_id and codesets.codeset_id = 5))
+JOIN #Codesets codesets on ((de.drug_concept_id = codesets.concept_id and codesets.codeset_id = 0))
 ) C
 
 
@@ -96,17 +96,17 @@ with ctePersons(person_id) as (
 select person_id, drug_exposure_start_date, drug_exposure_end_date
 INTO #drugTarget
 FROM (
-	select de.PERSON_ID, DRUG_EXPOSURE_START_DATE, COALESCE(DRUG_EXPOSURE_END_DATE, DATEADD(day,DAYS_SUPPLY,DRUG_EXPOSURE_START_DATE), DATEADD(day,1,DRUG_EXPOSURE_START_DATE)) as DRUG_EXPOSURE_END_DATE
+	select de.PERSON_ID, DRUG_EXPOSURE_START_DATE, DATEADD(day,30,DRUG_EXPOSURE_START_DATE) as DRUG_EXPOSURE_END_DATE
 	FROM @cdm_database_schema.DRUG_EXPOSURE de
 	JOIN ctePersons p on de.person_id = p.person_id
-	JOIN #Codesets cs on cs.codeset_id = 5 AND de.drug_concept_id = cs.concept_id
+	JOIN #Codesets cs on cs.codeset_id = 0 AND de.drug_concept_id = cs.concept_id
 
 	UNION ALL
 
-	select de.PERSON_ID, DRUG_EXPOSURE_START_DATE, COALESCE(DRUG_EXPOSURE_END_DATE, DATEADD(day,DAYS_SUPPLY,DRUG_EXPOSURE_START_DATE), DATEADD(day,1,DRUG_EXPOSURE_START_DATE)) as DRUG_EXPOSURE_END_DATE
+	select de.PERSON_ID, DRUG_EXPOSURE_START_DATE, DATEADD(day,30,DRUG_EXPOSURE_START_DATE) as DRUG_EXPOSURE_END_DATE
 	FROM @cdm_database_schema.DRUG_EXPOSURE de
 	JOIN ctePersons p on de.person_id = p.person_id
-	JOIN #Codesets cs on cs.codeset_id = 5 AND de.drug_source_concept_id = cs.concept_id
+	JOIN #Codesets cs on cs.codeset_id = 0 AND de.drug_source_concept_id = cs.concept_id
 ) E
 ;
 
@@ -123,7 +123,7 @@ JOIN
     JOIN
     (
       --cteEndDates
-      select PERSON_ID, DATEADD(day,-1 * 60,EVENT_DATE) as END_DATE -- unpad the end date by 60
+      select PERSON_ID, DATEADD(day,-1 * 30,EVENT_DATE) as END_DATE -- unpad the end date by 30
       FROM
       (
 				select PERSON_ID, EVENT_DATE, EVENT_TYPE,
@@ -137,8 +137,8 @@ JOIN
 
 					UNION ALL
 
-					-- add the end dates with NULL as the row number, padding the end dates by 60 to allow a grace period for overlapping ranges.
-					select PERSON_ID, DATEADD(day,60,DRUG_EXPOSURE_END_DATE), 1 as EVENT_TYPE, NULL
+					-- add the end dates with NULL as the row number, padding the end dates by 30 to allow a grace period for overlapping ranges.
+					select PERSON_ID, DATEADD(day,30,DRUG_EXPOSURE_END_DATE), 1 as EVENT_TYPE, NULL
 					FROM #drugTarget D
 				) RAWDATA
       ) E
