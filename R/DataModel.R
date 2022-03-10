@@ -64,7 +64,7 @@ RewardDataModel <- R6::R6Class(
       INNER JOIN @results_schema.outcome_cohort oc ON cd.cohort_definition_id = oc.cohort_definition_id
       {@cohort_ids != ''}? {WHERE cohort_definition_id IN (@cohort_ids)}
       "
-      self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$referenceSchema,)
+      self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
 
     getExposureCohortDefinitionSet = function(cohortIds = NULL) {
@@ -73,7 +73,7 @@ RewardDataModel <- R6::R6Class(
       INNER JOIN @results_schema.exposure_cohort ec ON cd.cohort_definition_id = ec.cohort_definition_id
       {@cohort_ids != ''}? {WHERE cohort_definition_id IN (@cohort_ids)}
       "
-      self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$referenceSchema,)
+      self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
 
     getExposureCohortConceptSets = function(cohortIds = NULL) {
