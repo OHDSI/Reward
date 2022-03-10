@@ -59,15 +59,16 @@ create TABLE @schema.scc_stat (
     stat_type varchar(100),
     mean NUMERIC,
     sd NUMERIC,
-    min NUMERIC,
-    p10 NUMERIC,
-    p25 NUMERIC,
+    minimum NUMERIC,
+    p_10 NUMERIC,
+    p_25 NUMERIC,
     median NUMERIC,
-    p75 NUMERIC,
-    p90 NUMERIC,
-    max NUMERIC
+    p_75 NUMERIC,
+    p_90 NUMERIC,
+    maximum NUMERIC,
+    total NUMERIC
     {@include_constraints != ''} ? {,
-    PRIMARY KEY (source_id, analysis_id, outcome_cohort_id, target_cohort_id),
+    PRIMARY KEY (source_id, analysis_id, outcome_cohort_id, target_cohort_id, stat_type),
 
     CONSTRAINT out_cohort_def_fk
       FOREIGN KEY(outcome_cohort_id)
@@ -94,6 +95,14 @@ create TABLE @schema.data_source (
     cdm_version varchar,
     db_id varchar,
     version_date date
+);
+
+
+create table negative_control (
+    cohort_definition_id BIGINT,
+    negative_control_concept_id BIGINT,
+    negative_control_cohort_id BIGINT,
+    is_outcome_control INT
 );
 
 create TABLE @schema.outcome_null_distribution (

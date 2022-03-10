@@ -1,6 +1,6 @@
 # Copyright 2022 Observational Health Data Sciences and Informatics
 #
-# This file is part of CohortDiagnostics
+# This file is part of Reward
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ loadReportContext <- function(globalConfigPath) {
 loadGlobalConfiguration <- function(globalConfigPath, keyring = NULL) {
   config <- yaml::read_yaml(globalConfigPath)
 
-  defaults <- list(tables = list())
+  defaults <- list(tables = list(), negativeControlCount = 150)
   config <- .setDefaultOptions(config, defaults)
 
   referenceTables <- list(

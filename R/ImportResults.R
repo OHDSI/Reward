@@ -1,6 +1,6 @@
 # Copyright 2022 Observational Health Data Sciences and Informatics
 #
-# This file is part of CohortDiagnostics
+# This file is part of Reward
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,13 +37,14 @@ importResults <- function(config, resultsZipPath, connection = NULL, cleanup = T
 
   # Import tables using bulk upload
   for (file in files) {
-    if (isTRUE(grep("scc-result", basename(file)))) {
+    if (isTRUE(grep("scc-result", basename(file)) >= 1)) {
       tableName <- "scc_result"
-       data <- vroom::vroom(file, ",")
-    } else if (isTRUE(grep("time", basename(file)))) {
+       data <- vroom::vroom(file, ",", show_col_types = FALSE)
+    } else if (isTRUE(grep("time", basename(file)) >= 1)) {
       tableName <- "scc_stat"
-      data <- vroom::vroom(file, ",")
+      data <- vroom::vroom(file, ",", show_col_types = FALSE)
       data$stat_type <- strsplit(basename(file), "-")[[1]][[1]]
+      data <- data %>% dplyr::rename(maximum = max, minimum = min)
     } else {
       next # Not handled results
     }

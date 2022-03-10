@@ -1,4 +1,4 @@
-dbms <- getOption("dbms", default = "sqlite")
+dbms <- getTestDbms()
 if (dbms == "sqlite") {
   serverPath <- "testSqliteDb.sqlite"
   configPath <- file.path("config", "sqliteGlobalCfg.yml")

@@ -1,4 +1,5 @@
 library(Reward)
 library(testthat)
+library(checkmate)
 options(dbms="sqlite")
 test_check("Reward")

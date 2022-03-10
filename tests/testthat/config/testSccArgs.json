@@ -16,7 +16,7 @@
       "addLengthOfExposureUnexposed" : true,
       "riskWindowEndUnexposed" : -1,
       "riskWindowStartUnexposed" : -1,
-      "hasFullTimeAtRisk" : true,
+      "hasFullTimeAtRisk" : false,
       "washoutPeriod" : 0,
       "followupPeriod" : 0
     }
@@ -39,7 +39,7 @@
       "addLengthOfExposureUnexposed" : true,
       "riskWindowEndUnexposed" : -1,
       "riskWindowStartUnexposed" : -1,
-      "hasFullTimeAtRisk" : true,
+      "hasFullTimeAtRisk" : false,
       "washoutPeriod" : 0,
       "followupPeriod" : 0
     }
@@ -62,7 +62,7 @@
       "addLengthOfExposureUnexposed" : true,
       "riskWindowEndUnexposed" : -1,
       "riskWindowStartUnexposed" : -1,
-      "hasFullTimeAtRisk" : true,
+      "hasFullTimeAtRisk" : false,
       "washoutPeriod" : 0,
       "followupPeriod" : 0
     }
@@ -85,7 +85,7 @@
       "addLengthOfExposureUnexposed" : true,
       "riskWindowEndUnexposed" : -1,
       "riskWindowStartUnexposed" : -1,
-      "hasFullTimeAtRisk" : true,
+      "hasFullTimeAtRisk" : false,
       "washoutPeriod" : 0,
       "followupPeriod" : 0
     }
@@ -108,7 +108,7 @@
       "addLengthOfExposureUnexposed" : true,
       "riskWindowEndUnexposed" : -1,
       "riskWindowStartUnexposed" : -1,
-      "hasFullTimeAtRisk" : true,
+      "hasFullTimeAtRisk" : false,
       "washoutPeriod" : 0,
       "followupPeriod" : 0
     }

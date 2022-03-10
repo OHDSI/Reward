@@ -1,6 +1,6 @@
 # Copyright 2022 Observational Health Data Sciences and Informatics
 #
-# This file is part of CohortDiagnostics
+# This file is part of Reward
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@
 #' @importFrom utils packageVersion
 #' @import SqlRender
 #' @export
-createRewardSchema <- function(configFilePath) {
+createRewardSchema <- function(configFilePath,
+                               settingsFilePath = system.file("settings", "defaultSccArgs.json", package = utils::packageName())) {
   config <- loadGlobalConfiguration(configFilePath)
   connection <- DatabaseConnector::connect(connectionDetails = config$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
@@ -54,7 +55,7 @@ createRewardSchema <- function(configFilePath) {
                                            vocabulary_schema = config$vocabularySchema)
   DatabaseConnector::executeSql(connection, sql)
 
-  addAnalysisSettingsJson(connection, config)
+  addAnalysisSettingsJson(connection, config, settingsFilePath = settingsFilePath)
 }
 
 addAnalysisSetting <- function(connection, config, name, typeId, description, options) {

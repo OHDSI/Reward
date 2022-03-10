@@ -1,3 +1,7 @@
+getTestDbms <- function() {
+  getOption("dbms", default = "sqlite")
+}
+
 # When devtools::load_all is run, create symbolic link for sql directory
 # Allows testing with devtools::test on osx and linux
 if (Sys.getenv("DEVTOOLS_LOAD") == "true" & .Platform$OS.type == "unix") {
@@ -58,23 +62,34 @@ with_dbc_connection <- function(connection, code) {
   eval(substitute(code), envir = connection, enclos = parent.frame())
 }
 
-createTestReferences <- function(configPath = "tests/testthat/config/sqliteGlobalCfg.yml",
-                                 vocabularyImportPath = "tests/testthat/test_vocabulary/",
-                                 vocabularySchema = "main",
-                                 outputFile = "reward-references.zip") {
+# Consistent path for config files if using devtools::load_all() or inside tests
+withTestsRoot <- function(...) {
+ isTestEnv <- isTRUE(grep("testthat", getwd()) > 0)
+ if (isTestEnv) {
+   return(file.path(normalizePath("."), ...))
+ }
+ return(normalizePath(file.path("tests", "testthat", ...)))
+}
 
+createTestReferences <- function(configPath = file.path(withTestsRoot(), "config", "sqliteGlobalCfgModel.yml"),
+                                 vocabularyImportPath = file.path(withTestsRoot(), "test_vocabulary"),
+                                 vocabularySchema = "main",
+                                 analysisSettingsFilePath = file.path(withTestsRoot(), "config", "testSccArgs.json"),
+                                 outputFile = "reward-test-references.zip",
+                                 deleteDb = TRUE) {
   config <- loadGlobalConfiguration(configPath)
   unlink(config$connectionDetails$server(), force = TRUE)
-  on.exit(unlink(config$connectionDetails$server(), force = TRUE))
-
+  if (deleteDb) {
+    on.exit(unlink(config$connectionDetails$server(), force = TRUE))
+  }
   connectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = config$conectionDetails$server())
   importVocabulary(config$connectionDetails, vocabularyImportPath, vocabularySchema)
-  createRewardSchema(configPath)
+  createRewardSchema(configPath, settingsFilePath = analysisSettingsFilePath)
   connection <- DatabaseConnector::connect(config$connectionDetails)
   with_dbc_connection(connection, {
-    cohortDefinition <- RJSONIO::readJSONStream(file.path("tests", "testthat", "cohorts", "atlasCohort1.json"))
-    sqlDefinition <- readChar(file.path("tests", "testthat", "cohorts", "atlasCohort1.sql"),
-                              file.info(file.path("tests", "testthat", "cohorts", "atlasCohort1.sql"))$size)
+    cohortDefinition <- RJSONIO::readJSONStream(withTestsRoot("cohorts", "atlasCohort1.json"))
+    sqlDefinition <- readChar(withTestsRoot("cohorts", "atlasCohort1.sql"),
+                              file.info(withTestsRoot("cohorts", "atlasCohort1.sql"))$size)
     insertAtlasCohortRef(connection,
                          config,
                          100,
@@ -83,9 +98,9 @@ createTestReferences <- function(configPath = "tests/testthat/config/sqliteGloba
                          sqlDefinition = sqlDefinition,
                          exposure = FALSE)
 
-    cohortDefinition <- RJSONIO::readJSONStream(file.path("tests", "testthat", "cohorts", "atlasExposureCohort19321.json"))
-    sqlDefinition <- readChar(file.path("tests", "testthat", "cohorts", "atlasExposureCohort19321.sql"),
-                              file.info(file.path("tests", "testthat", "cohorts", "atlasExposureCohort19321.sql"))$size)
+    cohortDefinition <- RJSONIO::readJSONStream(withTestsRoot("cohorts", "atlasExposureCohort19321.json"))
+    sqlDefinition <- readChar(withTestsRoot("cohorts", "atlasExposureCohort19321.sql"),
+                              file.info(withTestsRoot("cohorts", "atlasExposureCohort19321.sql"))$size)
     insertAtlasCohortRef(connection,
                          config,
                          101,
@@ -96,4 +111,24 @@ createTestReferences <- function(configPath = "tests/testthat/config/sqliteGloba
 
     exportReferenceTables(config, connection, exportZipFile = outputFile)
   })
+}
+
+
+createModelTestDb <- function(outputPath = withTestsRoot("testSqliteDbModel.sqlite")) {
+  configPath <- withTestsRoot("config", "sqliteGlobalCfgModel.yml")
+  config <- loadGlobalConfiguration(configPath)
+  createTestReferences(outputFile = "reward-test-references.zip", deleteDb = FALSE)
+  on.exit(unlink("reward-test-references.zip"), add = TRUE)
+
+  # Tested internally with REP, these tests are for integration
+  cdmConfigPath <- withTestsRoot("config", "test.cdm.yml")
+  cdmConfig <- RewardExecutionPackage::loadCdmConfiguration(cdmConfigPath)
+  connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cdmConfig$connectionDetails$server())
+  on.exit(unlink(cdmConfig$connectionDetails$server()), add = TRUE)
+  on.exit(unlink(unlink(config$exportPath), recursive = TRUE, force = TRUE), add = TRUE)
+
+  RewardExecutionPackage::execute(cdmConfigPath, "reward-test-references.zip")
+  resultsZipPath <- file.path(cdmConfig$exportPath, paste0("reward-results-", cdmConfig$database, ".zip"))
+  importResults(config, resultsZipPath, cleanup = TRUE)
+  file.copy(config$connectionDetails$server(), outputPath, overwrite = TRUE)
 }

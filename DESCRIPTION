@@ -8,12 +8,17 @@ Description: REWARD base package for managing data and constructing studies.
 License: Apache 2.0
 Encoding: UTF-8
 LazyData: true
+Depends:
+    R (>= 4.0.0)
 Imports:
     DatabaseConnector (>= 5.0.0),
     ParallelLogger,
+    R6,
     dplyr
 Requires:
     CemConnector,
+    pool,
+    DBI,
     yaml,
     vroom,
     RewardExecutionPackage,
