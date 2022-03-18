@@ -17,6 +17,7 @@ Imports:
     dplyr
 Requires:
     CemConnector,
+    EmpiricalCalibration,
     pool,
     DBI,
     yaml,

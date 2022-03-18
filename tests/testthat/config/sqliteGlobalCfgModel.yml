@@ -9,4 +9,10 @@ resultsSchema: "main"
 vocabularySchema: "main"
 
 cemConnectionDetails:
-  apiUrl: https://cem.ohdsi.org
+  connectionDetails:
+    dbms: "sqlite"
+    server: "cem_test_db/cemTestInstance.sqlite"
+
+  cemSchema: "main"
+  vocabularySchema: "main"
+  sourceSchema: "main"

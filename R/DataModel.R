@@ -58,6 +58,14 @@ RewardDataModel <- R6::R6Class(
       self$connection$finalize()
     },
 
+    getCemConnection = function() {
+      if (!is.null(self$config$cemConnectionDetails$connectionDetails)) {
+        self$config$cemConnectionDetails$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails,
+                                                                      self$config$cemConnectionDetails$connectionDetails)
+      }
+      do.call(CemConnector::createCemConnection, self$config$cemConnectionDetails)
+    },
+
     getOutcomeCohortDefinitionSet = function(cohortIds = NULL) {
       # make a proper cohort definition set from sql and cohort json
       sql <- "SELECT cd.* FROM @results_schema.cohort_definition cd
@@ -79,6 +87,14 @@ RewardDataModel <- R6::R6Class(
     getExposureCohortConceptSets = function(cohortIds = NULL) {
       sql <- "SELECT ccs.* FROM @results_schema.cohort_concept_set ccs
       INNER JOIN @results_schema.exposure_cohort ec ON ccs.cohort_definition_id = ec.cohort_definition_id
+      {@cohort_ids != ''}? {WHERE cohort_definition_id IN (@cohort_ids)}
+      "
+      self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
+    },
+
+    getOutcomeCohortConceptSets = function(cohortIds = NULL) {
+      sql <- "SELECT ccs.*, oc.outcome_type FROM @results_schema.cohort_concept_set ccs
+      INNER JOIN @results_schema.outcome_cohort oc ON ccs.cohort_definition_id = oc.cohort_definition_id
       {@cohort_ids != ''}? {WHERE cohort_definition_id IN (@cohort_ids)}
       "
       self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
