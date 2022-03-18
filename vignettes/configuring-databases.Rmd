@@ -1,0 +1,268 @@
+---
+title: "Configuring Databases"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Configuring Databases}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+Reward has 2 main database setup configurations; the main postgresql back end, where references and combined data are stored, and the CDMs where the cohorts are generated and effect estimates are calculated from.
+As it is assumed that the CDM is separate from the postgresql backend all references that are shared between data sources must be imported each time data are generated to allow the correct identifiers to line up when results are combined.
+
+```{r run = FALSE}
+library(rewardb)
+```
+
+# Postgres db configuration
+It is assumed that the postgres database is configured and you have been given an account that can create schemas.
+
+# Creating the postgres configuration
+
+We need a configuration file, by default many functions look for `config/global-cfg.yml`.
+This is the global shared config across many CDMs and shiny dashboards.
+
+Fill this out as per an example here:
+
+```
+
+webApiUrl: "https://epi.jnj.com:8443/WebAPI"
+exportPath: "export"
+
+connectionDetails:
+  dbms: "postgresql"
+  server: "my-database-instance-url.ca/reward"
+  port: 5432
+  user: "reward_user"
+
+rewardbResultsSchema: "rewardb"
+vocabularySchema: "vocabulary"
+cemSchema: "cem"
+
+```
+
+Note, that a password may be stored in this file. 
+However, we recommend not storing it here as it can be checked in to git by mistake. 
+The environment variable `REWARD_B_DB_PASSWORD` is checked when the configuration is loaded.
+Alternatively, a password prompt will appead the first time a configuration is loaded in to the R session.
+
+To load the configuration:
+
+```{r eval=FALSE}
+config <- loadGlobalConfiguration("config/global-cfg.yml")
+```
+
+## Adding a vocabulary
+TODO - add an omop vocabulary to the reward database. See the standard vocabulary documentation on how to do this.
+
+## Building the postgres database
+Running the following function builds a schema in the postgres database:
+
+```{r eval=FALSE}
+buildPgDatabase(configFilePath = "config/global-cfg")
+```
+Here, all cohort references will be created from the vocabulary or imported from the Phenotype Library.
+
+### Adding analysis settings
+By default, the SCC analysis performed by reward is for the first exposure and first outcome only.
+Additional analysis settings can be specified and added to the database as follows.
+
+```{r eval = FALSE}
+name <- "My setting"
+typeId <- 2
+description <- "My custom scc params"
+
+analysis <- SelfControlledCohort::createRunSelfControlledCohortArgs(firstExposureOnly = TRUE,
+                                                                    firstOutcomeOnly = FALSE,
+                                                                    minAge = 0,
+                                                                    maxAge = 18,
+                                                                    studyStartDate = "",
+                                                                    studyEndDate = "",
+                                                                    addLengthOfExposureExposed = TRUE,
+                                                                    riskWindowStartExposed = 1,
+                                                                    riskWindowEndExposed = 30,
+                                                                    addLengthOfExposureUnexposed = TRUE,
+                                                                    riskWindowEndUnexposed = -1,
+                                                                    riskWindowStartUnexposed = -30,
+                                                                    hasFullTimeAtRisk = TRUE,
+                                                                    washoutPeriod = 0,
+                                                                    followupPeriod = 0)
+
+addAnalysisSetting(connection, config, name, typeId, description, analysis)
+```
+
+Consult the OHDSI SelfControlledCohort package for more details on the settings.
+
+### Importing cohorts from ATLAS
+It is likely that you want to import many cohorts defined in ATLAS to the reference tables.
+These can either b
+
+```{r eval=FALSE}
+connection <- DatabaseConnector::connect(connectionDetails = config$connectionDetails)
+
+atlasCohorts <- c(7542, 7551, 7552, 7553, 7576)
+# Add atlas cohorts
+for (atlasId in atlasCohorts) {
+  insertAtlasCohortRef(connection, config, atlasId)
+}
+```
+
+And for exposures these can be inserted with the `exposure = TRUE` (exposures and outcomes are distinct cohorts in reward, but there is no reason that a cohort cannot be inserted as both an exposure and an outcome if you believe you have good reason to do so):
+
+```{r eval=FALSE}
+atlasExposureCohorts <- c(19177, 19178)
+
+for (atlasId in atlasExposureCohorts) {
+  insertAtlasCohortRef(connection, config, atlasId, exposure = TRUE)
+}
+
+```
+
+Cohorts can be inserted from other ATLAS sources beyond the one set in the configuration yaml file.
+To do this specify this with the `webApiUrl` parameter.
+
+For example:
+
+```{r eval=FALSE}
+insertAtlasCohortRef(connection, config, 5, webApiUrl = 'https://atlas.ohdsi.org/WebAPI', exposure = FALSE)
+```
+
+Do not worry about a collision between cohort identifiers (i.e. cohort 5 from both an internal atlas source and the OHDSI atlas server), these are managed internally by reward as multiple atlas instances are supported.
+
+#### Updating ATLAS cohorts
+It is likely that you will want to update cohort definitions.
+Currently, updating the cohorts requires removing references to the old definitions.
+To do this remove the old cohort with its atlas identifier (and URL if it is not from the webapi specified in the configuration yaml file).
+
+```{r eval=FALSE}
+removeAtlasCohort(connection, config, 5, webApiUrl = 'https://atlas.ohdsi.org/WebAPI', exposure = FALSE)
+```
+
+## Adding Additional SCC configuration settings
+
+```{r eval=FALSE}
+```
+
+## Exporting references
+Cohort references and identifiers are required on each CDM to generate the cohorts.
+The file can be exported as follows.
+
+Note that before ANY analysis is ran, (even for one off cohorts), it is desirable to check that the CDM has the latest references as this will create integrity issues.
+
+```{r eval=FALSE}
+exportReferenceTables(config, exportPath = 'reward-references-<todays-date>.zip')
+```
+
+This will create the zip file `'reward-references-<todays-date>.zip'` which contains a CSV file export of the tables needed to compute the cohorts on the CDMs.
+
+## Creating the common evidence model schema
+
+# CDM configuration
+
+# Creating yaml configuration
+We will be working with an example Eunomia database.
+To configure a CDM create a new yaml file `config/cdm/eunomia.yml`
+It will look like this:
+
+```
+sourceId: 1
+database: eunomia
+name: eunomia
+
+exportPath: "export"
+referencePath: "reference_files"
+
+connectionDetails:
+  dbms: "sqlite"
+  server: "/var/folders/53/10lzj63s7bzf19qyws11zzmc0000gp/T//Rtmpscjnud/filea9b938463649.sqlite"
+
+useSecurePassword: FALSE
+passwordEnvironmentVariable: "PASS"
+bulkUpload: FALSE
+
+resultSchema: "reward"
+referenceSchema: "reward"
+cdmSchema: "eunomia"
+vocabularySchema: "eunomia"
+drugEraSchema: "reward"
+
+
+tables:
+  outcomeCohort: "rb_outcome_cohort"
+  cohort: "rb_cohort"
+  sccResult: "rb_scc_result"
+  # Reference table definitions
+  cohortDefinition: "rb_cohort_definition"
+  outcomeCohortDefinition: "rb_outcome_cohort_definition"
+  conceptSetDefinition: "rb_concept_set_definition"
+  atlasOutcomeReference: "rb_atlas_outcome_reference"
+  atlasOutcomeConcept: "rb_atlas_outcome_concept"
+  atlasExposureReference: "rb_atlas_exposure_reference"
+  atlasExposureConcept: "rb_atlas_exposure_concept"
+  customExposure: "rb_custom_exposure"
+  customExposureConcept: "rb_custom_exposure_concept"
+  analysisSetting: "rb_analysis_setting"
+
+```
+
+There are number of crucial options.
+
+```
+sourceId: 1
+database: eunomia
+name: eunomia
+```
+These options specify the database name and configuration. 
+The `sourceId` must be unique and new, this is not managed by reward.
+
+```
+exportPath: "export"
+referencePath: "reference_files"
+```
+These are where the results will be exported and where the reference zip file will be exported before insert in to the cdm.
+Note, that changing these directories or removing them will stop reward from running properly.
+
+```
+useSecurePassword: FALSE
+passwordEnvironmentVariable: "PASS"
+bulkUpload: FALSE
+```
+
+`useSecurePassword` using a secure password allows the prompt for a password when the CDM config is loaded.
+`passwordEnvironmentVariable` Environment variable where this can be stored with `Sys.setenv`.
+`bulkUpload` this option is desirable to be TRUE where possible as it prevents DatabaseConnector from doing bulk inserts.
+
+
+```
+resultSchema: "scratch_reward"
+referenceSchema: "scratch_reward"
+drugEraSchema: "scratch_reward"
+cdmSchema: "cdm"
+vocabularySchema: "cdm"
+```
+
+The results, reference schema and drug era schema don't need to be the same but they must exist and the user must have write permissions.
+Contact your CDM administration team for help with this.
+The CDM schema is where the cdm lives. 
+It is likely that the vocabulary is in the same schema but this may not be the case.
+
+It is unlikely that you will need to configure the tables but this may be the case if you only have 1 scratch schema and you want to run reward multiple times, for example.
+
+## Registering the CDM
+Once a cdm config is created it can be registered in the REWARD postgres instance. 
+Note that this just sets the ID and name. No CDM access is required to do this.
+It is up to the user to track the CDM updates and configure reward accordingly.
+```{r eval=FALSE}
+registerCdm(connection, globalConfig, cdmConfig)
+```
+
+

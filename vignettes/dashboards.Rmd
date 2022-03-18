@@ -1,0 +1,92 @@
+---
+title: "Dashboard Creation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{dashboards}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(rewardb)
+```
+
+# Introduction
+This process assumes that you have generated data and have a user account that can create database schemas.
+
+# Creating a configuration file
+First, you need to create a configuration YAML file. 
+The best way to do this is to copy one of the existing configurations in the `config` directory.
+E.g. open the file `../config/config.dev.yml` and save a copy `../config/config.my-study.yml`.
+
+Now editing the new file you can set the application name, short_name and description fields.
+The `short_name` field should be unique to your application because it is the postgres schema that the results will be stored in.
+For this example we are only interested in two outcome ids and a custom atlas cohort.
+Edit the fields in the top of the file as follows:
+
+```
+name: My study dashboard
+short_name: my_study # This is the name of the database schema!
+description: My study all about x
+outcome_concept_ids: [80488]
+custom_outcome_cohort_ids: [804880001] # These are atlas ids or pheenotype library ids
+target_concept_ids: ~
+useExposureControls: True # This option ensures that we control using based exposures as our outcomes are fixed
+```
+
+Notice that the `target_cohort_ids` field has the character`~`, this indicates that the field is
+null. This is because, for this example, we are interested in all exposures for the specified outcomes.
+
+For an exposure dashboard use the following as a template
+```
+name: My study dashboard
+short_name: my_study # This is the name of the database schema!
+description: My study all about x
+outcome_concept_ids: ~
+custom_outcome_cohort_ids: ~
+target_concept_ids: [1124300]
+atlas_exposure_ids: [ 19177, 19178 ] # These are atlas ids or pheenotype library ids
+useExposureControls: False # This option ensures that we control using outcomes as our exposures are fixed
+```
+
+# Using manual negative controls
+
+The automated method of generating negative controls may fail to find good, or correct, coverage of cohorts.
+To use a manual set of negative controls use the `cemEvidenceFiles` option in the configuration file to point to exports from ATLAS concept set evidence generation.
+For example:
+
+```
+cemEvidenceFiles:
+    13735: "extra/controls/influenza_vaccine_controls_export.csv"
+    13734: "extra/controls/pneumenocccoal_vaccine_export.csv"
+```
+
+Where the id field relates to the resulting cohort id.
+These export files are directly taken from atlas.
+
+TODO: this currently only works for outcome controls as this is a seldom used feature.
+
+# Making the database schema
+Then we want to create the database schema and perform empirical calibration with the build dashboard function
+
+```{r eval = FALSE}
+buildDashboardFromConfig("config/config.my-study.yml", "config/global-cfg.yml")
+```
+
+# Viewing the dashboard
+point at your new config file, e.g. `config/config.my-study.yml` relative to the current working directory.
+
+Then to run the shiny application, inside R:
+```{r eval = FALSE}
+rewardb::launchDashboard("config/config.tnfs.yml", "config/global-cfg.yml")
+```
+
+Deploying the the shiny server requires installing the reward package and dependencies on the shared shiny server, uploading configurating files and then pointing the above command at their locations on the server.
+Here, you will need to place the database user credentials in `global-cfg.yml`, do not commit these in to git.
