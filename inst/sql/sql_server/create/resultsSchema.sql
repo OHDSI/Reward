@@ -10,6 +10,17 @@
 {DEFAULT @analysis_setting = 'analysis_setting'}
 {DEFAULT @include_constraints = ''}
 
+DROP TABLE IF EXISTS @schema.data_source {@include_constraints} ? {cascade};
+create TABLE @schema.data_source (
+    source_id INT {@include_constraints} ? {PRIMARY KEY},
+    source_name varchar,
+    source_key varchar,
+    cdm_version varchar,
+    db_id varchar,
+    version_date date
+);
+
+DROP TABLE IF EXISTS @schema.scc_result {@include_constraints} ? {cascade};
 create table @schema.scc_result (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
@@ -29,28 +40,29 @@ create table @schema.scc_result (
     p_value NUMERIC,
     I2 NUMERIC,
     num_exposures NUMERIC
-    {@include_constraints != ''} ? {,
+    {@include_constraints} ? {,
     PRIMARY KEY (source_id, analysis_id, outcome_cohort_id, target_cohort_id),
 
     CONSTRAINT out_cohort_def_fk
       FOREIGN KEY(outcome_cohort_id)
-	    REFERENCES @cohort_definition(COHORT_DEFINITION_ID),
+	    REFERENCES @schema.@cohort_definition(COHORT_DEFINITION_ID),
 
     CONSTRAINT exp_cohort_def_fk
       FOREIGN KEY(target_cohort_id)
-	    REFERENCES @cohort_definition(COHORT_DEFINITION_ID),
+	    REFERENCES @schema.@cohort_definition(COHORT_DEFINITION_ID),
 
 	CONSTRAINT source_id_fk
       FOREIGN KEY(source_id)
-	    REFERENCES data_source(source_id),
+	    REFERENCES @schema.data_source(source_id),
 
     CONSTRAINT analysis_id_fk
       FOREIGN KEY(analysis_id)
-	    REFERENCES analysis_setting(analysis_id)
+	    REFERENCES @schema.analysis_setting(analysis_id)
 
     }
 );
 
+DROP TABLE IF EXISTS @schema.scc_stat {@include_constraints} ? {cascade};
 create TABLE @schema.scc_stat (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
@@ -67,44 +79,36 @@ create TABLE @schema.scc_stat (
     p_90 NUMERIC,
     maximum NUMERIC,
     total NUMERIC
-    {@include_constraints != ''} ? {,
+    {@include_constraints} ? {,
     PRIMARY KEY (source_id, analysis_id, outcome_cohort_id, target_cohort_id, stat_type),
 
     CONSTRAINT out_cohort_def_fk
       FOREIGN KEY(outcome_cohort_id)
-	    REFERENCES @cohort_definition(COHORT_DEFINITION_ID),
+	    REFERENCES @schema.@cohort_definition(COHORT_DEFINITION_ID),
 
     CONSTRAINT exp_cohort_def_fk
       FOREIGN KEY(target_cohort_id)
-	    REFERENCES @cohort_definition(COHORT_DEFINITION_ID),
+	    REFERENCES @schema.@cohort_definition(COHORT_DEFINITION_ID),
 
 	CONSTRAINT source_id_fk
       FOREIGN KEY(source_id)
-	    REFERENCES data_source(source_id),
+	    REFERENCES @schema.data_source(source_id),
 
     CONSTRAINT analysis_id_fk
       FOREIGN KEY(analysis_id)
-	    REFERENCES analysis_setting(analysis_id)
+	    REFERENCES @schema.analysis_setting(analysis_id)
     }
 );
 
-create TABLE @schema.data_source (
-    source_id INT {@include_constraints != ''} ? {PRIMARY KEY},
-    source_name varchar,
-    source_key varchar,
-    cdm_version varchar,
-    db_id varchar,
-    version_date date
-);
-
-
-create table negative_control (
+DROP TABLE IF EXISTS @schema.negative_control {@include_constraints} ? {cascade};
+create table @schema.negative_control (
     cohort_definition_id BIGINT,
     negative_control_concept_id BIGINT,
     negative_control_cohort_id BIGINT,
     is_outcome_control INT
 );
 
+DROP TABLE IF EXISTS @schema.outcome_null_distribution {@include_constraints} ? {cascade};
 create TABLE @schema.outcome_null_distribution (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
@@ -115,23 +119,23 @@ create TABLE @schema.outcome_null_distribution (
     null_dist_sd NUMERIC,
     absolute_error NUMERIC,
     n_controls NUMERIC
-    {@include_constraints != ''} ? {,
+    {@include_constraints} ? {,
     PRIMARY KEY (source_id, analysis_id, target_cohort_id, outcome_type),
     CONSTRAINT exp_cohort_def_fk
       FOREIGN KEY(target_cohort_id)
-	    REFERENCES @cohort_definition(COHORT_DEFINITION_ID),
+	    REFERENCES @schema.@cohort_definition(COHORT_DEFINITION_ID),
 
 	CONSTRAINT source_id_fk
       FOREIGN KEY(source_id)
-	    REFERENCES data_source(source_id),
+	    REFERENCES @schema.data_source(source_id),
 
     CONSTRAINT analysis_id_fk
       FOREIGN KEY(analysis_id)
-	    REFERENCES analysis_setting(analysis_id)
+	    REFERENCES @schema.analysis_setting(analysis_id)
     }
 );
 
-
+DROP TABLE IF EXISTS  @schema.exposure_null_distribution {@include_constraints} ? {cascade};
 create TABLE @schema.exposure_null_distribution (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
@@ -140,23 +144,23 @@ create TABLE @schema.exposure_null_distribution (
     null_dist_sd NUMERIC,
     absolute_error NUMERIC,
     n_controls NUMERIC
-    {@include_constraints != ''} ? {,
+    {@include_constraints} ? {,
     PRIMARY KEY (source_id, analysis_id, outcome_cohort_id),
     CONSTRAINT out_cohort_def_fk
       FOREIGN KEY(outcome_cohort_id)
-	    REFERENCES @cohort_definition(COHORT_DEFINITION_ID),
+	    REFERENCES @schema.@cohort_definition(COHORT_DEFINITION_ID),
 
 	CONSTRAINT source_id_fk
       FOREIGN KEY(source_id)
-	    REFERENCES data_source(source_id),
+	    REFERENCES @schema.data_source(source_id),
 
     CONSTRAINT analysis_id_fk
       FOREIGN KEY(analysis_id)
-	    REFERENCES @analysis_setting(analysis_id)
+	    REFERENCES @schema.@analysis_setting(analysis_id)
     }
 );
 
-{@include_constraints != ''} ? {
+{@include_constraints} ? {
 create index sccr_idx on @schema.scc_result(outcome_cohort_id, target_cohort_id);
 create index idx_exp_null_dist on @schema.exposure_null_distribution(outcome_cohort_id);
 create index idx_out_null_dist on @schema.outcome_null_distribution(ingredient_concept_id);
