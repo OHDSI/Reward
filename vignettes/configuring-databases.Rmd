@@ -50,6 +50,8 @@ cemSchema: "cem"
 
 ```
 
+This can be created by hand or with the utility function `createGlobalConfig`
+
 Note, that a password may be stored in this file. 
 However, we recommend not storing it here as it can be checked in to git by mistake. 
 The environment variable `REWARD_B_DB_PASSWORD` is checked when the configuration is loaded.
@@ -68,7 +70,7 @@ TODO - add an omop vocabulary to the reward database. See the standard vocabular
 Running the following function builds a schema in the postgres database:
 
 ```{r eval=FALSE}
-buildPgDatabase(configFilePath = "config/global-cfg")
+createRewardSchema(configFilePath = "config/global-cfg")
 ```
 Here, all cohort references will be created from the vocabulary or imported from the Phenotype Library.
 

@@ -173,7 +173,7 @@ createGlobalConfig <- function(configPath,
 #' @description
 #' Opens a file for editing that contains the default settings for a cdm
 #'
-#' @inheritParams loadCdmConfiguration
+#' @inheritParams loadGlobalConfiguration
 #' @param testConnection                Attempt to connect to database and write to schemas needed for writing?
 #' @export
 validateConfigFile <- function(configPath, testConnection = TRUE, keyring = NULL) {

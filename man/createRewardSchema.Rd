@@ -4,7 +4,11 @@
 \alias{createRewardSchema}
 \title{Build postgres schema}
 \usage{
-createRewardSchema(configFilePath)
+createRewardSchema(
+  configFilePath,
+  settingsFilePath = system.file("settings", "defaultSccArgs.json", package =
+    utils::packageName())
+)
 }
 \arguments{
 \item{configFilePath}{path to global reward config}

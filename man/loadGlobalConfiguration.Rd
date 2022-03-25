@@ -4,10 +4,12 @@
 \alias{loadGlobalConfiguration}
 \title{Loads global config}
 \usage{
-loadGlobalConfiguration(globalConfigPath)
+loadGlobalConfiguration(globalConfigPath, keyring = NULL)
 }
 \arguments{
-\item{globalConfigPath}{path to global yaml}
+\item{globalConfigPath}{Path to global configuration yaml file}
+
+\item{keyring}{Optional keyring::keyring for storing secrets}
 }
 \description{
 Load reward global config yaml file

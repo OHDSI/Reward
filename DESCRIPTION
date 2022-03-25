@@ -28,6 +28,7 @@ Requires:
     keyring,
     base64enc
 Suggests:
+    targets,
     testthat,
     Eunomia
 Remotes:
