@@ -15,7 +15,7 @@ Imports:
     ParallelLogger,
     R6,
     dplyr
-Requires:
+Depends:
     CemConnector,
     EmpiricalCalibration,
     pool,
