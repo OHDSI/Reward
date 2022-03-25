@@ -168,7 +168,7 @@ The file can be exported as follows.
 Note that before ANY analysis is ran, (even for one off cohorts), it is desirable to check that the CDM has the latest references as this will create integrity issues.
 
 ```{r eval=FALSE}
-exportReferenceTables(config, exportPath = 'reward-references-<todays-date>.zip')
+exportReferenceTables(configPath, exportPath = 'reward-references-<todays-date>.zip')
 ```
 
 This will create the zip file `'reward-references-<todays-date>.zip'` which contains a CSV file export of the tables needed to compute the cohorts on the CDMs.

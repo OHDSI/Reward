@@ -23,3 +23,16 @@
 #' @import dplyr
 #' @import ParallelLogger
 NULL
+
+#' @importFrom RewardExecutionPackage createCdmConfiguration
+#' @export
+RewardExecutionPackage::createCdmConfiguration
+#' @importFrom RewardExecutionPackage importReferenceTables
+#' @export
+RewardExecutionPackage::importReferenceTables
+#' @importFrom RewardExecutionPackage loadCdmConfiguration
+#' @export
+RewardExecutionPackage::loadCdmConfiguration
+#' @importFrom RewardExecutionPackage validateCdmConfigFile
+#' @export
+RewardExecutionPackage::validateCdmConfigFile
