@@ -26,15 +26,19 @@ library(rewardb)
 # Postgres db configuration
 It is assumed that the postgres database is configured and you have been given an account that can create schemas.
 
-# Creating the postgres configuration
+## Adding a vocabulary
+TODO - add an omop vocabulary to the reward database.
+This is out of scope for these docs.
+Please see the standard vocabulary documentation on how to do this.
 
-We need a configuration file, by default many functions look for `config/global-cfg.yml`.
+## Creating the postgres configuration
+
+We need a configuration file, by default many functions look for `global-cfg.yml`.
 This is the global shared config across many CDMs and shiny dashboards.
 
 Fill this out as per an example here:
 
-```
-
+```{yaml}
 webApiUrl: "https://epi.jnj.com:8443/WebAPI"
 exportPath: "export"
 
@@ -44,27 +48,30 @@ connectionDetails:
   port: 5432
   user: "reward_user"
 
-rewardbResultsSchema: "rewardb"
-vocabularySchema: "vocabulary"
-cemSchema: "cem"
+rewardbResultsSchema: "reward"
+# It is stronly advised to have a vocabulary for every reward schema
+vocabularySchema: "reward"
+
+# Change this only if you're hosting an internal solution for getting negative control outcomes and exposures
+cemConnectionDetails:
+  apiUrl: https://cem.ohdsi.org
+
 
 ```
 
-This can be created by hand or with the utility function `createGlobalConfig`
+This can be created by hand or with the utility function `createGlobalConfig`, which is stronlgy reccomended as this will
+call `validateConfigFile` upon saving it which will check the parameters are valid and test the connection to the
+database.
 
 Note, that a password may be stored in this file. 
 However, we recommend not storing it here as it can be checked in to git by mistake. 
-The environment variable `REWARD_B_DB_PASSWORD` is checked when the configuration is loaded.
-Alternatively, a password prompt will appead the first time a configuration is loaded in to the R session.
+
 
 To load the configuration:
 
 ```{r eval=FALSE}
 config <- loadGlobalConfiguration("config/global-cfg.yml")
 ```
-
-## Adding a vocabulary
-TODO - add an omop vocabulary to the reward database. See the standard vocabulary documentation on how to do this.
 
 ## Building the postgres database
 Running the following function builds a schema in the postgres database:

@@ -31,7 +31,15 @@ createRewardSchema <- function(configFilePath,
   connection <- DatabaseConnector::connect(connectionDetails = config$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
 
-  message("creating rewardb results an reference schema")
+  message("creating rewardb results and reference schema")
+  sql <- SqlRender::loadRenderTranslateSql(file.path("create", "referenceSchema.sql"),
+                                           packageName = "RewardExecutionPackage",
+                                           dbms = connection@dbms,
+                                           schema = config$resultsSchema,
+                                           include_constraints = TRUE)
+  DatabaseConnector::executeSql(connection, sql)
+
+
   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "resultsSchema.sql"),
                                            packageName = utils::packageName(),
                                            dbms = connection@dbms,
@@ -39,12 +47,7 @@ createRewardSchema <- function(configFilePath,
                                            include_constraints = TRUE)
   DatabaseConnector::executeSql(connection, sql)
 
-  sql <- SqlRender::loadRenderTranslateSql(file.path("create", "referenceSchema.sql"),
-                                           packageName = "RewardExecutionPackage",
-                                           dbms = connection@dbms,
-                                           schema = config$resultsSchema,
-                                           include_constraints = TRUE)
-  DatabaseConnector::executeSql(connection, sql)
+
 
   message("creating bulk cohort references")
   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "cohortReferences.sql"),
