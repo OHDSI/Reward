@@ -14,6 +14,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#' Register a CDM or return sourceId of existing cdm
+registerCdm <- function(config, connection, cdmInfoFile) {
+  cdmInfo <- RJSONIO::fromJSON(SqlRender::readSql(cdmInfoFile))
+
+
+  getSourceInfo <- function() {
+    sql <- "SELECT * FROM @schema.data_source ds WHERE ds.source_key = '@database';"
+    DatabaseConnector::renderTranslateQuerySql(connection,
+                                               sql,
+                                               schema = config$resultsSchema,
+                                               database = cdmInfo$database,
+                                               snakeCaseToCamelCase = TRUE)
+  }
+
+  sourceInfo <- getSourceInfo()
+  if (nrow(sourceInfo) == 0) {
+    message("Inserting CDM with source key ", cdmInfo$database)
+    sql <- "
+    SELECT
+        CASE
+          WHEN MAX(source_id) IS NULL THEN 1
+          ELSE max(source_id) + 1
+        END
+    AS source_id FROM @schema.data_source"
+    sourceId <- DatabaseConnector::renderTranslateQuerySql(connection,
+                                                           sql,
+                                                           schema = config$resultsSchema,
+                                                           snakeCaseToCamelCase = TRUE) %>% dplyr::pull()
+
+
+    sql <- "INSERT INTO @schema.data_source
+    (source_id, source_name, source_key, version_date)
+    VALUES(@source_id, '@source_name', '@source_key', now());
+    "
+    DatabaseConnector::renderTranslateExecuteSql(connection,
+                                                 sql,
+                                                 schema = config$resultsSchema,
+                                                 source_id = sourceId,
+                                                 source_name = cdmInfo$name,
+                                                 source_key = cdmInfo$database)
+  }
+  sourceInfo <- getSourceInfo()
+  cdmInfo$changedSourceId <- cdmInfo$sourceId != sourceInfo$sourceId
+
+  if (cdmInfo$changedSourceId) {
+    warning("Source id in file is not the same as the created id, update cdm config to use source id: ",
+            sourceInfo$sourceId)
+  }
+
+  cdmInfo$sourceId <- sourceInfo$sourceId
+  return(cdmInfo)
+}
+
 
 #' Import Results from CDM
 #' @description
@@ -34,7 +87,13 @@ importResults <- function(config, resultsZipPath, connection = NULL, cleanup = T
     on.exit(DatabaseConnector::disconnect(connection), add = TRUE)
   }
 
-  utils::unzip(zipfile = resultsZipPath, exdir = config$exportPath, overwrite = FALSE)
+  utils::unzip(zipfile = resultsZipPath, exdir = config$exportPath, overwrite = TRUE)
+  cdmInfoFile <- file.path(config$exportPath, "cdmInfo.json")
+  if (!file.exists(cdmInfoFile)) {
+    stop("Required CDM info file not attached")
+  }
+
+  cdmInfo <- registerCdm(config, connection, cdmInfoFile)
   files <- file.path(config$exportPath, list.files(config$exportPath, pattern = "*.csv"))
   # Import tables using bulk upload
   for (file in files) {
@@ -50,7 +109,11 @@ importResults <- function(config, resultsZipPath, connection = NULL, cleanup = T
     maxRow <- 1e6
     ParallelLogger::logInfo("Inserting file ", file, "into table ", tableName)
     data <- vroom::vroom(file, ",", show_col_types = FALSE, n_max = maxRow)
-    while(nrow(data) > 0) {
+    while (nrow(data) > 0) {
+      if (cdmInfo$changedSourceId) {
+        data$source_id <- cdmInfo$sourceId
+      }
+
       DatabaseConnector::insertTable(connection,
                                      databaseSchema = config$resultsSchema,
                                      tableName = tableName,
