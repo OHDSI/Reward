@@ -21,6 +21,7 @@
 #' @importFrom utils packageName
 #' @importFrom jsonlite fromJSON toJSON
 #' @import dplyr
+#' @importFrom dplyr `%>%`
 #' @import ParallelLogger
 NULL
 

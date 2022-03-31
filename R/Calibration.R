@@ -64,5 +64,3 @@ computeCalibratedRows <- function(positives,
   result <- result %>% dplyr::bind_cols(keptColumns)
   return(result)
 }
-
-

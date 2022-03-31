@@ -24,47 +24,6 @@
   return(config)
 }
 
-#' Loads Application Context
-#' @description
-#' By default, loads the database connections in to this object
-#' loads database password from prompt if REWARD_B_PASSWORD system env variable is not set (e.g. in .Rprofile)
-#' The idea is to allow shared configuration settings between the web app and any data processing tools
-#' @param configPath is a yaml file for the application configuration
-#' @param globalConfigPath path to global yaml
-#' @export
-loadShinyAppContext <- function(configPath, globalConfigPath) {
-  defaults <- list(
-    useExposureControls = FALSE,
-    custom_exposure_ids = c(),
-    useConnectionPool = TRUE,
-    analysisIds = c(1)
-  )
-
-  appContext <- .setDefaultOptions(yaml::read_yaml(configPath), defaults)
-  appContext$globalConfig <- loadGlobalConfiguration(globalConfigPath)
-  appContext$connectionDetails <- appContext$globalConfig$connectionDetails
-
-  class(appContext) <- append(class(appContext), "appContext")
-  return(appContext)
-}
-
-#' @title
-#' Load report application context
-#' @description
-#' By default, loads the database connections in to this object
-#' loads database password from prompt if REWARD_B_PASSWORD system env variable is not set (e.g. in .Rprofile)
-#' The idea is to allow shared configuration settings between the web app and any data processing tools
-#' @param globalConfigPath is a yaml file for the application configuratione
-#' @param .env environment to load variable in to
-#' @param exposureId exposure cohort id
-#' @param outcomeId outcome cohort id
-loadReportContext <- function(globalConfigPath) {
-  reportAppContext <- loadGlobalConfiguration(globalConfigPath)
-  reportAppContext$useConnectionPool <- TRUE
-  class(reportAppContext) <- append(class(reportAppContext), "reportAppContext")
-  return(reportAppContext)
-}
-
 #' Loads global config
 #' @description
 #' Load reward global config yaml file

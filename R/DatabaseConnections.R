@@ -23,15 +23,19 @@ ConnectionHandler <- R6::R6Class(
   public = list(
     connectionDetails = NULL,
     con = NULL,
+    tempEmulationSchema = NULL,
     isActive = FALSE,
-    initialize = function(connectionDetails) {
+    initialize = function(connectionDetails, tempEmulationSchema = getOption("sqlRenderTempEmulationSchema")) {
       checkmate::assert_class(connectionDetails, "connectionDetails")
       self$connectionDetails <- connectionDetails
+      self$tempEmulationSchema <- tempEmulationSchema
       self$initConnection()
     },
     renderTranslateSql = function(query, ...) {
       sql <- SqlRender::render(sql = query, ...)
-      SqlRender::translate(sql, targetDialect = self$connectionDetails$dbms)
+      SqlRender::translate(sql,
+                           targetDialect = self$connectionDetails$dbms,
+                           tempEmulationSchema = self$tempEmulationSchema)
     },
     initConnection = function() {
       if (self$isActive) {
@@ -66,15 +70,24 @@ ConnectionHandler <- R6::R6Class(
           if (self$connectionDetails$dbms %in% c("postgresql", "redshift")) {
             DatabaseConnector::dbExecute(self$con, "ABORT;")
           }
-          print(sql)
-          stop(error)
+          stop(paste(error, sql, sep = "\n"))
         }
       )
 
       return(dplyr::as_tibble(data))
     },
+
+    #' Override this in subclass to implement different query metho
     queryFunction = function(sql, snakeCaseToCamelCase = TRUE) {
       DatabaseConnector::querySql(self$con, sql, snakeCaseToCamelCase = snakeCaseToCamelCase)
+    },
+
+    queryDbFile = function(sqlFilename, packageName, snakeCaseToCamelCase = TRUE, ...) {
+      sql <- SqlRender::loadRenderTranslateSql(sqlFilename = sqlFilename,
+                                               packageName = packageName,
+                                               dbms = self$connectionDetails$dbms,
+                                               tempEmulationSchema = self$tempEmulationSchema, ...)
+      self$queryFunction(sql, snakeCaseToCamelCase = snakeCaseToCamelCase)
     }
   )
 )
