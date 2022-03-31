@@ -1,4 +1,0 @@
-target_cohort_id,outcome_cohort_id,mean,sd,min,p_10,p_25,median,p_75,p_90,max,total,stat_type,analysis_id,source_id
-1361711000,1,8713,0,8713,8713,8713,8713,8713,8713,8713,1,time_to_outcome_exposed,3,0
-1361711000,192671001,8713,0,8713,8713,8713,8713,8713,8713,8713,1,time_to_outcome_exposed,3,0
-1361711000,192671002,8713,0,8713,8713,8713,8713,8713,8713,8713,1,time_to_outcome_exposed,3,0
