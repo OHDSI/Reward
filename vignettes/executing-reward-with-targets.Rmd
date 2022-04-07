@@ -1,0 +1,79 @@
+---
+title: "Executing Reward with targets.R"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{targets}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+This vignette discusses executing the RewardExecutionPackage with targets worklow framework.
+
+# Installation
+The first thing we're going to need is to create an renv for isolated reward execution.
+
+```{r eval=FALSE}
+install.packages("renv")
+renv::init()
+```
+Next we will install the RewardExecutionPackage via github using remotes.
+
+```{r eval=FALSE}
+install.packages("remotes")
+remotes::install_github("OHDSI/RewardExecutionPackage")
+```
+We now need to create our targets file that can be customized to our needs.
+
+```{r eval=FALSE}
+RewardExecuctionPackage::createTargetsFile()
+```
+This will create a file called `_targets.R` that will run the workflow.
+
+We now need to create our yml configuration files for our CDMs.
+These files store the information used to execute the package on Reward.
+
+```{r eval = FALSE}
+dir.create("cdmConfig")
+RewardExecutionPackage::createCdmConfiguration("cdmConfig/myCdm.yml")
+```
+Edit this file with the settings for your CDM - take special note of the database connection fields, the password field
+and the work schemas where docs will live.
+You will be asked to enter and save a password for use with the database if you choose to have a password secured using
+the keyring package.
+
+For multiple cdms, just add the files to the cdmConfig directory.
+
+
+# Get exported Reward references
+We will need a set of references from the central reward database.
+These will contain the cohorts that are to be executed.
+
+# Execution
+You can now execute the workflow with
+
+```{r, eval=FALSE}
+targets::tar_make()
+```
+This will take a long time to execute. If the execution pauses you can visualise the network to see what steps have been executed.
+
+```{r, eval = FALSE}
+targets::tar_visnetwork()
+```
+
+When the process completes, each CDM will have a zip folder containing all results that can be added to the central Reward server by the administrator.
+# Optional - multiprocess execution
+If you would like to run the execution in multiprocess mode (recommended) install the clustermq package.
+Note that this may have additional setup requirements on your system.
+Consult the [documentation](https://mschubert.github.io/clustermq/articles/userguide.html).
+```{r, eval = FALSE}
+install.packages('clustermq')
+```
+
+The execution can now run with:
+
+```{r eval = FALSE}
+targets::tar_make_clustermq(workers = 2)
+```
+Set the workers count to the number of simultaneous R processes you would like to run.
+For more advanced cluster configuration see the [targets documentation](https://books.ropensci.org/targets/hpc.html).

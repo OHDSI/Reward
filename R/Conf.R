@@ -70,6 +70,7 @@ loadGlobalConfiguration <- function(globalConfigPath, keyring = NULL) {
     }
   }
   config$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails, config$connectionDetails)
+  class(config) <- "RewardConfig"
   return(config)
 }
 

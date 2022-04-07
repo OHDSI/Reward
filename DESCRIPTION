@@ -17,6 +17,7 @@ Imports:
     dplyr,
     CemConnector,
     EmpiricalCalibration,
+    CohortGenerator,
     pool,
     DBI,
     yaml,

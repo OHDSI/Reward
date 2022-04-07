@@ -36,6 +36,7 @@ createRewardSchema <- function(configFilePath,
                                            packageName = "RewardExecutionPackage",
                                            dbms = connection@dbms,
                                            schema = config$resultsSchema,
+                                           store_atlas_refs = TRUE,
                                            include_constraints = TRUE)
   DatabaseConnector::executeSql(connection, sql)
 
@@ -46,7 +47,6 @@ createRewardSchema <- function(configFilePath,
                                            schema = config$resultsSchema,
                                            include_constraints = TRUE)
   DatabaseConnector::executeSql(connection, sql)
-
 
 
   message("creating bulk cohort references")
