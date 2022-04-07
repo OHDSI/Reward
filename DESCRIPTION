@@ -23,6 +23,8 @@ Imports:
     yaml,
     vroom,
     RewardExecutionPackage,
+    CirceR,
+    ROhdsiWebApi,
     jsonlite,
     RSQLite,
     keyring,
@@ -34,5 +36,7 @@ Suggests:
 Remotes:
   ohdsi/RewardExecutionPackage,
   ohdsi/CemConnector,
-  ohdsi/Eunomia
+  ohdsi/Eunomia,
+  ohdsi/ROhdsiWebApi,
+  ohdsi/CirceR
 RoxygenNote: 7.1.2

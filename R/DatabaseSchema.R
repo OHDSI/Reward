@@ -125,11 +125,12 @@ insertAtlasCohortRef <- function(connection,
   # Null is mainly used for test purposes
   if (is.null(cohortDefinition)) {
     ParallelLogger::logInfo(paste("pulling", atlasId))
-    cohortDefinition <- ROhdsiWebApi::getCohortDefinition(atlasId, webApiUrl)
+    cohortDefinition <- ROhdsiWebApi::getCohortDefinition(cohortId = atlasId, baseUrl = webApiUrl)
   }
 
   if (is.null(sqlDefinition)) {
-    sqlDefinition <- ROhdsiWebApi::getCohortSql(cohortDefinition, webApiUrl, generateStats = FALSE)
+    options <- CirceR::createGenerateOptions(generateStats = FALSE)
+    sqlDefinition <- CirceR::buildCohortQuery(RJSONIO::toJSON(cohortDefinition$expression), options)
   }
 
   encodedFormDefinition <- base64enc::base64encode(charToRaw(RJSONIO::toJSON(cohortDefinition)))
@@ -151,16 +152,29 @@ insertAtlasCohortRef <- function(connection,
   ParallelLogger::logInfo(paste("inserting", atlasId, webApiUrl))
 
   # Note that this is because there isn't a generic implemenation for autoincrementing keys
-  sql <- "SELECT CASE WHEN max(cohort_definition_id) IS NULL THEN 1 ELSE max(cohort_definition_id) + 1 END
-                    as ID FROM @schema.@reference_table"
+  sql <- "SELECT CASE
+                    WHEN max(cd.cohort_definition_id) IS NULL THEN 1
+                    ELSE max(cd.cohort_definition_id) + 1
+                  END as ID
+          FROM @schema.cohort_definition cd
+          INNER JOIN @schema.atlas_cohort_reference acr ON acr.cohort_definition_id = cd.cohort_definition_id
+          "
   newEntry <- DatabaseConnector::renderTranslateQuerySql(connection,
                                                          sql,
-                                                         schema = config$resultsSchema,
-                                                         reference_table = referenceTable)
+                                                         schema = config$resultsSchema)
   cohortDefinitionId <- newEntry$ID[[1]]
+  DatabaseConnector::renderTranslateExecuteSql(
+    connection,
+    sql = "INSERT INTO @schema.cohort_definition
+                            (cohort_definition_id, cohort_definition_name, short_name, concept_set_id)
+                                     values (@cohort_definition_id, '@name', '@name', 99999999)",
+    schema = config$resultsSchema,
+    cohort_definition_id = cohortDefinitionId,
+    name = gsub("'", "''", cohortDefinition$name)
+  )
 
   # Create reference and Get last insert as referent ID from sequence
-  insertSql <- "INSERT INTO @schema.@reference_table
+  insertSql <- "INSERT INTO @schema.atlas_cohort_reference
                     (cohort_definition_id, atlas_id, atlas_url, definition, sql_definition)
                       values (@cohort_defiinition_id, @atlas_id, '@atlas_url', '@definition', '@sql_definition')"
   # Insert and get newly generated id
@@ -172,18 +186,7 @@ insertAtlasCohortRef <- function(connection,
     atlas_id = atlasId,
     atlas_url = gsub("'", "''", webApiUrl),
     definition = encodedFormDefinition,
-    sql_definition = encodedFormSql,
-    reference_table = referenceTable
-  )
-
-  DatabaseConnector::renderTranslateExecuteSql(
-    connection,
-    sql = "INSERT INTO @schema.cohort_definition
-                            (cohort_definition_id, cohort_definition_name, short_name, concept_set_id)
-                                     values (@cohort_definition_id, '@name', '@name', 99999999)",
-    schema = config$resultsSchema,
-    cohort_definition_id = cohortDefinitionId,
-    name = gsub("'", "''", cohortDefinition$name)
+    sql_definition = encodedFormSql
   )
 
   if (exposure) {

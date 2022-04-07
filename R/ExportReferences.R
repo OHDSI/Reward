@@ -23,9 +23,10 @@ CONST_META_FILE_NAME <- "reward-meta-info.json"
 #' @param config        RewardConfig instance
 #' @param connection    DatabaseConnector connection
 #' @param path          Path to export data to
+#' @export
 saveAtlasCohortRefs <- function(config,
                                 connection,
-                                exportPath = config$exportPath) {
+                                exportPath) {
   checkmate::assert_class(config, "RewardConfig")
 
   csql <- "
@@ -34,7 +35,7 @@ saveAtlasCohortRefs <- function(config,
     acr.atlas_id,
     acr.definition,
     acr.sql_definition,
-    cd.short_name as cohort_name,
+    cd.short_name as cohort_name
   FROM @schema.atlas_cohort_reference acr
   INNER JOIN @schema.cohort_definition cd ON cd.cohort_definition_id = acr.cohort_definition_id"
 
@@ -43,8 +44,8 @@ saveAtlasCohortRefs <- function(config,
                                                      schema = config$resultsSchema,
                                                      snakeCaseToCamelCase = TRUE)
   # Create atlasCohortsDefinitions csv
-  dir.create(file.path(exportPath, "cohorts"))
-  dir.create(file.path(exportPath, "sql"))
+  dir.create(file.path(exportPath, "cohorts"), showWarnings = FALSE)
+  dir.create(file.path(exportPath, "sql"), showWarnings = FALSE)
 
   files <- c()
   for (i in 1:nrow(data)) {
@@ -91,7 +92,7 @@ exportReferenceTables <- function(config,
   meta$hashList <- list()
   meta$tableNames <- config$referenceTables
   meta$atlasCohortHash <- list()
-  exportFiles <- saveAtlasCohortRefs(config, connection)
+  exportFiles <- saveAtlasCohortRefs(config, connection, exportPath)
 
   for (file in exportFiles) {
     meta$atlasCohortHash[[file]] <- tools::md5sum(file)[[1]]
@@ -116,7 +117,7 @@ exportReferenceTables <- function(config,
   jsonlite::write_json(meta, metaDataFilename)
 
   exportFiles <- c(exportFiles, file.path(exportPath, paste0(config$referenceTables, ".csv")))
-  zip::zipr(exportZipFile, append(exportFiles, metaDataFilename), include_directories = FALSE)
+  zip::zipr(exportZipFile, append(exportFiles, metaDataFilename), include_directories = TRUE)
 
   ParallelLogger::logInfo(paste("Created export zipfile", exportZipFile))
 
