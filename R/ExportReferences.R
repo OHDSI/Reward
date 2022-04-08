@@ -77,17 +77,21 @@ saveAtlasCohortRefs <- function(config,
 #' @export
 exportReferenceTables <- function(config,
                                   connection = NULL,
-                                  exportPath = tempdir(),
+                                  exportPath = config$export,
                                   exportZipFile = "reward-references.zip") {
   scipen <- getOption("scipen")
   options(scipen = 999)
+  exportPath <- normalizePath(exportPath)
+  if (!dir.exists(exportPath)) {
+    dir.create(exportPath)
+  }
 
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails = config$connectionDetails)
     on.exit(DatabaseConnector::disconnect(connection))
   }
 
-  # Collect all files and make a hash
+  # Collect all files and make a hashn
   meta <- list()
   meta$hashList <- list()
   meta$tableNames <- config$referenceTables
@@ -112,12 +116,11 @@ exportReferenceTables <- function(config,
     suppressWarnings({ write.csv(data, file, na = "", row.names = FALSE, fileEncoding = "ascii") })
     meta$hashList[[basename(file)]] <- tools::md5sum(file)[[1]]
   }
-
+  exportFiles <- c(exportFiles, file.path(exportPath, paste0(config$referenceTables, ".csv")))
   metaDataFilename <- file.path(exportPath, CONST_META_FILE_NAME)
   jsonlite::write_json(meta, metaDataFilename)
-
-  exportFiles <- c(exportFiles, file.path(exportPath, paste0(config$referenceTables, ".csv")))
-  zip::zipr(exportZipFile, append(exportFiles, metaDataFilename), include_directories = TRUE)
+  unlink(exportZipFile)
+  DatabaseConnector::createZipFile(exportZipFile, c(metaDataFilename, exportFiles), rootFolder = exportPath)
 
   ParallelLogger::logInfo(paste("Created export zipfile", exportZipFile))
 
