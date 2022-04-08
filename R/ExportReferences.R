@@ -113,7 +113,7 @@ exportReferenceTables <- function(config,
     }
 
     file <- file.path(exportPath, paste0(table, ".csv"))
-    suppressWarnings({ write.csv(data, file, na = "", row.names = FALSE, fileEncoding = "ascii") })
+    suppressWarnings({ write.csv(data, file, na = "", row.names = FALSE, fileEncoding = "UTF-8") })
     meta$hashList[[basename(file)]] <- tools::md5sum(file)[[1]]
   }
   exportFiles <- c(exportFiles, file.path(exportPath, paste0(config$referenceTables, ".csv")))
