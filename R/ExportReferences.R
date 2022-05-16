@@ -52,8 +52,8 @@ saveAtlasCohortRefs <- function(config,
     row <- data[i,]
     sqlDef <- rawToChar(base64enc::base64decode(row$sqlDefinition))
     jsonDef <- rawToChar(base64enc::base64decode(row$definition))
-    sqlFileName <- file.path(exportPath, "cohorts", paste0(row$cohortId, ".sql"))
-    jsonFileName <- file.path(exportPath, "sql", paste0(row$cohortId, ".json"))
+    sqlFileName <- file.path(exportPath, "sql", paste0(row$cohortId, ".sql"))
+    jsonFileName <- file.path(exportPath, "cohorts", paste0(row$cohortId, ".json"))
     write(sqlDef, file = sqlFileName)
     write(jsonDef, file = jsonFileName)
     files <- c(files, jsonFileName, sqlFileName)
