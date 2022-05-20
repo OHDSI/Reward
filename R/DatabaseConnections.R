@@ -14,9 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' @import checkmate
-#' @import R6
-#' @importFrom DBI dbIsValid
 ConnectionHandler <- R6::R6Class(
   "ConnectionHandler",
   public = list(
@@ -91,8 +88,7 @@ ConnectionHandler <- R6::R6Class(
   )
 )
 
-#' @importFrom pool dbPool poolClose
-#' @importFrom DBI dbIsValid
+
 PooledConnectionHandler <- R6::R6Class(
   "PooledConnectionHandler",
   inherit = ConnectionHandler,

@@ -23,7 +23,6 @@
 #' @field config    Reward configuration s3 object
 #' @import checkmate
 #' @import R6
-#' @export
 RewardDataModel <- R6::R6Class(
   "RewardDataModel",
   private = list(cemConnection = NULL),
