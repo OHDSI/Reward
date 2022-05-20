@@ -119,12 +119,17 @@ addCohortDefinitionSet <- function(connection,
   checkmate::assertNames(names(cohortDefinitionSet), must.include = c("cohortId","cohortName", "sql", "json"))
 
   for (row in 1:nrow(cohortDefinitionSet)) {
+    cohortDefinition <-list(
+      name = cohortDefinitionSet[row,]$cohortName,
+      id = cohortDefinitionSet[row,]$cohortId,
+      expression = RJSONIO::fromJSON(cohortDefinitionSet[row,]$json)
+    )
     tryCatch({
       insertAtlasCohortRef(connection,
                            config,
                            cohortDefinitionSet[row,]$cohortId,
                            webApiUrl = webApiUrl,
-                           cohortDefinitionSet[row,]$json,
+                           cohortDefinition,
                            cohortDefinitionSet[row,]$sql,
                            exposure = exposure)
     }, error = function(err) {
