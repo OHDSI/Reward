@@ -98,6 +98,44 @@ addAnalysisSettingsJson <- function(connection,
 }
 
 #' @title
+#' Insert atlas cohort definition set in to database
+#' @description
+#' Creates individual references in Reward db for each cohort definition in the cohort definition set.
+#' Note: Call this function separatley for exposure and outcome cohorts and different atlas sources.
+#'
+#'
+#' @param connection                        DatabaseConnector::connection
+#' @param config                            rewardb global config
+#' @param cohortDefinitionSet               A data.frame of cohorts containing -> cohortId, cohortName, json, sql fields
+#' @param webApiUrl                         atlas source the definition set comes from (insert definitions from different sources sepratley)
+#' @param exposure                          If exposure, cohort is treated as an exposure, drug domains are captured
+#' @export
+addCohortDefinitionSet <- function(connection,
+                                   config,
+                                   cohortDefinitionSet,
+                                   webApiUrl = NULL,
+                                   exposure = FALSE) {
+
+  checkmate::assertDataFrame(cohortDefinitionSet, min.rows = 1, col.names = "named")
+  checkmate::assertNames(names(cohortDefinitionSet), must.include = c("cohortId","cohortName", "sql", "json"))
+
+  for (row in 1:nrow(cohortDefinitionSet)) {
+    tryCatch({
+      insertAtlasCohortRef(connection,
+                           config,
+                           cohortDefinitionSet[row,]$cohortId,
+                           webApiUrl = webApiUrl,
+                           cohortDefinitionSet[row,]$json,
+                           cohortDefinitionSet[row,]$sql,
+                           exposure = exposure)
+    }, error = function(err) {
+      print(paste("Error inserting Cohort ", cohortDefinitionSet[row,]$cohortId, "\n", err))
+    })
+  }
+}
+
+
+#' @title
 #' Insert atlas cohort ref to postgres db
 #' @description
 #' Adds atlas cohort to db reference, from web api
@@ -113,25 +151,14 @@ insertAtlasCohortRef <- function(connection,
                                  config,
                                  atlasId,
                                  webApiUrl = NULL,
-                                 cohortDefinition = NULL,
-                                 sqlDefinition = NULL,
+                                 cohortDefinition,
+                                 sqlDefinition,
                                  exposure = FALSE) {
   if (is.null(webApiUrl)) {
     webApiUrl <- config$webApiUrl
   }
 
   referenceTable <- config$referenceTables$atlasCohortReference
-
-  # Null is mainly used for test purposes
-  if (is.null(cohortDefinition)) {
-    ParallelLogger::logInfo(paste("pulling", atlasId))
-    cohortDefinition <- ROhdsiWebApi::getCohortDefinition(cohortId = atlasId, baseUrl = webApiUrl)
-  }
-
-  if (is.null(sqlDefinition)) {
-    options <- CirceR::createGenerateOptions(generateStats = FALSE)
-    sqlDefinition <- CirceR::buildCohortQuery(RJSONIO::toJSON(cohortDefinition$expression), options)
-  }
 
   encodedFormDefinition <- base64enc::base64encode(charToRaw(RJSONIO::toJSON(cohortDefinition)))
   encodedFormSql <- base64enc::base64encode(charToRaw(sqlDefinition))

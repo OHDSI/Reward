@@ -9,8 +9,8 @@ insertAtlasCohortRef(
   config,
   atlasId,
   webApiUrl = NULL,
-  cohortDefinition = NULL,
-  sqlDefinition = NULL,
+  cohortDefinition,
+  sqlDefinition,
   exposure = FALSE
 )
 }

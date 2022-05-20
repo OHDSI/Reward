@@ -29,11 +29,16 @@ calibrationPlotUi <- function(id,
   )
 }
 
-#'
+#' Calibration plot siny server module
+#' @description
+#' Display calibration plots for reward cohorts based on data available in system
+#' Also shows Expected Absolute Systematic Error
 #'
 #' @param id                shiny namespace should be consistent with UI
 #' @param model             RewardDataModel R6 class instance
 #' @param selectedCohort    cohort object reactive - returned list must contain: cohortDefinitionId, isExposure, selectedOutcomeType (reactive)
+#'
+#' @export
 calibrationPlotServer <- function(id, model, selectedCohort) {
   checkmate::assertR6(model, "RewardDataModel")
   checkmate::assert(shiny::is.reactive(selectedCohort))

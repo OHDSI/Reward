@@ -7,7 +7,7 @@
 exportReferenceTables(
   config,
   connection = NULL,
-  exportPath = tempdir(),
+  exportPath = config$export,
   exportZipFile = "reward-references.zip"
 )
 }

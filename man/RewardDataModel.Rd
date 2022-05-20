@@ -25,11 +25,15 @@ An interface to the common evidence model that uses works directly with a databa
 \item \href{#method-new}{\code{RewardDataModel$new()}}
 \item \href{#method-finalize}{\code{RewardDataModel$finalize()}}
 \item \href{#method-getCemConnection}{\code{RewardDataModel$getCemConnection()}}
+\item \href{#method-getDataSources}{\code{RewardDataModel$getDataSources()}}
 \item \href{#method-getOutcomeCohortDefinitionSet}{\code{RewardDataModel$getOutcomeCohortDefinitionSet()}}
 \item \href{#method-getExposureCohortDefinitionSet}{\code{RewardDataModel$getExposureCohortDefinitionSet()}}
 \item \href{#method-getExposureCohortConceptSets}{\code{RewardDataModel$getExposureCohortConceptSets()}}
 \item \href{#method-getOutcomeCohortConceptSets}{\code{RewardDataModel$getOutcomeCohortConceptSets()}}
+\item \href{#method-getCohortConceptSet}{\code{RewardDataModel$getCohortConceptSet()}}
+\item \href{#method-getCohort}{\code{RewardDataModel$getCohort()}}
 \item \href{#method-getCohortStats}{\code{RewardDataModel$getCohortStats()}}
+\item \href{#method-getNegativeControlSccResults}{\code{RewardDataModel$getNegativeControlSccResults()}}
 \item \href{#method-clone}{\code{RewardDataModel$clone()}}
 }
 }
@@ -71,6 +75,15 @@ Closes connection
 Get cem connector api connection
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getCemConnection()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getDataSources"></a>}}
+\if{latex}{\out{\hypertarget{method-getDataSources}{}}}
+\subsection{Method \code{getDataSources()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getDataSources()}\if{html}{\out{</div>}}
 }
 
 }
@@ -129,7 +142,7 @@ Get expsoure cohort concept sets
 \if{html}{\out{<a id="method-getOutcomeCohortConceptSets"></a>}}
 \if{latex}{\out{\hypertarget{method-getOutcomeCohortConceptSets}{}}}
 \subsection{Method \code{getOutcomeCohortConceptSets()}}{
-Get outcome cohort concept sets
+Get outcome cohort concept sets for all cohorts specified
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getOutcomeCohortConceptSets(cohortIds = NULL)}\if{html}{\out{</div>}}
 }
@@ -138,6 +151,32 @@ Get outcome cohort concept sets
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{cohortIds}}{numeric vector of cohort ids or null}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getCohortConceptSet"></a>}}
+\if{latex}{\out{\hypertarget{method-getCohortConceptSet}{}}}
+\subsection{Method \code{getCohortConceptSet()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getCohortConceptSet(cohortDefinitionId)}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getCohort"></a>}}
+\if{latex}{\out{\hypertarget{method-getCohort}{}}}
+\subsection{Method \code{getCohort()}}{
+Get getCohort data for one cohort
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getCohort(cohortDefinitionId)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{cohortDefinitionId}}{cohort identifier (not null, integer)}
 }
 \if{html}{\out{</div>}}
 }
@@ -156,10 +195,26 @@ Get getCohortStats
 \describe{
 \item{\code{cohortDefinitionId}}{cohort identifier (not null, integer)}
 
-\item{\code{isExposure}}{Logical exposure cohort or not}
+\item{\code{isExposure}}{Logical exposure cohort or not
+
+Returns SCC results for a cohort id}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getNegativeControlSccResults"></a>}}
+\if{latex}{\out{\hypertarget{method-getNegativeControlSccResults}{}}}
+\subsection{Method \code{getNegativeControlSccResults()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getNegativeControlSccResults(
+  cohortDefinitionId,
+  isExposure,
+  outcomeType = NULL,
+  conceptSet = NULL
+)}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}
