@@ -23,7 +23,6 @@
 #' @param configFilePath                        path to global reward config
 #'
 #' @importFrom utils packageVersion
-#' @import SqlRender
 #' @export
 createRewardSchema <- function(configFilePath,
                                settingsFilePath = system.file("settings", "defaultSccArgs.json", package = utils::packageName())) {
