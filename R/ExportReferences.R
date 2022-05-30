@@ -99,7 +99,8 @@ exportReferenceTables <- function(config,
   exportFiles <- saveAtlasCohortRefs(config, connection, exportPath)
 
   for (file in exportFiles) {
-    meta$atlasCohortHash[[file]] <- tools::md5sum(file)[[1]]
+    relativePath <- R.utils::getRelativePath(file, exportPath)
+    meta$atlasCohortHash[[relativePath]] <- tools::md5sum(file)[[1]]
   }
 
   for (table in config$referenceTables) {

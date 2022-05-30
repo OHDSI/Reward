@@ -149,9 +149,6 @@ See `createType1OutcomeCohorts.sql` for more details.
 As with exposure cohorts, ATLAS can be used to define cohorts they can then be imported into the Postgres database with the `insertAtlasCohortRef` function.
 It is noteworthy that these cohorts to not actually need to be stored in ATLAS and cna just have a JSON definition. At some point [capr](https:://github.com/OHDSI/capr) definitions should be considered.
 
-#### Phenotype Library
-The entire [OHDSI Phenotype Library](https:://github.com/OHDSI/PhenotypeLibrary) is imported into REWARD by default using the develop branch.
-
 ## Issues with cohort construction on redshift
 Currently, the cohort construction process on redshift often fails due to disk space errors.
 A workaround has been to use a batch process that selects only around 5000 uncomputed cohorts, where computation is checked by looking at the cohort identifiers in the resulting cohort table.
@@ -188,17 +185,3 @@ Negative control selection is based around the Common Evidence Model (CEM) that 
 A matrix for all the ingredient and condition level associations is stored in the reward postgres instance.
 This is an export from the CEM package and is stored in the table `cem.matrix_summary`.
 Here a 1 indicates that an ingredient/outcome pair are related via some mechanism identified in the CEM, and 0 indicates that no known association has been found.
-
-ATLAS exports of concept set evidence can also be imported into REWARD when dashboards are generated.
-These will be applied in addition to the automated cohorts.
-For example, the process my find no mappings - this is a simple work around to ensure that automated negative controls can be used.
-
-Adding the `cemEvidenceFiles` option to a dashboard config file supports this, for example:
-
-```
-cemEvidenceFiles:
-    13735: "extra/controls/influenza_vaccine_controls_export.csv"
-    13734: "extra/controls/pneumenocccoal_vaccine_export.csv"
-```
-
-The process for automated negative control selection as been outlined as interesting to many other researchers and is currently under evaluation.
