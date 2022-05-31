@@ -60,7 +60,9 @@ saveAtlasCohortRefs <- function(config,
   }
 
   cohortInfo <- data %>% select(.data$cohortId, .data$atlasId, .data$cohortName)
-  cohortInfoFile <- file.path(exportPath, "AtlasCohorts.csv")
+  cohortInfoFile <- file.path(exportPath, "atlas_cohorts.csv")
+
+  colnames(cohortInfo) <- SqlRender::camelCaseToSnakeCase(colnames(cohortInfo))
   write.csv(cohortInfo, cohortInfoFile, row.names = FALSE, na = "")
   files <- c(files, cohortInfoFile)
   return(files)
