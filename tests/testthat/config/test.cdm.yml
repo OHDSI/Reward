@@ -1,7 +1,7 @@
 # Values that distinguish this CDM from others
 # Source ID should be unique to avoid confusion
 # See documentation on registering a CDM in REWARD for more details
-sourceId: 0
+sourceId: 1
 database: MyCdmDatabaseName
 name: MyCdmFriendlyName
 

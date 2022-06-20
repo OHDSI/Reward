@@ -20,7 +20,7 @@ registerCdm <- function(config, connection, cdmInfoFile) {
 
 
   getSourceInfo <- function() {
-    sql <- "SELECT * FROM @schema.data_source ds WHERE ds.source_key = '@database';"
+    sql <- "SELECT source_id, source_name, source_key FROM @schema.data_source ds WHERE ds.source_key = '@database';"
     DatabaseConnector::renderTranslateQuerySql(connection,
                                                sql,
                                                schema = config$resultsSchema,
@@ -46,14 +46,15 @@ registerCdm <- function(config, connection, cdmInfoFile) {
 
     sql <- "INSERT INTO @schema.data_source
     (source_id, source_name, source_key, version_date)
-    VALUES(@source_id, '@source_name', '@source_key', now());
+    VALUES(@source_id, '@source_name', '@source_key', '@dt');
     "
     DatabaseConnector::renderTranslateExecuteSql(connection,
                                                  sql,
                                                  schema = config$resultsSchema,
                                                  source_id = sourceId,
                                                  source_name = cdmInfo$name,
-                                                 source_key = cdmInfo$database)
+                                                 source_key = cdmInfo$database,
+                                                 dt = Sys.time())
   }
   sourceInfo <- getSourceInfo()
   cdmInfo$changedSourceId <- cdmInfo$sourceId != sourceInfo$sourceId

@@ -49,6 +49,8 @@ test_that("Build database schema, add test cohorts", {
 
     referenceZipFile <- tempfile(fileext = "zip")
     on.exit(unlink(referenceZipFile), add = TRUE)
+    unlink(config$exportPath, recursive = TRUE, force = TRUE)
+    dir.create(config$exportPath)
     exportReferenceTables(config, connection, exportZipFile = referenceZipFile)
     expect_true(file.exists(referenceZipFile))
 
@@ -59,7 +61,7 @@ test_that("Build database schema, add test cohorts", {
     connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cdmConfig$connectionDetails$server())
     on.exit(unlink(cdmConfig$connectionDetails$server()), add = TRUE)
     RewardExecutionPackage::execute(cdmConfigPath, referenceZipFile)
-    resultsZipPath <- file.path(cdmConfig$exportPath, paste0("reward-results-", cdmConfig$database, ".zip"))
+    resultsZipPath <- file.path(paste0(cdmConfig$database, "RewardResults.zip"))
     unlink(config$exportPath, recursive = TRUE, force = TRUE)
     on.exit(unlink(unlink(config$exportPath), recursive = TRUE, force = TRUE), add = TRUE)
     importResults(config, resultsZipPath, connection = connection, cleanup = TRUE)

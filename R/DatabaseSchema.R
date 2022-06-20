@@ -35,6 +35,7 @@ createRewardSchema <- function(configFilePath,
                                            packageName = "RewardExecutionPackage",
                                            dbms = connection@dbms,
                                            schema = config$resultsSchema,
+                                           store_atlas_refs = TRUE,
                                            include_constraints = connection@dbms != "sqlite")
   DatabaseConnector::executeSql(connection, sql)
 
