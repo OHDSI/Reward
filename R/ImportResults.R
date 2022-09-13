@@ -97,6 +97,18 @@ importResults <- function(config, resultsZipPath, connection = NULL, cleanup = T
   cdmInfo <- registerCdm(config, connection, cdmInfoFile)
   files <- file.path(config$exportPath, list.files(config$exportPath, pattern = "*.csv"))
   # Import tables using bulk upload
+
+  uploadChunk <- function(chunk, pos) {
+    DatabaseConnector::insertTable(connection,
+                                   databaseSchema = config$resultsSchema,
+                                   tableName = tableName,
+                                   data = chunk,
+                                   dropTableIfExists = FALSE,
+                                   createTable = FALSE,
+                                   tempTable = FALSE,
+                                   bulkLoad = TRUE)
+  }
+
   for (file in files) {
     # Regexp match files to upload to different tables
     if (isTRUE(grep("scc-result", basename(file)) >= 1)) {
@@ -115,16 +127,18 @@ importResults <- function(config, resultsZipPath, connection = NULL, cleanup = T
         data$source_id <- cdmInfo$sourceId
       }
 
-      DatabaseConnector::insertTable(connection,
-                                     databaseSchema = config$resultsSchema,
-                                     tableName = tableName,
-                                     data = data,
-                                     dropTableIfExists = FALSE,
-                                     createTable = FALSE,
-                                     tempTable = FALSE,
-                                     bulkLoad = TRUE)
+
       skip <- skip + maxRow
       data <- vroom::vroom(file, ",", show_col_types = FALSE, skip = skip, n_max = maxRow, col_names = colnames(data))
+
+      readr::read_csv_chunked(
+        file = file,
+        callback = uploadChunk,
+        chunk_size = 1e7,
+        col_types = readr::cols(),
+        guess_max = 1e6,
+        progress = FALSE
+      )
     }
     if (cleanup) {
       unlink(file, recursive = TRUE, force = TRUE)
