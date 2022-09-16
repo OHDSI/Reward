@@ -17,14 +17,21 @@
 calibrationExplorerUi <- function(request) {
   ui <- shiny::fluidPage(
     shiny::titlePanel("Reward Calibration Explorer"),
-    shiny::sidebarLayout(
-      shiny::sidebarPanel(
-        shiny::selectInput("exposureOutcome",
-                           "Exposure/Outcome",
-                           choices = c("Exposures", "Outcomes"),
-                           selected = NULL),
+    shiny::fluidRow(
+      shiny::column(
+        width = 6,
+        shiny::selectInput(
+          inputId = "exposureOutcome",
+          label = "Exposure/Outcome",
+          width = "100%",
+          choices = c("Exposures", "Outcomes"),
+          selected = NULL)
+      ),
+      shiny::column(
+        width = 6,
         shiny::selectizeInput("cohortSelection",
                               label = "Cohorts:",
+                              width = "100%",
                               choices = NULL,
                               multiple = FALSE)
       ),
@@ -33,19 +40,28 @@ calibrationExplorerUi <- function(request) {
 
         shiny::tabsetPanel(
           id = "mainTabs",
-          shiny::tabPanel("Cohort Statistics",
-                          shiny::p("Available record counts for selected cohort:"),
-                          reactable::reactableOutput("cohortInfoTable")),
-          shiny::tabPanel("Negative Control Concepts",
-                          shiny::p("Negative control concepts automatically generated from common evidence model"),
-                          CemConnector::negativeControlSelectorUi("negativeControls")),
-          shiny::tabPanel("Calibration",
-                          shiny::selectInput("selectedOutcomeType",
-                                             "Use outcome cohort type",
-                                             choices = c("One Diagnosis Code" = 2,
-                                                         "2 Diagnosis Codes" = 0,
-                                                         "Inpatient Visit" = 1)),
-                          calibrationPlotUi("calibrationPlot"))
+          shiny::tabPanel(
+            "Cohort Statistics",
+            shiny::p("Available record counts for selected cohort:"),
+            reactable::reactableOutput("cohortInfoTable")
+          ),
+          # shiny::conditionalPanel(
+          #   condition = ""
+          #   # shiny::tabPanel("Negative Control Concepts",
+          #   #                 shiny::p("Negative control concepts automatically generated from common evidence model"),
+          #   #                 CemConnector::negativeControlSelectorUi("negativeControls"))
+          # ),
+          shiny::tabPanel(
+            title = "Calibration",
+            shiny::conditionalPanel(
+              condition = "input$exposureOutcome == 'Exposures'",
+              shiny::selectInput("selectedOutcomeType",
+                                 "Use outcome cohort type",
+                                 choices = c("One Diagnosis Code" = 2,
+                                             "2 Diagnosis Codes" = 0,
+                                             "Inpatient Visit" = 1))
+            ),
+            calibrationPlotUi("calibrationPlot"))
         )
       )
     )
@@ -54,7 +70,7 @@ calibrationExplorerUi <- function(request) {
 }
 
 calibrationExplorerServer <- function(input, output, session) {
-  shinyOptions(cache = cachem::cache_disk("~/.rewardCalibrationCache"))
+  shiny::shinyOptions(cache = cachem::cache_disk("~/.rewardCalibrationCache"))
   cemConnection <- model$getCemConnection()
 
   getCohortSet <- shiny::reactive({
@@ -83,7 +99,8 @@ calibrationExplorerServer <- function(input, output, session) {
     selectedName <- input$cohortSelection
     cohortDefinitionId <- cohortSet %>%
       dplyr::filter(.data$shortName == selectedName) %>%
-      dplyr::select(.data$cohortDefinitionId) %>% dplyr::pull()
+      dplyr::select(.data$cohortDefinitionId) %>%
+      dplyr::pull()
 
     if (length(cohortDefinitionId))
       return(model$getCohort(cohortDefinitionId))
@@ -112,20 +129,24 @@ calibrationExplorerServer <- function(input, output, session) {
     cohort$shortName
   })
 
-  output$cohortInfoTable <- reactable::renderReactable({
+  getCohortStats <- shiny::reactive({
     cohort <- selectedCohort()
     reactable::reactable(model$getCohortStats(cohort$cohortDefinitionId, cohort$isExposure))
   })
 
-  CemConnector::negativeControlSelectorModule("negativeControls",
-                                              backend = cemConnection,
-                                              conceptInput = shiny::reactive({
-                                                selectedCohort()$conceptSet
-                                              }),
-                                              isOutcomeSearch = shiny::reactive({
-                                                cohort <- selectedCohort()
-                                                cohort$isExposure
-                                              }))
+  output$cohortInfoTable <- reactable::renderReactable({
+    getCohortStats()
+  })
+
+  # CemConnector::negativeControlSelectorModule("negativeControls",
+  #                                             backend = cemConnection,
+  #                                             conceptInput = shiny::reactive({
+  #                                               selectedCohort()$conceptSet
+  #                                             }),
+  #                                             isOutcomeSearch = shiny::reactive({
+  #                                               cohort <- selectedCohort()
+  #                                               cohort$isExposure
+  #                                             }))
   calibrationPlotServer("calibrationPlot", model, selectedCohort)
 }
 

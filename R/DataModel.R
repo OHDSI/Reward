@@ -32,11 +32,11 @@ RewardDataModel <- R6::R6Class(
     vocabularySchema = NULL,
     resultsSchema = NULL,
 
-        #' @description
-        #' initialize backend object.
-        #' @param configPath          Reward configuration yaml path
-        #' @param keyring             optional keyring::keyring object
-        #' @param usePooledConnection Used a pooled connection object rather than a database connector object.
+    #' @description
+    #' initialize backend object.
+    #' @param configPath          Reward configuration yaml path
+    #' @param keyring             optional keyring::keyring object
+    #' @param usePooledConnection Used a pooled connection object rather than a database connector object.
     initialize = function(configPath,
                           keyring = NULL,
                           usePooledConnection = FALSE) {
@@ -44,9 +44,9 @@ RewardDataModel <- R6::R6Class(
       self$config <- loadGlobalConfiguration(configPath, keyring = keyring)
       # Load connection
       if (usePooledConnection) {
-        self$connection <- PooledConnectionHandler$new(self$config$connectionDetails)
+        self$connection <- ResultModelManager::PooledConnectionHandler$new(self$config$connectionDetails)
       } else {
-        self$connection <- ConnectionHandler$new(self$config$connectionDetails)
+        self$connection <- ResultModelManager::ConnectionHandler$new(self$config$connectionDetails)
       }
 
       self$vocabularySchema <- self$config$vocabularySchema
@@ -158,12 +158,15 @@ RewardDataModel <- R6::R6Class(
       SELECT cd.cohort_definition_id,
              cd.short_name,
              ds.source_name,
-             count(sccr.rr) as result_count
-      FROM @results_schema.cohort_definition cd
-      INNER JOIN @results_schema.scc_result sccr ON {@exposure} ? {sccr.target_cohort_id} : {sccr.outcome_cohort_id} = cd.cohort_definition_id
-      INNER JOIN @results_schema.data_source ds ON ds.source_id = sccr.source_id
-      WHERE cd.cohort_definition_id = @cohort_definition_id
-      GROUP BY cd.cohort_definition_id, ds.source_name;"
+             aset.analysis_name,
+             aset.analysis_id,
+             s.count as result_count
+      FROM {@exposure} ? {@results_schema.scc_target_source_counts} : {@results_schema.scc_outcome_source_counts} s
+      INNER JOIN @results_schema.data_source ds ON ds.source_id = s.source_id
+      INNER JOIN @results_schema.analysis_setting aset ON s.analysis_id = aset.analysis_id
+      INNER JOIN @results_schema.cohort_definition cd ON
+       {@exposure} ? {s.target_cohort_id} : {s.outcome_cohort_id} = cd.cohort_definition_id
+      WHERE cd.cohort_definition_id = @cohort_definition_id;"
       self$connection$queryDb(sql,
                               cohort_definition_id = cohortDefinitionId,
                               exposure = isExposure,
@@ -173,9 +176,9 @@ RewardDataModel <- R6::R6Class(
     #'
     #' Returns SCC results for a cohort id
     getNegativeControlSccResults = function(cohortDefinitionId,
-                                             isExposure,
-                                             outcomeType = NULL,
-                                             conceptSet = NULL) {
+                                            isExposure,
+                                            outcomeType = NULL,
+                                            conceptSet = NULL) {
       checkmate::assertLogical(isExposure)
       checkmate::assertIntegerish(outcomeType, null.ok = !isExposure)
       # Get negative controls from cem connection

@@ -15,10 +15,18 @@
 # limitations under the License.
 
 #' Register a CDM or return sourceId of existing cdm
+#' @description
+#' This function adds a CDM to reward - however, the config file is not fully required.
+#' Only the meta-data fields `database` and `name` are required.
+#'
+#' When a cdm is registered the database field is a unique idenitifier.
+#'
+#' @param config                Reward config
+#' @param connection            connection to Reward db instance
+#' @param cdmInfoFile           path to configruations
+#' @export
 registerCdm <- function(config, connection, cdmInfoFile) {
   cdmInfo <- RJSONIO::fromJSON(SqlRender::readSql(cdmInfoFile))
-
-
   getSourceInfo <- function() {
     sql <- "SELECT source_id, source_name, source_key FROM @schema.data_source ds WHERE ds.source_key = '@database';"
     DatabaseConnector::renderTranslateQuerySql(connection,
@@ -69,16 +77,32 @@ registerCdm <- function(config, connection, cdmInfoFile) {
 }
 
 
+computeSourceCounts <- function(config, connection) {
+  ParallelLogger::logInfo("(Re)creating source count tables")
+  sql <- SqlRender::loadRenderTranslateSql(file.path("post_process", "source_counts.sql"),
+                                           result_schema = config$resultsSchema,
+                                           packageName = utils::packageName(),
+                                           dbms = config$connectionDetails$dbms)
+
+  DatabaseConnector::executeSql(connection, sql)
+}
+
+
 #' Import Results from CDM
 #' @description
 #' Verify and import results exported from CDMs
 #'
-#' @param config            Reward configuration object
-#' @param resultsZipPath    path to exported results
-#' @param connection        DatabaseConnector connection to reward databases
-#' @param cleanup           Remove extracted csv files after inserting results
+#' @param config                        Reward configuration object
+#' @param resultsZipPath                path to exported results
+#' @param connection                    DatabaseConnector connection to reward databases
+#' @param cleanup                       Remove extracted csv files after inserting results
+#' @param computeAggregateTables        compute tables that count aggregated stats across different data sources
 #' @export
-importResults <- function(config, resultsZipPath, connection = NULL, cleanup = TRUE) {
+importResults <- function(config,
+                          resultsZipPath,
+                          connection = NULL,
+                          cleanup = TRUE,
+                          computeStatsTables = TRUE) {
   if (cleanup) {
     on.exit(unlink(config$exportPath, recursive = TRUE, force = TRUE), add = TRUE)
   }
@@ -97,8 +121,10 @@ importResults <- function(config, resultsZipPath, connection = NULL, cleanup = T
   cdmInfo <- registerCdm(config, connection, cdmInfoFile)
   files <- file.path(config$exportPath, list.files(config$exportPath, pattern = "*.csv"))
   # Import tables using bulk upload
-
   uploadChunk <- function(chunk, pos) {
+    if (cdmInfo$changedSourceId) {
+      chunk$source_id <- cdmInfo$sourceId
+    }
     DatabaseConnector::insertTable(connection,
                                    databaseSchema = config$resultsSchema,
                                    tableName = tableName,
@@ -118,30 +144,22 @@ importResults <- function(config, resultsZipPath, connection = NULL, cleanup = T
     } else {
       next # Not handled results
     }
-    skip <- 1 # The first row is the column names
-    maxRow <- 1e6
     ParallelLogger::logInfo("Inserting file ", file, "into table ", tableName)
-    data <- vroom::vroom(file, ",", show_col_types = FALSE, n_max = maxRow)
-    while (nrow(data) > 0) {
-      if (cdmInfo$changedSourceId) {
-        data$source_id <- cdmInfo$sourceId
-      }
+    readr::read_csv_chunked(
+      file = file,
+      callback = uploadChunk,
+      chunk_size = 1e7,
+      guess_max = 1e6,
+      progress = FALSE
+    )
 
-
-      skip <- skip + maxRow
-      data <- vroom::vroom(file, ",", show_col_types = FALSE, skip = skip, n_max = maxRow, col_names = colnames(data))
-
-      readr::read_csv_chunked(
-        file = file,
-        callback = uploadChunk,
-        chunk_size = 1e7,
-        col_types = readr::cols(),
-        guess_max = 1e6,
-        progress = FALSE
-      )
-    }
     if (cleanup) {
       unlink(file, recursive = TRUE, force = TRUE)
     }
   }
+
+  if (computeStatsTables) {
+    computeSourceCounts(config, connection)
+  }
 }
+

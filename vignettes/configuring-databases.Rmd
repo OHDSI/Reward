@@ -156,11 +156,6 @@ To do this remove the old cohort with its atlas identifier (and URL if it is not
 removeAtlasCohort(connection, config, 5, webApiUrl = 'https://atlas.ohdsi.org/WebAPI', exposure = FALSE)
 ```
 
-## Adding Additional SCC configuration settings
-
-```{r eval=FALSE}
-```
-
 ## Exporting references
 Cohort references and identifiers are required on each CDM to generate the cohorts.
 The file can be exported as follows.
@@ -173,11 +168,10 @@ exportReferenceTables(configPath, exportPath = 'reward-references-<todays-date>.
 
 This will create the zip file `'reward-references-<todays-date>.zip'` which contains a CSV file export of the tables needed to compute the cohorts on the CDMs.
 
-## Creating the common evidence model schema
-
 # CDM configuration
+For each CDM you wish to execute REWARD on a settings file is required.
 
-# Creating yaml configuration
+## Creating yaml configuration
 We will be working with an example Eunomia database.
 To configure a CDM create a new yaml file `config/cdm/eunomia.yml`
 It will look like this:
@@ -231,7 +225,7 @@ database: eunomia
 name: eunomia
 ```
 These options specify the database name and configuration. 
-The `sourceId` must be unique and new, this is not managed by reward.
+The `sourceId` must be unique and new, this is managed by reward so this setting should be changed after the CDM is registered.
 
 ```
 exportPath: "export"

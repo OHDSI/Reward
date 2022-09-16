@@ -18,14 +18,20 @@
 calibrationPlotUi <- function(id,
                               figureTitle = "Figure 1.",
                               figureText = "Plot of calibration of effect estimates. Blue dots are negative control effect estimates.") {
+  ns <- shiny::NS(id)
   shiny::tagList(
-    shinycssloaders::withSpinner(plotly::plotlyOutput(NS(id, "calibrationPlot"), height = 500)),
-    shiny::div(
-      shiny::strong(figureTitle),
-      paste(figureText),
-      shiny::downloadButton(shiny::NS(id, "downloadCalibrationPlot"), "Save")
-    ),
-    shinycssloaders::withSpinner(DT::dataTableOutput(shiny::NS(id, "nullDistribution")))
+    shiny::actionButton(inputId = ns("getNullDist"), label = "Get"),
+    shiny::conditionalPanel(
+      ns = ns,
+      condition = "input.getNullDist > 0",
+      shinycssloaders::withSpinner(plotly::plotlyOutput(ns("calibrationPlot"), height = 500)),
+      shiny::div(
+        shiny::strong(figureTitle),
+        paste(figureText),
+        shiny::downloadButton(ns("downloadCalibrationPlot"), "Save")
+      ),
+      shinycssloaders::withSpinner(DT::dataTableOutput(ns("nullDistribution")))
+    )
   )
 }
 
@@ -44,11 +50,12 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
   checkmate::assert(shiny::is.reactive(selectedCohort))
 
   server <- shiny::moduleServer(id, function(input, output, session) {
-    ParallelLogger::logInfo("Initialized calibration plot module for: ", model$schemaName)
+    ParallelLogger::logInfo("Initialized calibration plot module")
 
     dataSources <- model$getDataSources()
 
-    getNullDist <- reactive({
+    getNullDist <- shiny::eventReactive(input$getNullDist, {
+      browser()
       cohort <- selectedCohort()
       nulls <- data.frame()
       negatives <- model$getNegativeControlSccResults(cohort$cohortDefinitionId,
@@ -88,7 +95,7 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
       return(output)
     })
 
-    getCalibrationPlot <- reactive({
+    getCalibrationPlot <- shiny::reactive({
       cohort <- selectedCohort()
 
       plot <- ggplot2::ggplot()
@@ -98,9 +105,9 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
         validsourceIds <- null[selectedRows,]$sourceId
 
         negatives <- model$getNegativeControlSccResults(cohort$cohortDefinitionId,
-                                                      cohort$isExposure,
-                                                      outcomeType = 1,
-                                                      conceptSet = cohort$conceptSet)
+                                                        cohort$isExposure,
+                                                        outcomeType = 1,
+                                                        conceptSet = cohort$conceptSet)
 
         if (length(validsourceIds) == 0) {
           validsourceIds <- dataSources$sourceId[1]

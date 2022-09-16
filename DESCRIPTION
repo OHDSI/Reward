@@ -12,6 +12,7 @@ Depends:
     R (>= 4.0.0),
     DatabaseConnector (>= 5.0.0),
     ParallelLogger,
+    ResultModelManager,
     R6
 Imports:
     dplyr,
@@ -39,5 +40,6 @@ Remotes:
   ohdsi/CemConnector,
   ohdsi/Eunomia,
   ohdsi/ROhdsiWebApi,
+  ohdsi/ResultModelManager,
   ohdsi/CirceR
 RoxygenNote: 7.1.2
