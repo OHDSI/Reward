@@ -20,17 +20,17 @@ calibrationPlotUi <- function(id,
                               figureText = "Plot of calibration of effect estimates. Blue dots are negative control effect estimates.") {
   ns <- shiny::NS(id)
   shiny::tagList(
-    shiny::actionButton(inputId = ns("getNullDist"), label = "Get"),
+    shiny::actionButton(inputId = ns("getNullDist"), label = "Get negative control data"),
     shiny::conditionalPanel(
       ns = ns,
       condition = "input.getNullDist > 0",
       shinycssloaders::withSpinner(plotly::plotlyOutput(ns("calibrationPlot"), height = 500)),
       shiny::div(
         shiny::strong(figureTitle),
-        paste(figureText),
+        shiny::tags$p(figureText),
         shiny::downloadButton(ns("downloadCalibrationPlot"), "Save")
       ),
-      shinycssloaders::withSpinner(DT::dataTableOutput(ns("nullDistribution")))
+      shinycssloaders::withSpinner(reactable::reactableOutput(ns("nullDistribution")))
     )
   )
 }
@@ -54,20 +54,20 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
 
     dataSources <- model$getDataSources()
 
-    getNullDist <- shiny::eventReactive(input$getNullDist, {
-      browser()
+    getNullDist <- shiny::reactive({
       cohort <- selectedCohort()
       nulls <- data.frame()
       negatives <- model$getNegativeControlSccResults(cohort$cohortDefinitionId,
                                                       cohort$isExposure,
                                                       outcomeType = cohort$selectedOutcomeType,
                                                       conceptSet = cohort$conceptSet)
-      for (source in unique(negatives$sourceId)) {
-        subset <- negatives[negatives$sourceId == source,]
-        null <- EmpiricalCalibration::fitNull(log(subset$rr), subset$seLogrr)
+      for (sourceId in unique(negatives$sourceId)) {
+        subset <- negatives %>% dplyr::filter(.data$sourceId == sourceId,
+                                              .data$analysisId == cohort$analysisId)
+        null <- EmpiricalCalibration::fitNull(log(subset$rr), subset$seLogRr)
         systematicError <- EmpiricalCalibration::computeExpectedAbsoluteSystematicError(null)
         df <- data.frame(
-          "sourceId" = source,
+          "sourceId" = sourceId,
           "n" = nrow(subset),
           "mean" = round(exp(null[["mean"]]), 3),
           "sd" = round(exp(null[["sd"]]), 3),
@@ -81,18 +81,19 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
       return(nulls)
     })
 
-    output$nullDistribution <- DT::renderDataTable({
-      null <- getNullDist()
-      output <- DT::datatable(
-        null,
-        options = list(dom = 't', columnDefs = list(list(visible = FALSE, targets = c(0)))),
-        rownames = FALSE,
-        selection = "single",
-        colnames = c("Source", "N controls", "Mean", "Stdev", "EASE"),
-        caption = "Table: null distribution mean, standard deviation and Expected Absolute Systematic Error by data source.
-         Select row to view in above plot."
-      )
-      return(output)
+    getNullDistTable <- shiny::eventReactive(input$getNullDist, {
+      nullDist <- getNullDist() %>%
+        dplyr::select(.data$sourceName,
+                      .data$sourceKey,
+                      .data$n,
+                      .data$mean,
+                      .data$sd,
+                      .data$EASE)
+    })
+
+    output$nullDistribution <- reactable::renderReactable({
+      nullDist <- getNullDistTable()
+      reactable::reactable(nullDist)
     })
 
     getCalibrationPlot <- shiny::reactive({
@@ -106,8 +107,10 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
 
         negatives <- model$getNegativeControlSccResults(cohort$cohortDefinitionId,
                                                         cohort$isExposure,
-                                                        outcomeType = 1,
+                                                        outcomeType = cohort$selectedOutcomeType,
                                                         conceptSet = cohort$conceptSet)
+        negatives <- negatives %>%
+          dplyr::filter(.data$analysisId == cohort$analysisId)
 
         if (length(validsourceIds) == 0) {
           validsourceIds <- dataSources$sourceId[1]
@@ -116,19 +119,24 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
 
         if (nrow(negatives)) {
           plotNegatives <- negatives[negatives$rr > 0,]
-          plot <- EmpiricalCalibration::plotCalibrationEffect(logrrNegatives = log(plotNegatives$rr),
-                                                              seLogrrNegatives = plotNegatives$seLogrr)
+          plot <- EmpiricalCalibration::plotCalibrationEffect(logRrNegatives = log(plotNegatives$rr),
+                                                              seLogRrNegatives = plotNegatives$seLogRr)
         }
       }
       return(plot)
     })
 
+
+    loadCalibrationPlot <- shiny::eventReactive(input$getNullDist, {
+      getCalibrationPlot()
+    })
+
     output$calibrationPlot <- plotly::renderPlotly({
-      plot <- getCalibrationPlot()
+      plot <- loadCalibrationPlot()
       return(plotly::ggplotly(plot))
     })
 
-    output$downloadCalibrationPlot <- downloadHandler(
+    output$downloadCalibrationPlot <- shiny::downloadHandler(
       filename = function() {
         "calibration-plot.png"
       },

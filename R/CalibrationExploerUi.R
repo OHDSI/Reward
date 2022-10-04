@@ -35,34 +35,13 @@ calibrationExplorerUi <- function(request) {
                               choices = NULL,
                               multiple = FALSE)
       ),
-      shiny::mainPanel(
+    ),
+    shiny::fluidRow(
+      shiny::column(
+        width = 12,
         shiny::h3(shiny::textOutput("cohortName")),
 
-        shiny::tabsetPanel(
-          id = "mainTabs",
-          shiny::tabPanel(
-            "Cohort Statistics",
-            shiny::p("Available record counts for selected cohort:"),
-            reactable::reactableOutput("cohortInfoTable")
-          ),
-          # shiny::conditionalPanel(
-          #   condition = ""
-          #   # shiny::tabPanel("Negative Control Concepts",
-          #   #                 shiny::p("Negative control concepts automatically generated from common evidence model"),
-          #   #                 CemConnector::negativeControlSelectorUi("negativeControls"))
-          # ),
-          shiny::tabPanel(
-            title = "Calibration",
-            shiny::conditionalPanel(
-              condition = "input$exposureOutcome == 'Exposures'",
-              shiny::selectInput("selectedOutcomeType",
-                                 "Use outcome cohort type",
-                                 choices = c("One Diagnosis Code" = 2,
-                                             "2 Diagnosis Codes" = 0,
-                                             "Inpatient Visit" = 1))
-            ),
-            calibrationPlotUi("calibrationPlot"))
-        )
+        shiny::uiOutput("tabArea")
       )
     )
   )
@@ -89,6 +68,17 @@ calibrationExplorerServer <- function(input, output, session) {
     return(cohortSet$shortName)
   })
 
+  shiny::observe({
+    analysisSettingChoices <- model$getAnalysisSettings() %>%
+      dplyr::select(.data$analysisName,
+                    .data$analysisId)
+
+    analysisSetting <- analysisSettingChoices$analysisId
+    names(analysisSetting) <- analysisSettingChoices$analysisName
+    shiny::updateSelectInput(session = session,
+                             inputId = "selectedAnalysisType",
+                             choices = analysisSetting)
+  })
 
   shiny::observeEvent(eventExpr = input$exposureOutcome, handlerExpr = {
     shiny::updateSelectizeInput(session, "cohortSelection", choices = getCohortDropDownSelection(), server = TRUE)
@@ -109,7 +99,10 @@ calibrationExplorerServer <- function(input, output, session) {
   })
 
   getSelectedOutcomeType <- shiny::reactive({
-    as.integer(input$selectedOutcomeType)
+    if (!is.null(input$selectedOutcomeType))
+      return(as.integer(input$selectedOutcomeType))
+
+    return(NULL)
   })
 
   selectedCohort <- shiny::reactive({
@@ -118,10 +111,15 @@ calibrationExplorerServer <- function(input, output, session) {
     if (!is.null(cohort)) {
       cohort$isExposure <- input$exposureOutcome == "Exposures"
       cohort$selectedOutcomeType <- getSelectedOutcomeType()
+      cohort$analysisId <- input$selectedAnalysisType
       return(cohort)
     }
 
-    list(cohortDefinitionId = -1, shortName = "No Cohort Selected", conceptSet = list(), isExposure = TRUE)
+    list(cohortDefinitionId = -1,
+         shortName = "No Cohort Selected",
+         conceptSet = list(),
+         isExposure = TRUE,
+         analysisSetting = 1)
   })
 
   output$cohortName <- shiny::renderText({
@@ -131,23 +129,80 @@ calibrationExplorerServer <- function(input, output, session) {
 
   getCohortStats <- shiny::reactive({
     cohort <- selectedCohort()
-    reactable::reactable(model$getCohortStats(cohort$cohortDefinitionId, cohort$isExposure))
+    data <- model$getCohortStats(cohort$cohortDefinitionId, cohort$isExposure)
+    colnames(data) <- SqlRender::camelCaseToTitleCase(colnames(data))
+    reactable::reactable(data = data)
   })
 
   output$cohortInfoTable <- reactable::renderReactable({
     getCohortStats()
   })
 
-  # CemConnector::negativeControlSelectorModule("negativeControls",
-  #                                             backend = cemConnection,
-  #                                             conceptInput = shiny::reactive({
-  #                                               selectedCohort()$conceptSet
-  #                                             }),
-  #                                             isOutcomeSearch = shiny::reactive({
-  #                                               cohort <- selectedCohort()
-  #                                               cohort$isExposure
-  #                                             }))
-  calibrationPlotServer("calibrationPlot", model, selectedCohort)
+
+  if (!is.null(cemConnection)) {
+    CemConnector::negativeControlSelectorModule("negativeControls",
+                                                backend = cemConnection,
+                                                conceptInput = shiny::reactive({
+                                                  selectedCohort()$conceptSet
+                                                }),
+                                                nControls = shiny::reactive({
+                                                  5000
+                                                }),
+                                                isOutcomeSearch = shiny::reactive({
+                                                  cohort <- selectedCohort()
+                                                  cohort$isExposure
+                                                }))
+
+    calibrationPlotServer("calibrationPlot", model, selectedCohort)
+
+    output$tabArea <- shiny::renderUI({
+      shiny::tabsetPanel(
+        id = "mainTabs",
+        type = "pills",
+        shiny::tabPanel(
+          "Cohort Statistics",
+          shiny::p("Available record counts for selected cohort are caluclated as non-zero uncalibrated effect estimates
+            observed in data sources for selected cohorts"),
+          reactable::reactableOutput("cohortInfoTable")
+        ),
+        shiny::tabPanel(
+          "Negative Control Concepts",
+          shiny::p("Negative control concepts automatically selected from common evidence model"),
+          CemConnector::negativeControlSelectorUi("negativeControls")
+        ),
+        shiny::tabPanel(
+          title = "Calibration",
+          shiny::conditionalPanel(
+            condition = "input.exposureOutcome == 'Exposures'",
+            shiny::selectInput("selectedOutcomeType",
+                               "Outcome control cohort type",
+                               choices = c("One Diagnosis Code" = 2,
+                                           "2 Diagnosis Codes" = 0,
+                                           "Inpatient Visit" = 1))
+          ),
+          shiny::selectInput(
+            inputId = "selectedAnalysisType",
+            label = "SCC analysis settings",
+            choices = NULL),
+          calibrationPlotUi("calibrationPlot"))
+      )
+    })
+  } else {
+    output$tabArea <- shiny::renderUI({
+      shiny::tabsetPanel(
+        id = "mainTabs",
+        type = "pills",
+        shiny::tabPanel(
+          "Cohort Statistics",
+          shiny::p("Available record counts for selected cohort are caluclated as non-zero uncalibrated effect estimates
+            observed in data sources for selected cohorts"),
+          reactable::reactableOutput("cohortInfoTable"),
+          shiny::p("Note unable to get negative controls as - CEM connection service is unavailable.
+           Please contact system administrator for resolution.", style = "color:red;")
+        )
+      )
+    })
+  }
 }
 
 
@@ -165,8 +220,6 @@ calibrationExplorerServer <- function(input, output, session) {
 #' @param usedPooledConnection       (Optional) Use a pooled database connection (used in multi-user environments).
 #' @export
 launchCalibrationExplorer <- function(configPath, usePooledConnection = TRUE) {
-  shinyPackages <- c("shiny", "DT", "shinycssloaders", "plotly")
-
   checkmate::assertFileExists(configPath)
   .GlobalEnv$model <- RewardDataModel$new(configPath, usePooledConnection = usePooledConnection)
   shiny::shinyApp(server = calibrationExplorerServer, calibrationExplorerUi, onStart = function() {

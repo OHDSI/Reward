@@ -62,14 +62,19 @@ RewardDataModel <- R6::R6Class(
     #' @description
     #' Get cem connector api connection
     getCemConnection = function() {
-      if (is.null(private$cemConnection)) {
-        if (!is.null(self$config$cemConnectionDetails$connectionDetails)) {
-          self$config$cemConnectionDetails$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails,
-                                                                        self$config$cemConnectionDetails$connectionDetails)
+      tryCatch({
+        if (is.null(private$cemConnection)) {
+          if (!is.null(self$config$cemConnectionDetails$connectionDetails)) {
+            self$config$cemConnectionDetails$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails,
+                                                                          self$config$cemConnectionDetails$connectionDetails)
+          }
+          private$cemConnection <- do.call(CemConnector::createCemConnection, self$config$cemConnectionDetails)
         }
-        private$cemConnection <- do.call(CemConnector::createCemConnection, self$config$cemConnectionDetails)
-      }
-      # Return reference for reuse
+      }, error = function(err, ...) {
+        warning("CEM connector connection not loaded: ", err)
+        private$cemConnection <- NULL
+      })
+       # Return reference for reuse
       return(private$cemConnection)
     },
 
@@ -147,6 +152,11 @@ RewardDataModel <- R6::R6Class(
       return(cohort)
     },
 
+    getAnalysisSettings = function() {
+      sql <- "SELECT * FROM @results_schema.analysis_setting"
+      self$connection$queryDb(sql, results_schema = self$resultsSchema)
+    },
+
     #' @description
     #' Get getCohortStats
     #' @param cohortDefinitionId         cohort identifier (not null, integer)
@@ -199,12 +209,15 @@ RewardDataModel <- R6::R6Class(
         }
 
         sql <- "SELECT * FROM @results_schema.scc_result
-        WHERE {@exposure} ? {outcome_cohort_id} : {target_cohort_id} IN (@cohort_ids)"
+        WHERE {@exposure} ? {target_cohort_id} : {outcome_cohort_id} = @cohort_definition_id
+        AND {@exposure} ? {outcome_cohort_id} : {target_cohort_id} IN (@cohort_ids)
+        AND rr IS NOT NULL"
 
         res <- self$connection$queryDb(sql,
-                                cohort_ids = cohortIds,
-                                results_schema = self$resultsSchema,
-                                exposure = isExposure)
+                                       cohort_definition_id = cohortDefinitionId,
+                                       cohort_ids = cohortIds,
+                                       results_schema = self$resultsSchema,
+                                       exposure = isExposure)
         return(res)
       }
       return(data.frame())
