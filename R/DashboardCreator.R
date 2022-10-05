@@ -14,16 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' Create stand-alone dashboaard database from reward data
-#' @details
-#' Creates a configuration file for a Reward dashboard Shiny application to allow investigation in to
-#' a subset of exposures or outcomes
-#'
-#' @param configPath            Path to global configuration path
-#' @param dashboardConfig       Dashboard configuration options (see create dashboard configuration file)
-createDashboardConfiguration <- function(dashboardConfigPath, overwrite = FALSE) {
-
-}
 
 #' Create stand-alone dashboaard database from reward data
 #' @details
@@ -32,18 +22,23 @@ createDashboardConfiguration <- function(dashboardConfigPath, overwrite = FALSE)
 #'
 #' @param configPath            Path to global configuration path
 #' @param dashboardConfig       Dashboard configuration options (see create dashboard configuration file)
-createDashboardDatabase <- function(configPath, dashboardConfig, overwrite = FALSE) {
+createDashboardDatabase <- function(configPath,
+                                    dashboardConfig,
+                                    overwrite = FALSE) {
 
   ## 1. Create schema/tables in dashboard
 
   ## 2. Copy relevant data in to dashboard schema
+
   ## 2 a. use copy if in existing database
+
   ## 2 b. Import data if in separate database
 
   ## 3. Add negative control outcomes for exposures within study - mark for hidden or use different table
+
   ## 4. (optional) Add negative control exposure for outcomes within study - mark for hidden or use different table
 
   ## 5. Produce calibrated effect estimates
 
-  ## 6. Produce self contained shiny app
+
 }

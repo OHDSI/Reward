@@ -49,7 +49,7 @@ calibrationExplorerUi <- function(request) {
 }
 
 calibrationExplorerServer <- function(input, output, session) {
-  shiny::shinyOptions(cache = cachem::cache_disk("~/.rewardCalibrationCache"))
+  shiny::shinyOptions(cache = cachem::cache_disk("~/.rewardUiCache"))
   cemConnection <- model$getCemConnection()
 
   getCohortSet <- shiny::reactive({
@@ -222,6 +222,9 @@ calibrationExplorerServer <- function(input, output, session) {
 launchCalibrationExplorer <- function(configPath, usePooledConnection = TRUE) {
   checkmate::assertFileExists(configPath)
   .GlobalEnv$model <- RewardDataModel$new(configPath, usePooledConnection = usePooledConnection)
+  on.exit({
+    .GlobalEnv$model <- NULL
+  })
   shiny::shinyApp(server = calibrationExplorerServer, calibrationExplorerUi, onStart = function() {
     shiny::onStop(function() {
       writeLines("Closing connections")

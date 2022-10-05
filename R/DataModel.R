@@ -152,9 +152,19 @@ RewardDataModel <- R6::R6Class(
       return(cohort)
     },
 
-    getAnalysisSettings = function() {
+    getAnalysisSettings = function(decode = TRUE) {
       sql <- "SELECT * FROM @results_schema.analysis_setting"
-      self$connection$queryDb(sql, results_schema = self$resultsSchema)
+      rows <- self$connection$queryDb(sql, results_schema = self$resultsSchema)
+      #' Decode raw base 64
+      if (decode) {
+        decoded <- c()
+        for (i in 1:nrow(rows)) {
+          decoded <- c(decoded, rawToChar(base64enc::base64decode(rows$options[i])))
+        }
+        rows$options <- decoded
+      }
+
+      return(rows)
     },
 
     #' @description
