@@ -63,7 +63,9 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
                                                       conceptSet = cohort$conceptSet)
       for (sourceId in unique(negatives$sourceId)) {
         subset <- negatives %>% dplyr::filter(.data$sourceId == sourceId,
-                                              .data$analysisId == cohort$analysisId)
+                                              .data$analysisId == cohort$analysisId,
+                                              !is.na(.data$rr),
+                                              !is.null(.data$rr))
         null <- EmpiricalCalibration::fitNull(log(subset$rr), subset$seLogRr)
         systematicError <- EmpiricalCalibration::computeExpectedAbsoluteSystematicError(null)
         df <- data.frame(
@@ -120,6 +122,8 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
         if (nrow(negatives)) {
           plotNegatives <- negatives[negatives$rr > 0,]
           plot <- EmpiricalCalibration::plotCalibrationEffect(logRrNegatives = log(plotNegatives$rr),
+                                                              xLimits = c(min(0.25, plotNegatives$rr), max(10, plotNegatives$rr)),
+                                                              yLimits = c(0.0, max(1.5, exp(plotNegatives$seLogRr))),
                                                               seLogRrNegatives = plotNegatives$seLogRr)
         }
       }

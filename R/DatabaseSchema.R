@@ -30,28 +30,28 @@ createRewardSchema <- function(configFilePath,
   connection <- DatabaseConnector::connect(connectionDetails = config$connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
 
-  message("creating rewardb results and reference schema")
+  message("creating reward results and reference schema")
   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "referenceSchema.sql"),
                                            packageName = "RewardExecutionPackage",
-                                           dbms = connection@dbms,
+                                           dbms = config$connectionDetails$dbms,
                                            schema = config$resultsSchema,
                                            store_atlas_refs = TRUE,
-                                           include_constraints = connection@dbms != "sqlite")
+                                           include_constraints = config$connectionDetails$dbms != "sqlite")
   DatabaseConnector::executeSql(connection, sql)
 
 
   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "resultsSchema.sql"),
                                            packageName = utils::packageName(),
-                                           dbms = connection@dbms,
+                                           dbms = config$connectionDetails$dbms,
                                            schema = config$resultsSchema,
-                                           include_constraints = connection@dbms != "sqlite")
+                                           include_constraints = config$connectionDetails$dbms != "sqlite")
   DatabaseConnector::executeSql(connection, sql)
 
 
   message("creating bulk cohort references")
   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "cohortReferences.sql"),
                                            packageName = utils::packageName(),
-                                           dbms = connection@dbms,
+                                           dbms = config$connectionDetails$dbms,
                                            schema = config$resultsSchema,
                                            version_number = utils::packageVersion(utils::packageName()),
                                            vocabulary_schema = config$vocabularySchema)

@@ -4,7 +4,13 @@
 \alias{createDashboardDatabase}
 \title{Create stand-alone dashboaard database from reward data}
 \usage{
-createDashboardDatabase(configPath, dashboardConfig, overwrite = FALSE)
+createDashboardDatabase(
+  configPath,
+  dashboardConfigPath,
+  sqliteDbFile = NULL,
+  resultDatabaseSchema = NULL,
+  overwrite = FALSE
+)
 }
 \arguments{
 \item{configPath}{Path to global configuration path}

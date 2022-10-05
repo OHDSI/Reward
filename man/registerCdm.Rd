@@ -6,6 +6,16 @@
 \usage{
 registerCdm(config, connection, cdmInfoFile)
 }
+\arguments{
+\item{config}{Reward config}
+
+\item{connection}{connection to Reward db instance}
+
+\item{cdmInfoFile}{path to configruations}
+}
 \description{
-Register a CDM or return sourceId of existing cdm
+This function adds a CDM to reward - however, the config file is not fully required.
+Only the meta-data fields `database` and `name` are required.
+
+When a cdm is registered the database field is a unique idenitifier.
 }

@@ -4,7 +4,13 @@
 \alias{importResults}
 \title{Import Results from CDM}
 \usage{
-importResults(config, resultsZipPath, connection = NULL, cleanup = TRUE)
+importResults(
+  config,
+  resultsZipPath,
+  connection = NULL,
+  cleanup = TRUE,
+  computeStatsTables = TRUE
+)
 }
 \arguments{
 \item{config}{Reward configuration object}
@@ -14,6 +20,8 @@ importResults(config, resultsZipPath, connection = NULL, cleanup = TRUE)
 \item{connection}{DatabaseConnector connection to reward databases}
 
 \item{cleanup}{Remove extracted csv files after inserting results}
+
+\item{computeAggregateTables}{compute tables that count aggregated stats across different data sources}
 }
 \description{
 Verify and import results exported from CDMs
