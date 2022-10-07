@@ -1,16 +1,8 @@
 {DEFAULT @schema = 'reward'}
-{DEFAULT @cohort_definition = 'cohort_definition'}
-{DEFAULT @exposure_cohort = 'exposure_cohort'}
-{DEFAULT @outcome_cohort = 'outcome_cohort'}
-{DEFAULT @cohort_group_definition = 'cohort_group_definition'}
-{DEFAULT @cohort_group = 'cohort_group'}
-{DEFAULT @concept_set_definition = 'concept_set_definition'}
-{DEFAULT @atlas_cohort_reference = 'atlas_cohort_reference'}
-{DEFAULT @cohort_concept_set = 'cohort_concept_set'}
-{DEFAULT @analysis_setting = 'analysis_setting'}
 {DEFAULT @include_constraints = ''}
+{DEFAULT @add_calibrated_columns = FALSE}
 
-DROP TABLE IF EXISTS @schema.data_source {@include_constraints} ? {cascade};
+drop table IF EXISTS @schema.data_source {@include_constraints} ? {cascade};
 create TABLE @schema.data_source (
     source_id INT {@include_constraints} ? {PRIMARY KEY},
     source_name varchar,
@@ -20,7 +12,7 @@ create TABLE @schema.data_source (
     version_date date
 );
 
-DROP TABLE IF EXISTS @schema.scc_result {@include_constraints} ? {cascade};
+drop table IF EXISTS @schema.scc_result {@include_constraints} ? {cascade};
 create table @schema.scc_result (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
@@ -40,6 +32,9 @@ create table @schema.scc_result (
     p_value NUMERIC,
     I2 NUMERIC,
     num_exposures NUMERIC
+    {@add_calibrated_columns} ? {,
+     calibrated INT DEFAULT 0
+    }
     {@include_constraints} ? {,
     PRIMARY KEY (source_id, analysis_id, outcome_cohort_id, target_cohort_id),
 
@@ -62,7 +57,7 @@ create table @schema.scc_result (
     }
 );
 
-DROP TABLE IF EXISTS @schema.scc_stat {@include_constraints} ? {cascade};
+drop table IF EXISTS @schema.scc_stat {@include_constraints} ? {cascade};
 create TABLE @schema.scc_stat (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
@@ -100,7 +95,7 @@ create TABLE @schema.scc_stat (
     }
 );
 
-DROP TABLE IF EXISTS @schema.negative_control {@include_constraints} ? {cascade};
+drop table IF EXISTS @schema.negative_control {@include_constraints} ? {cascade};
 create table @schema.negative_control (
     cohort_definition_id BIGINT,
     negative_control_concept_id BIGINT,
@@ -108,7 +103,7 @@ create table @schema.negative_control (
     is_outcome_control INT
 );
 
-DROP TABLE IF EXISTS @schema.outcome_null_distribution {@include_constraints} ? {cascade};
+drop table IF EXISTS @schema.outcome_null_distribution {@include_constraints} ? {cascade};
 create TABLE @schema.outcome_null_distribution (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
@@ -135,7 +130,7 @@ create TABLE @schema.outcome_null_distribution (
     }
 );
 
-DROP TABLE IF EXISTS  @schema.exposure_null_distribution {@include_constraints} ? {cascade};
+drop table IF EXISTS  @schema.exposure_null_distribution {@include_constraints} ? {cascade};
 create TABLE @schema.exposure_null_distribution (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,

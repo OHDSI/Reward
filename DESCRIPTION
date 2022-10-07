@@ -29,7 +29,8 @@ Imports:
     jsonlite,
     RSQLite,
     keyring,
-    base64enc
+    base64enc,
+    bit64
 Suggests:
     targets,
     testthat,

@@ -31,12 +31,13 @@ RewardDataModel <- R6::R6Class(
     config = NULL,
     vocabularySchema = NULL,
     resultsSchema = NULL,
+    cemConnectionDetails = list(),
 
-    #' @description
-    #' initialize backend object.
-    #' @param configPath          Reward configuration yaml path
-    #' @param keyring             optional keyring::keyring object
-    #' @param usePooledConnection Used a pooled connection object rather than a database connector object.
+            #' @description
+            #' initialize backend object.
+            #' @param configPath          Reward configuration yaml path
+            #' @param keyring             optional keyring::keyring object
+            #' @param usePooledConnection Used a pooled connection object rather than a database connector object.
     initialize = function(configPath,
                           keyring = NULL,
                           usePooledConnection = FALSE) {
@@ -51,6 +52,7 @@ RewardDataModel <- R6::R6Class(
 
       self$vocabularySchema <- self$config$vocabularySchema
       self$resultsSchema <- self$config$resultsSchema
+      self$cemConnectionDetails <- self$config$cemConnectionDetails
     },
 
     #' @description
@@ -64,17 +66,17 @@ RewardDataModel <- R6::R6Class(
     getCemConnection = function() {
       tryCatch({
         if (is.null(private$cemConnection)) {
-          if (!is.null(self$config$cemConnectionDetails$connectionDetails)) {
-            self$config$cemConnectionDetails$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails,
-                                                                          self$config$cemConnectionDetails$connectionDetails)
+          if (!is.null(self$cemConnectionDetails$connectionDetails)) {
+            self$cemConnectionDetails$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails,
+                                                                   self$cemConnectionDetails$connectionDetails)
           }
-          private$cemConnection <- do.call(CemConnector::createCemConnection, self$config$cemConnectionDetails)
+          private$cemConnection <- do.call(CemConnector::createCemConnection, self$cemConnectionDetails)
         }
       }, error = function(err, ...) {
         warning("CEM connector connection not loaded: ", err)
         private$cemConnection <- NULL
       })
-       # Return reference for reuse
+      # Return reference for reuse
       return(private$cemConnection)
     },
 
@@ -94,9 +96,9 @@ RewardDataModel <- R6::R6Class(
       self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
 
-        #' @description
-        #' Get exposure cohort definition set
-        #' @param cohortIds         numeric vector of cohort ids or null
+    #' @description
+    #' Get exposure cohort definition set
+    #' @param cohortIds         numeric vector of cohort ids or null
     getExposureCohortDefinitionSet = function(cohortIds = NULL) {
       # make a proper cohort definition set from sql and cohort json
       sql <- "SELECT cd.* FROM @results_schema.cohort_definition cd
@@ -106,9 +108,9 @@ RewardDataModel <- R6::R6Class(
       self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
 
-        #' @description
-        #' Get expsoure cohort concept sets
-        #' @param cohortIds         numeric vector of cohort ids or null
+    #' @description
+    #' Get expsoure cohort concept sets
+    #' @param cohortIds         numeric vector of cohort ids or null
     getExposureCohortConceptSets = function(cohortIds = NULL) {
       sql <- "SELECT ccs.* FROM @results_schema.cohort_concept_set ccs
       INNER JOIN @results_schema.exposure_cohort ec ON ccs.cohort_definition_id = ec.cohort_definition_id
@@ -128,9 +130,9 @@ RewardDataModel <- R6::R6Class(
       self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
 
-    getCohortConceptSet = function(cohortDefinitionId) {
+    getCohortConceptSet = function(cohortDefinitionId = NULL) {
       sql <- "SELECT ccs.* FROM @results_schema.cohort_concept_set ccs
-      WHERE cohort_definition_id = @cohort_definition_id"
+      {@cohort_definition_id != ''} ? {WHERE cohort_definition_id = @cohort_definition_id}"
       self$connection$queryDb(sql,
                               cohort_definition_id = cohortDefinitionId,
                               results_schema = self$resultsSchema)
@@ -155,7 +157,7 @@ RewardDataModel <- R6::R6Class(
     getAnalysisSettings = function(decode = TRUE) {
       sql <- "SELECT * FROM @results_schema.analysis_setting"
       rows <- self$connection$queryDb(sql, results_schema = self$resultsSchema)
-      #' Decode raw base 64
+                  #' Decode raw base 64
       if (decode) {
         decoded <- c()
         for (i in 1:nrow(rows)) {
@@ -231,6 +233,80 @@ RewardDataModel <- R6::R6Class(
         return(res)
       }
       return(data.frame())
+    },
+
+    getNegativeControlConditions = function(cohortIds = NULL) {
+      cemConnection <- self$getCemConnection()
+      if (is.null(cemConnection))
+        return(data.frame())
+
+      # Get concept sets for all exposure cohorts
+      # Use CemConnector to get control outcome concepts
+      # This will take a long time with the web api utility
+      suggestedControlConditions <- self$getExposureCohortConceptSets(cohortIds = cohortIds) %>%
+        dplyr::group_by(.data$cohortDefinitionId) %>%
+        dplyr::group_modify(
+          ~cemConnection$getSuggestedControlCondtions(.x, nControls = self$config$negativeControlCount)) %>%
+        # Map control outcome concepts to cohorts (* 1000)
+        dplyr::mutate(outcomeCohortId = .data$conceptId * 1000, outcomeType = 0)
+
+      # Map other outcome types
+      suggestedControlConditions <- suggestedControlConditions %>%
+        dplyr::bind_rows(suggestedControlConditions %>%
+                           dplyr::mutate(outcomeCohortId = .data$outcomeCohortId + 1, outcomeType = 1)) %>%
+        dplyr::bind_rows(suggestedControlConditions %>%
+                           dplyr::mutate(outcomeCohortId = .data$outcomeCohortId + 2, outcomeType = 2))
+
+      suggestedControlConditions
+    },
+
+    getNegativeControlExposures = function(cohortIds = NULL) {
+      cemConnection <- self$getCemConnection()
+      if (is.null(cemConnection))
+        return(data.frame())
+
+      # Get concept sets for all exposure cohorts
+      # Use CemConnector to get control outcome concepts
+      # This will take a long time with the web api utility
+      suggestedControlExposures <- self$getOutcomeCohortConceptSets(cohortIds = cohortIds) %>%
+        dplyr::group_by(.data$cohortDefinitionId) %>%
+        dplyr::group_modify(
+          ~cemConnection$getSuggestedControlExposures(.x, nControls = self$config$negativeControlCount)) %>%
+        dplyr::mutate(exposureCohortId = .data$conceptId * 1000)
+    }
+  )
+)
+
+#' CEM Database Backend Class
+#' @description
+#' An interface to the common evidence model that uses works directly with a database schema
+#' @field connection DatabaseConnector::connection instance
+#' @field vocabularySchema OMOP vocabulary schema (must include concept and concept ancestor tables)
+#' @field resultsSchema schema containing reward references and results
+#' @field config    Reward configuration s3 object
+#' @import checkmate
+#' @import R6
+DashboardDataModel <- R6::R6Class(
+  "DashboardDataModel",
+  inherit = RewardDataModel,
+  public = list(
+    initialize = function(dashboardConfigPath,
+                          connectionDetails = NULL,
+                          cemConnectionDetails = list(),
+                          sqliteDbFile = NULL,
+                          resultDatabaseSchema = NULL,
+                          usePooledConnection = TRUE) {
+      stopifnot("Must specify either database schema or sqlite file " = !is.null(sqliteDbFile) | !is.null(resultDatabaseSchema))
+      self$config <- loadDashboardConfiguration(dashboardConfigPath)
+      # Load connection
+      if (usePooledConnection) {
+        self$connection <- ResultModelManager::PooledConnectionHandler$new(connectionDetails)
+      } else {
+        self$connection <- ResultModelManager::ConnectionHandler$new(connectionDetails)
+      }
+
+      self$resultsSchema <- resultDatabaseSchema
+      self$cemConnectionDetails <- cemConnectionDetails
     }
   )
 )

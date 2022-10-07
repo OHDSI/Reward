@@ -84,7 +84,7 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
     })
 
     getNullDistTable <- shiny::eventReactive(input$getNullDist, {
-      nullDist <- getNullDist() %>%
+      getNullDist() %>%
         dplyr::select(.data$sourceName,
                       .data$sourceKey,
                       .data$n,

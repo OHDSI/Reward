@@ -193,3 +193,25 @@ validateConfigFile <- function(configPath, testConnection = TRUE, keyring = NULL
 
   ParallelLogger::logInfo("Configuration appears valid")
 }
+
+
+loadDashboardConfiguration <- function(dashboardConfigPath, validate = TRUE) {
+  checkmate::assertFileExists(dashboardConfigPath)
+  dashboardConfig <- yaml::read_yaml(dashboardConfigPath)
+  if (validate) {
+    validateDashboardConfig(dashboardConfig)
+  }
+  dashboardConfig$cohortIds <- bit64::as.integer64(dashboardConfig$cohortIds)
+  return(dashboardConfig)
+}
+
+
+validateDashboardConfig <- function(dashboardConfig) {
+  checkmate::assertCharacter(dashboardConfig$dashboardName, min.chars = 1)
+  checkmate::assertCharacter(dashboardConfig$shortName, min.chars = 1, max.chars = 255)
+  checkmate::assertCharacter(dashboardConfig$description, min.chars = 0)
+  checkmate::assertLogical(dashboardConfig$exposureDashboard)
+  checkmate::assertInteger(dashboardConfig$analysisSettings)
+  checkmate::assertInteger(dashboardConfig$dataSources)
+  checkmate::assertCharacter(dashboardConfig$cohortIds, min.len = 1, max.len = 25)
+}
