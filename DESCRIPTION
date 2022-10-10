@@ -30,7 +30,11 @@ Imports:
     RSQLite,
     keyring,
     base64enc,
-    bit64
+    bit64,
+    meta,
+    shiny,
+    shinycssloaders,
+    shinyWidgets
 Suggests:
     targets,
     testthat,

@@ -114,7 +114,7 @@ RewardDataModel <- R6::R6Class(
     getExposureCohortConceptSets = function(cohortIds = NULL) {
       sql <- "SELECT ccs.* FROM @results_schema.cohort_concept_set ccs
       INNER JOIN @results_schema.exposure_cohort ec ON ccs.cohort_definition_id = ec.cohort_definition_id
-      {@cohort_ids != ''}? {WHERE cohort_definition_id IN (@cohort_ids)}
+      {@cohort_ids != ''}? {WHERE ccs.cohort_definition_id IN (@cohort_ids)}
       "
       self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
@@ -125,7 +125,7 @@ RewardDataModel <- R6::R6Class(
     getOutcomeCohortConceptSets = function(cohortIds = NULL) {
       sql <- "SELECT ccs.*, oc.outcome_type FROM @results_schema.cohort_concept_set ccs
       INNER JOIN @results_schema.outcome_cohort oc ON ccs.cohort_definition_id = oc.cohort_definition_id
-      {@cohort_ids != ''}? {WHERE cohort_definition_id IN (@cohort_ids)}
+      {@cohort_ids != ''}? {WHERE ccs.cohort_definition_id IN (@cohort_ids)}
       "
       self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
@@ -290,14 +290,21 @@ DashboardDataModel <- R6::R6Class(
   "DashboardDataModel",
   inherit = RewardDataModel,
   public = list(
-    initialize = function(dashboardConfigPath,
+    initialize = function(dashboardConfigPath = NULL,
+                          dashboardConfig = NULL,
                           connectionDetails = NULL,
                           cemConnectionDetails = list(),
                           sqliteDbFile = NULL,
                           resultDatabaseSchema = NULL,
                           usePooledConnection = TRUE) {
       stopifnot("Must specify either database schema or sqlite file " = !is.null(sqliteDbFile) | !is.null(resultDatabaseSchema))
-      self$config <- loadDashboardConfiguration(dashboardConfigPath)
+
+      if (is.null(dashboardConfig)) {
+        self$config <- loadDashboardConfiguration(dashboardConfigPath)
+      } else {
+        self$config <- validateDashboardConfig(dashboardConfig)
+      }
+
       # Load connection
       if (usePooledConnection) {
         self$connection <- ResultModelManager::PooledConnectionHandler$new(connectionDetails)

@@ -1,6 +1,14 @@
 {DEFAULT @schema = 'reward'}
+{DEFAULT @cohort_definition = 'cohort_definition'}
+{DEFAULT @exposure_cohort = 'exposure_cohort'}
+{DEFAULT @outcome_cohort = 'outcome_cohort'}
+{DEFAULT @concept_set_definition = 'concept_set_definition'}
+{DEFAULT @atlas_cohort_reference = 'atlas_cohort_reference'}
+{DEFAULT @cohort_concept_set = 'cohort_concept_set'}
+{DEFAULT @analysis_setting = 'analysis_setting'}
 {DEFAULT @include_constraints = ''}
 {DEFAULT @add_calibrated_columns = FALSE}
+
 
 drop table IF EXISTS @schema.data_source {@include_constraints} ? {cascade};
 create TABLE @schema.data_source (
@@ -18,6 +26,9 @@ create table @schema.scc_result (
     analysis_id INT NOT NULL,
     outcome_cohort_id BIGINT NOT NULL,
     target_cohort_id BIGINT NOT NULL,
+    {@add_calibrated_columns} ? {
+     calibrated INT NOT NULL,
+    }
     rr NUMERIC,
     se_log_rr NUMERIC,
     log_rr NUMERIC,
@@ -32,11 +43,8 @@ create table @schema.scc_result (
     p_value NUMERIC,
     I2 NUMERIC,
     num_exposures NUMERIC
-    {@add_calibrated_columns} ? {,
-     calibrated INT DEFAULT 0
-    }
     {@include_constraints} ? {,
-    PRIMARY KEY (source_id, analysis_id, outcome_cohort_id, target_cohort_id),
+    PRIMARY KEY (source_id, analysis_id, outcome_cohort_id, target_cohort_id {@add_calibrated_columns} ? {, calibrated}),
 
     CONSTRAINT out_cohort_def_fk
       FOREIGN KEY(outcome_cohort_id)
@@ -109,9 +117,8 @@ create TABLE @schema.outcome_null_distribution (
     analysis_id INT NOT NULL,
     outcome_type INT NOT NULL,
     target_cohort_id BIGINT NOT NULL,
-    ingredient_concept_id INT not null,
-    null_dist_mean NUMERIC,
-    null_dist_sd NUMERIC,
+    mean NUMERIC,
+    sd NUMERIC,
     absolute_error NUMERIC,
     n_controls NUMERIC
     {@include_constraints} ? {,
@@ -135,8 +142,8 @@ create TABLE @schema.exposure_null_distribution (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
     outcome_cohort_id BIGINT NOT NULL,
-    null_dist_mean NUMERIC,
-    null_dist_sd NUMERIC,
+    mean NUMERIC,
+    sd NUMERIC,
     absolute_error NUMERIC,
     n_controls NUMERIC
     {@include_constraints} ? {,
@@ -158,5 +165,5 @@ create TABLE @schema.exposure_null_distribution (
 {@include_constraints} ? {
 create index sccr_idx on @schema.scc_result(outcome_cohort_id, target_cohort_id);
 create index idx_exp_null_dist on @schema.exposure_null_distribution(outcome_cohort_id);
-create index idx_out_null_dist on @schema.outcome_null_distribution(ingredient_concept_id);
+create index idx_out_null_dist on @schema.outcome_null_distribution(target_cohort_id);
 }
