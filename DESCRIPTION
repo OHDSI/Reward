@@ -34,7 +34,8 @@ Imports:
     meta,
     shiny,
     shinycssloaders,
-    shinyWidgets
+    shinyWidgets,
+    gt
 Suggests:
     targets,
     testthat,
