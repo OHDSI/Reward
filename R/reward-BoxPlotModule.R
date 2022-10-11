@@ -1,3 +1,19 @@
+# Copyright 2022 Observational Health Data Sciences and Informatics
+#
+# This file is part of Reward
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #' @title
 #' Box Plot Distribution
 #' @description
@@ -10,16 +26,16 @@ boxPlotDist <- function(data) {
   }
 
   plot <- ggplot2::ggplot(data = data) +
-    ggplot2::aes(x = .data$SOURCE_NAME,
-                 ymin = .data$MIN,
-                 lower = .data$P25,
-                 middle = .data$MEDIAN,
-                 upper = .data$P75,
-                 ymax = .data$MAX,
-                 average = .data$MEAN,
-                 sd = .data$SD,
-                 group = .data$SOURCE_NAME,
-                 y = .data$MEDIAN) +
+    ggplot2::aes(x = .data$sourceName,
+                 ymin = .data$min,
+                 lower = .data$p25,
+                 middle = .data$median,
+                 upper = .data$p75,
+                 ymax = .data$max,
+                 average = .data$mean,
+                 sd = .data$sd,
+                 group = .data$sourceName,
+                 y = .data$median) +
     ggplot2::geom_errorbar(size = 0.5) +
     ggplot2::geom_boxplot(stat = "identity", fill = rgb(0, 0, 0.8, alpha = 0.25), size = 0.2) +
     ggplot2::xlab("Data source") +
