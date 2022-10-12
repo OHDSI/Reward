@@ -22,69 +22,51 @@ metaAnalysisTableUi <- function(id) {
   )
 }
 
+#' @import shiny
 metaAnalysisTableServer <- function(id, model, selectedExposureOutcome) {
-  library(shiny)
-  niceColumnName <- list(
-    SOURCE_NAME = "Database",
-    CALIBRATED_RR = "Relative Risk *calibrated",
-    CALIBRATED_CI_95 = "CI 95*",
-    CALIBRATED_P_VALUE = "P*",
-    RR = "Relative Risk",
-    CI_95 = "CI 95",
-    P_VALUE = "P",
-    T_AT_RISK = "N Exp",
-    T_PT = "Exposed time (years)",
-    C_CASES = "Unexposed cases",
-    T_CASES = "Exposed cases"
-  )
-
-  niceColumnNameInv <- list()
-
-  for (n in names(niceColumnName)) {
-    niceColumnNameInv[niceColumnName[[n]]] <- n
-  }
-
-  server <- moduleServer(id, function(input, output, session) {
-
-    metaAnalysisTbl <- reactive({
+  server <- shiny::moduleServer(id, function(input, output, session) {
+    metaAnalysisTbl <- shiny::reactive({
       s <- selectedExposureOutcome()
-      exposureId <- s$TARGET_COHORT_ID
-      outcomeId <- s$OUTCOME_COHORT_ID
-      calibrationType <- s$calibrationType
+      exposureId <- s$targetCohortId
+      outcomeId <- s$outcomeCohortId
       if (length(outcomeId) & length(exposureId)) {
-        return(model$getMetaAnalysisTable(exposureId, outcomeId, calibrationType = calibrationType, sourceIds = s$usedDataSources))
+        return(model$getMetaAnalysisTable(exposureId, outcomeId))
       }
       return(data.frame())
     })
 
-    fullResultsTable <- reactive({
+    fullResultsTable <- shiny::reactive({
       table3 <- metaAnalysisTbl()
-
       if (length(table3) == 0) {
         return(data.frame())
       }
 
       if (nrow(table3) >= 1) {
-        table3$RR[table3$RR > 100] <- NA
-        table3$C_PT <- formatC(table3$C_PT, digits = 0, format = "f")
-        table3$T_PT <- formatC(table3$T_PT, digits = 0, format = "f")
-        table3$RR <- formatC(table3$RR, digits = 2, format = "f")
-        table3$LB_95 <- formatC(table3$LB_95, digits = 2, format = "f")
-        table3$UB_95 <- formatC(table3$UB_95, digits = 2, format = "f")
-        table3$P_VALUE <- formatC(table3$P_VALUE, digits = 2, format = "f")
+        table3$cPt <- formatC(table3$cPt, digits = 0, format = "f")
+        table3$cPt <- formatC(table3$cPt, digits = 0, format = "f")
+        table3$rr <- formatC(table3$rr, digits = 2, format = "f")
+        table3$lb95 <- formatC(table3$lb95, digits = 2, format = "f")
+        table3$ub95 <- formatC(table3$ub95, digits = 2, format = "f")
+        table3$pValue <- formatC(table3$pValue, digits = 2, format = "f")
 
-        table3$CALIBRATED_RR <- formatC(table3$CALIBRATED_RR, digits = 2, format = "f")
-        table3$CALIBRATED_LB_95 <- formatC(table3$CALIBRATED_LB_95, digits = 2, format = "f")
-        table3$CALIBRATED_UB_95 <- formatC(table3$CALIBRATED_UB_95, digits = 2, format = "f")
-        table3$CALIBRATED_P_VALUE <- formatC(table3$CALIBRATED_P_VALUE, digits = 2, format = "f")
+        table3$calibratedRr <- formatC(table3$calibratedRr, digits = 2, format = "f")
+        table3$calibratedLb95 <- formatC(table3$calibratedLb95, digits = 2, format = "f")
+        table3$calibratedUb95 <- formatC(table3$calibratedUb95, digits = 2, format = "f")
+        table3$calibratedPValue <- formatC(table3$calibratedPValue, digits = 2, format = "f")
 
-        for (n in names(niceColumnName)) {
-          colnames(table3)[colnames(table3) == n] <- niceColumnName[n]
-        }
+        table3 <- table3 %>% dplyr::select(
+          .data$sourceName,
+          .data$rr,
+          .data$ci95,
+          .data$pValue,
+          .data$calibratedRr,
+          .data$calibratedCi95,
+          .data$calibratedPValue
+        )
 
-        headers <- names(niceColumnNameInv)
+        colnames(table3) <- SqlRender::camelCaseToTitleCase(colnames(table3))
         table4 <- DT::datatable(
-          table3[, headers], rownames = FALSE, escape = FALSE, options = list(dom = 't'),
+          table3, rownames = FALSE, escape = FALSE, options = list(dom = 't'),
           caption = "* Indicates values after empirical calibration"
         )
         return(table4)
@@ -104,9 +86,9 @@ metaAnalysisTableServer <- function(id, model, selectedExposureOutcome) {
     output$downloadSubTable <- downloadHandler(
       filename = function() {
         s <- selectedExposureOutcome()
-        treatment <- s$TARGET_COHORT_ID
-        outcome <- s$OUTCOME_COHORT_ID
-        paste0(model$schemaName, '-results-', treatment, "-", outcome, '.csv')
+        treatment <- s$targetCohortId
+        outcome <- s$outcomeCohortId
+        paste0(model$resultsSchema, '-results-', treatment, "-", outcome, '.csv')
       },
       content = function(file) {
         write.csv(metaAnalysisTbl(), file, row.names = FALSE)

@@ -19,20 +19,6 @@ strQueryWrap <- function(vec) {
   paste0("'", vec, "'", sep = "")
 }
 
-#' Wrapper around boxplot module
-timeOnTreatmentServer <- function(id, model, selectedExposureOutcome) {
-  caption <- "Table: Shows time on treatment for population od patients exposed to medication that experience the outcome of interest."
-  server <- shiny::moduleServer(id, boxPlotModuleServer(model$getTimeOnTreatmentStats, caption, selectedExposureOutcome))
-  return(server)
-}
-
-#' Wrapper around boxplot module
-timeToOutcomeServer <- function(id, model, selectedExposureOutcome) {
-  caption <- "Table: shows distribution of absolute difference of time between exposure and outcome for population of patients exposed to medication that expeirence the outcome."
-  server <- shiny::moduleServer(id, boxPlotModuleServer(model$getTimeToOutcomeStats, caption, selectedExposureOutcome))
-  return(server)
-}
-
 #' @title
 #' Dashboard instance
 #' @description
@@ -209,19 +195,56 @@ rewardModule <- function(id = "Reward",
       return(filtered2)
     })
 
+    ingredientConetpInput <- shiny::reactive({
+      selected <- selectedExposureOutcome()
+      if (is.null(selected))
+        return(data.frame())
+      model$getExposureCohortConceptSets(selected$targetCohortId)
+    })
+
+    conditionConceptInput <- shiny::reactive({
+      selected <- selectedExposureOutcome()
+      if (is.null(selected))
+        return(data.frame())
+      model$getOutcomeCohortConceptSets(selected$outcomeCohortId)
+    })
+
+    selectedCohort <- shiny::reactive({
+      selected <- selectedExposureOutcome()
+
+      if (model$config$exposureDashboard) {
+        cohortId <- selected$targetCohortId
+        selectedOutcomeType <- 0 # TODO
+        conceptSet <- ingredientConetpInput()
+      } else {
+        cohortId <- selected$outcomeCohortId
+        selectedOutcomeType <- 0
+        conceptSet <- conditionConceptInput()
+
+      }
+
+      list(
+        cohortDefinitionId = cohortId,
+        isExposure = model$config$exposureDashboard,
+        selectedOutcomeType = selectedOutcomeType,
+        conceptSet = conceptSet,
+        analysisId = 1
+      )
+    })
+
     print("Loading shiny modules meta-analysis")
     metaAnalysisTableServer("metaTable", model, selectedExposureOutcome)
     print("Loading shiny modules forest plot")
     forestPlotServer("forestPlot", model, selectedExposureOutcome)
     print("Loading shiny modules calibration")
-    calibrationPlotServer("calibrationPlot", model, selectedExposureOutcome)
+    calibrationPlotServer("calibrationPlot", model, selectedCohort)
     print("Loading shiny module time on treatment")
     timeOnTreatmentServer("timeOnTreatment", model, selectedExposureOutcome)
-    tabPanelTimeOnTreatment <- tabPanel("Time on treatment", boxPlotModuleUi("timeOnTreatment"))
+    tabPanelTimeOnTreatment <- tabPanel("Time on treatment", boxPlotModuleUi(ns("timeOnTreatment")))
     shiny::appendTab(inputId = "outcomeResultsTabs", tabPanelTimeOnTreatment)
     print("Loading shiny module time to outcome")
     timeToOutcomeServer("timeToOutcome", model, selectedExposureOutcome)
-    tabPanelTimeToOutcome <- tabPanel("Time to outcome", boxPlotModuleUi("timeToOutcome"))
+    tabPanelTimeToOutcome <- tabPanel("Time to outcome", boxPlotModuleUi(ns("timeToOutcome")))
     shiny::appendTab(inputId = "outcomeResultsTabs", tabPanelTimeToOutcome)
 
     fullDataDownload <- shiny::reactive({
@@ -236,7 +259,7 @@ rewardModule <- function(id = "Reward",
 
     output$treatmentOutcomeStr <- shiny::renderText({
       s <- selectedExposureOutcome()
-      return(paste(s$TARGET_COHORT_NAME, "for", s$OUTCOME_COHORT_NAME))
+      return(paste(s$targetCohortName, " - ", s$outcomeCohortName))
     })
 
     output$downloadData <- shiny::downloadHandler(
@@ -297,23 +320,17 @@ rewardModule <- function(id = "Reward",
       }
     )
 
-    ingredientConetpInput <- shiny::reactive({
-      selected <- selectedExposureOutcome()
-      if (is.null(selected))
-        return(data.frame())
-      model$getExposureConceptSet(selected$TARGET_COHORT_ID)
+    output$selectedOutcomeConceptSet <- DT::renderDataTable({
+      dt <- conditionConceptInput()
+      colnames(dt) <- SqlRender::camelCaseToTitleCase(colnames(dt))
+      dt
     })
 
-    conditionConceptInput <- shiny::reactive({
-      selected <- selectedExposureOutcome()
-      if (is.null(selected))
-        return(data.frame())
-      model$getOutcomeConceptSet(selected$OUTCOME_COHORT_ID)
+    output$selectedExposureConceptSet <- DT::renderDataTable({
+      dt <- ingredientConetpInput()
+      colnames(dt) <- SqlRender::camelCaseToTitleCase(colnames(dt))
+      dt
     })
-
-
-    output$selectedOutcomeConceptSet <- DT::renderDataTable({ conditionConceptInput() })
-    output$selectedExposureConceptSet <- DT::renderDataTable({ ingredientConetpInput() })
 
     # Add cem panel if option is present
     if (!is.null(model$getCemConnection())) {
@@ -324,7 +341,7 @@ rewardModule <- function(id = "Reward",
                                      ingredientConceptInput = ingredientConetpInput,
                                      conditionConceptInput = conditionConceptInput,
                                      siblingLookupLevelsInput = shiny::reactive({ 0 }))
-      cemPanel <- shiny::tabPanel("Evidence", CemConnector::ceExplorerModuleUi("cemExplorer"))
+      cemPanel <- shiny::tabPanel("Evidence", CemConnector::ceExplorerModuleUi(ns("cemExplorer")))
       shiny::appendTab(inputId = "outcomeResultsTabs", cemPanel)
     }
   })

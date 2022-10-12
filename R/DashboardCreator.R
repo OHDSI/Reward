@@ -78,11 +78,9 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
     ),
     cohort_concept_set = list(
       subQuery = "SELECT cd.* FROM @results_schema.cohort_concept_set cd
-      INNER JOIN #usable_cohorts uc ON uc.cohort_definition_id = cd.cohort_definition_id
-      {@is_exposure} ? {WHERE cd.cohort_definition_id IN (@cohort_definition_id)}",
+      INNER JOIN #usable_cohorts uc ON uc.cohort_definition_id = cd.cohort_definition_id",
       params = list(
-        cohort_definition_id = dashboardConfig$cohortIds,
-        is_exposure = dashboardConfig$exposureDashboard
+        cohort_definition_id = dashboardConfig$cohortIds
       )
     ),
     analysis_setting = list(
@@ -149,7 +147,8 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
         dropTableIfExists = FALSE
       )
 
-      if (table == "scc_result" && length(config$dataSources) == 1) {
+      # Repeat upload if meta-analysis is just for a single data source
+      if (table == "scc_result" && length(dashboardConfig$dataSources) == 1) {
         result$SOURCE_ID <- -99
         DatabaseConnector::insertTable(
           connection = targetConnection,

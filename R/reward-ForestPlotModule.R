@@ -84,11 +84,11 @@ forestPlotServer <- function(id, model, selectedExposureOutcome) {
       s <- selectedExposureOutcome()
       exposureId <- s$targetCohortId
       outcomeId <- s$outcomeCohortId
-      calibrationType <- s$calibrationType
+
       if (length(outcomeId) & length(exposureId)) {
         shiny::updateTabsetPanel(session, "mainPanel", "Detail")
         calibOpts <- if (length(input$forestPlotCalibrated)) input$forestPlotCalibrated else c(0, 1)
-        res <- model$getForestPlotTable(exposureId, outcomeId, calibOpts, calibrationType = calibrationType, sourceIds = s$usedDataSources)
+        res <- model$getForestPlotTable(exposureId, outcomeId, as.numeric(calibOpts))
         return(res)
       }
       return(data.frame())

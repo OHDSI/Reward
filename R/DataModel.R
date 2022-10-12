@@ -33,11 +33,11 @@ RewardDataModel <- R6::R6Class(
     resultsSchema = NULL,
     cemConnectionDetails = list(),
 
-                                        #' @description
-                                        #' initialize backend object.
-                                        #' @param configPath          Reward configuration yaml path
-                                        #' @param keyring             optional keyring::keyring object
-                                        #' @param usePooledConnection Used a pooled connection object rather than a database connector object.
+                                                        #' @description
+                                                        #' initialize backend object.
+                                                        #' @param configPath          Reward configuration yaml path
+                                                        #' @param keyring             optional keyring::keyring object
+                                                        #' @param usePooledConnection Used a pooled connection object rather than a database connector object.
     initialize = function(configPath,
                           keyring = NULL,
                           usePooledConnection = FALSE) {
@@ -55,14 +55,14 @@ RewardDataModel <- R6::R6Class(
       self$cemConnectionDetails <- self$config$cemConnectionDetails
     },
 
-                                #' @description
-                                #' Closes connection
+                #' @description
+                #' Closes connection
     finalize = function() {
       self$connection$finalize()
     },
 
-                                #' @description
-                                #' Get cem connector api connection
+                #' @description
+                #' Get cem connector api connection
     getCemConnection = function() {
       tryCatch({
         if (is.null(private$cemConnection)) {
@@ -80,13 +80,17 @@ RewardDataModel <- R6::R6Class(
       return(private$cemConnection)
     },
 
+    queryDb = function(sql, results_schema = config$resultsSchema, ...) {
+      self$connection$queryDb(sql, results_schema = self$resultsSchema, ...)
+    },
+
     getDataSources = function() {
       self$connection$queryDb("SELECT * FROM  @results_schema.data_source", results_schema = self$resultsSchema)
     },
 
-                                #' @description
-                                #' Get outcome cohort definition set
-                                #' @param cohortIds         numeric vector of cohort ids or null
+                                                #' @description
+                                                #' Get outcome cohort definition set
+                                                #' @param cohortIds         numeric vector of cohort ids or null
     getOutcomeCohortDefinitionSet = function(cohortIds = NULL) {
       # make a proper cohort definition set from sql and cohort json
       sql <- "SELECT cd.* FROM @results_schema.cohort_definition cd
@@ -96,9 +100,9 @@ RewardDataModel <- R6::R6Class(
       self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
 
-                                #' @description
-                                #' Get exposure cohort definition set
-                                #' @param cohortIds         numeric vector of cohort ids or null
+                                                #' @description
+                                                #' Get exposure cohort definition set
+                                                #' @param cohortIds         numeric vector of cohort ids or null
     getExposureCohortDefinitionSet = function(cohortIds = NULL) {
       # make a proper cohort definition set from sql and cohort json
       sql <- "SELECT cd.* FROM @results_schema.cohort_definition cd
@@ -108,9 +112,9 @@ RewardDataModel <- R6::R6Class(
       self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
 
-                                #' @description
-                                #' Get expsoure cohort concept sets
-                                #' @param cohortIds         numeric vector of cohort ids or null
+                                                #' @description
+                                                #' Get expsoure cohort concept sets
+                                                #' @param cohortIds         numeric vector of cohort ids or null
     getExposureCohortConceptSets = function(cohortIds = NULL) {
       sql <- "SELECT ccs.* FROM @results_schema.cohort_concept_set ccs
       INNER JOIN @results_schema.exposure_cohort ec ON ccs.cohort_definition_id = ec.cohort_definition_id
@@ -119,9 +123,9 @@ RewardDataModel <- R6::R6Class(
       self$connection$queryDb(sql, cohort_ids = cohortIds, results_schema = self$resultsSchema)
     },
 
-                                #' @description
-                                #' Get outcome cohort concept sets for all cohorts specified
-                                #' @param cohortIds         numeric vector of cohort ids or null
+                                                #' @description
+                                                #' Get outcome cohort concept sets for all cohorts specified
+                                                #' @param cohortIds         numeric vector of cohort ids or null
     getOutcomeCohortConceptSets = function(cohortIds = NULL) {
       sql <- "SELECT ccs.*, oc.outcome_type FROM @results_schema.cohort_concept_set ccs
       INNER JOIN @results_schema.outcome_cohort oc ON ccs.cohort_definition_id = oc.cohort_definition_id
@@ -138,9 +142,9 @@ RewardDataModel <- R6::R6Class(
                               results_schema = self$resultsSchema)
     },
 
-                                #' @description
-                                #' Get getCohort data for one cohort
-                                #' @param cohortDefinitionId         cohort identifier (not null, integer)
+                                                #' @description
+                                                #' Get getCohort data for one cohort
+                                                #' @param cohortDefinitionId         cohort identifier (not null, integer)
     getCohort = function(cohortDefinitionId) {
       checkmate::assert_number(cohortDefinitionId)
       sql <- "SELECT cd.* FROM @results_schema.cohort_definition cd
@@ -157,7 +161,7 @@ RewardDataModel <- R6::R6Class(
     getAnalysisSettings = function(decode = TRUE) {
       sql <- "SELECT * FROM @results_schema.analysis_setting"
       rows <- self$connection$queryDb(sql, results_schema = self$resultsSchema)
-                                                            #' Decode raw base 64
+                                                                                    #' Decode raw base 64
       if (decode) {
         decoded <- c()
         for (i in 1:nrow(rows)) {
@@ -169,10 +173,10 @@ RewardDataModel <- R6::R6Class(
       return(rows)
     },
 
-                                #' @description
-                                #' Get getCohortStats
-                                #' @param cohortDefinitionId         cohort identifier (not null, integer)
-                                #' @param isExposure                   Logical exposure cohort or not
+                                                #' @description
+                                                #' Get getCohortStats
+                                                #' @param cohortDefinitionId         cohort identifier (not null, integer)
+                                                #' @param isExposure                   Logical exposure cohort or not
     getCohortStats = function(cohortDefinitionId, isExposure) {
       checkmate::assert_number(cohortDefinitionId)
       checkmate::assert_logical(isExposure)
@@ -195,8 +199,8 @@ RewardDataModel <- R6::R6Class(
                               results_schema = self$resultsSchema)
     },
 
-                                #'
-                                #' Returns SCC results for a cohort id
+                                                #'
+                                                #' Returns SCC results for a cohort id
     getNegativeControlSccResults = function(cohortDefinitionId,
                                             isExposure,
                                             outcomeType = NULL,
@@ -274,10 +278,10 @@ RewardDataModel <- R6::R6Class(
           ~cemConnection$getSuggestedControlIngredients(.x, nControls = self$config$negativeControlCount)) %>%
         dplyr::mutate(targetCohortId = .data$conceptId * 1000)
     },
-    #' Count any query as subquery - (note: will be inneficient in many situations)
-    #' @param query                 Sql query string
-    #' @param ...                   @seealso `SqlRender::render`
-    #' @paran render                Optional - call sqlrender to render first or not
+                    #' Count any query as subquery - (note: will be inneficient in many situations)
+                    #' @param query                 Sql query string
+                    #' @param ...                   @seealso `SqlRender::render`
+                    #' @paran render                Optional - call sqlrender to render first or not
     countQuery = function(query, ..., render = TRUE) {
       if (render) {
         query <- SqlRender::render(query, ...)
@@ -402,6 +406,155 @@ DashboardDataModel <- R6::R6Class(
     getFilteredTableResultsCount = function(...) {
       sql <- self$getFilteredTableResultsQuery(...)
       self$countQuery(sql, render = FALSE)
+    },
+
+    getMetaAnalysisTable = function(exposureId, outcomeId) {
+      sql <- "
+        SELECT r.SOURCE_ID,
+            ds.SOURCE_NAME,
+            r.RR,
+            CONCAT(ROUND(r.LB_95, 2), '-', ROUND(r.UB_95, 2)) AS CI_95,
+            r.LB_95,
+            r.UB_95,
+            r.P_VALUE,
+            r2.RR as Calibrated_RR,
+            CONCAT(ROUND(r2.LB_95, 2) , '-', ROUND(r2.UB_95, 2)) AS CALIBRATED_CI_95,
+            r2.LB_95 as CALIBRATED_LB_95,
+            r2.UB_95 as CALIBRATED_UB_95,
+            r2.P_VALUE as Calibrated_P_VALUE,
+            r.C_AT_RISK,
+            r.C_PT,
+            r.C_CASES,
+            r.T_AT_RISK,
+            r.T_PT,
+            r.T_CASES
+        FROM @results_schema.scc_result r
+        INNER JOIN @results_schema.data_source ds ON ds.source_id = r.source_id
+        LEFT JOIN @results_schema.scc_result r2 ON (
+                r2.OUTCOME_COHORT_ID = r.OUTCOME_COHORT_ID
+                AND r2.TARGET_COHORT_ID = r.TARGET_COHORT_ID
+                AND r2.calibrated = 1
+                AND r2.source_id = r.source_id
+            )
+            WHERE r.OUTCOME_COHORT_ID = @outcome
+            AND r.TARGET_COHORT_ID = @treatment
+            AND r.calibrated = 0
+        ORDER BY r.SOURCE_ID
+      "
+      return(self$queryDb(sql, treatment = exposureId, outcome = outcomeId))
+    },
+
+    getForestPlotTable = function(exposureId, outcomeId, calibrated) {
+      sql <- "
+      {DEFAULT @use_calibration = TRUE}
+      SELECT
+          r.SOURCE_ID,
+          ds.SOURCE_NAME,
+          r.C_AT_RISK,
+          r.C_PT,
+          r.C_CASES,
+          r.RR,
+          r.LB_95,
+          r.UB_95,
+          r.P_VALUE,
+          r.T_AT_RISK,
+          r.T_PT,
+          r.T_CASES,
+          r.SE_LOG_RR,
+          {@use_calibration} ? { r.calibrated, }
+          r.I2
+      FROM @results_schema.scc_result r
+      INNER JOIN @results_schema.data_source ds ON ds.source_id = r.source_id
+          WHERE r.OUTCOME_COHORT_ID = @outcome
+          AND r.TARGET_COHORT_ID = @treatment
+          {@use_calibration} ? { AND r.calibrated IN (@calibrated) }
+      ORDER BY r.SOURCE_ID
+      "
+      table <- self$queryDb(sql, treatment = exposureId, outcome = outcomeId, calibrated = calibrated)
+      calibratedTable <- table %>% dplyr::filter(.data$calibrated == 1)
+      uncalibratedTable <- table %>% dplyr::filter(.data$calibrated == 0)
+
+      if (nrow(calibratedTable) & nrow(uncalibratedTable)) {
+        calibratedTable$calibrated <- "Calibrated"
+        uncalibratedTable$calibrated <- "Uncalibrated"
+        uncalibratedTable$sourceName <- paste0(uncalibratedTable$sourceName, "\n uncalibrated")
+        calibratedTable$sourceName <- paste0(calibratedTable$sourceName, "\n Calibrated")
+      }
+
+      table <- rbind(uncalibratedTable[order(uncalibratedTable$sourceId, decreasing = TRUE),],
+                     calibratedTable[order(calibratedTable$sourceId, decreasing = TRUE),])
+      return(table)
+    },
+
+
+    getSummaryStats = function(statType, exposureId, outcomeId, sourceIds = NULL, tableName = "scc_stat", analysisId = 1) {
+      self$queryDb("
+      SELECT
+        ds.source_name,
+        round(mean, 3) as mean,
+        round(sd, 3) as sd,
+        minimum as min,
+        p_10 as p10,
+        p_25 as p25,
+        median as median,
+        p_75 as p75,
+        p_90 as p90,
+        maximum as max,
+        total
+      FROM @results_schema.@table_name tts
+      INNER JOIN @results_schema.data_source ds ON tts.source_id = ds.source_id
+      WHERE stat_type = '@stat_type'
+      AND target_cohort_id = @treatment AND outcome_cohort_id = @outcome
+      AND mean is not NULL
+      AND analysis_id = @analysis_id
+      {@source_ids != ''} ? {AND ds.source_id IN (@source_ids)}",
+                   stat_type = statType,
+                   analysis_id = analysisId,
+                   table_name = tableName,
+                   treatment = exposureId,
+                   outcome = outcomeId,
+                   source_ids = sourceIds)
+    },
+
+    getTimeToOutcomeStats = function(...) {
+      self$getSummaryStats(statType = "time_to_outcome", ...)
+    },
+
+    getTimeOnTreatmentStats = function(...) {
+      self$getSummaryStats(statType = "time_on_treatment", ...)
+    },
+
+    getNegativeControlSccResults = function(cohortDefinitionId,
+                                            isExposure,
+                                            outcomeType = NULL,
+                                            conceptSet = NULL) {
+      checkmate::assertLogical(isExposure)
+      checkmate::assertIntegerish(outcomeType, null.ok = !isExposure)
+
+      sql <- "
+      SELECT sr.* FROM @results_schema.scc_result sr
+      INNER JOIN @results_schema.negative_control nc ON (
+      nc.cohort_definition_id = {@exposure} ? {
+        sr.target_cohort_id AND sr.outcome_cohort_id = nc.negative_control_cohort_id
+        } : {
+        sr.outcome_cohort_id AND sr.target_cohort_id = nc.negative_control_cohort_id
+        }
+      )
+      {@exposure} ? {
+        INNER JOIN @results_schema.outcome_cohort oc ON (
+          oc.cohort_definition_id = sr.outcome_cohort_id AND oc.outcome_type = @outcome_type
+        )
+      }
+      WHERE {@exposure} ? {sr.target_cohort_id} : {sr.outcome_cohort_id} = @cohort_definition_id
+      AND sr.calibrated = 0
+      AND rr IS NOT NULL"
+
+      res <- self$queryDb(sql,
+                          cohort_definition_id = cohortDefinitionId,
+                          exposure = isExposure)
+      return(res)
+
+      return(data.frame())
     }
   )
 )

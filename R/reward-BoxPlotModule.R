@@ -53,10 +53,10 @@ boxPlotModuleServer <- function(distStatsFunc, caption, selectedExposureOutcome)
   serverFunction <- function(input, output, session) {
     getDistStats <- shiny::reactive({
       s <- selectedExposureOutcome()
-      treatment <- s$TARGET_COHORT_ID
-      outcome <- s$OUTCOME_COHORT_ID
+      treatment <- s$targetCohortId
+      outcome <- s$outcomeCohortId
 
-      data <- distStatsFunc(treatment, outcome, sourceIds = s$usedDataSources)
+      data <- distStatsFunc(exposureId = treatment, outcomeId = outcome, sourceIds = s$usedDataSources)
 
       return(data)
     })
@@ -93,3 +93,18 @@ boxPlotModuleUi <- function(id) {
     shinycssloaders::withSpinner(DT::dataTableOutput(NS(id, "statsTable")))
   )
 }
+
+#' Wrapper around boxplot module
+timeOnTreatmentServer <- function(id, model, selectedExposureOutcome) {
+  caption <- "Table: Shows time on treatment for population od patients exposed to medication that experience the outcome of interest."
+  server <- shiny::moduleServer(id, boxPlotModuleServer(model$getTimeOnTreatmentStats, caption, selectedExposureOutcome))
+  return(server)
+}
+
+#' Wrapper around boxplot module
+timeToOutcomeServer <- function(id, model, selectedExposureOutcome) {
+  caption <- "Table: shows distribution of absolute difference of time between exposure and outcome for population of patients exposed to medication that expeirence the outcome."
+  server <- shiny::moduleServer(id, boxPlotModuleServer(model$getTimeToOutcomeStats, caption, selectedExposureOutcome))
+  return(server)
+}
+
