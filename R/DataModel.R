@@ -271,13 +271,13 @@ RewardDataModel <- R6::R6Class(
       suggestedControlExposures <- self$getOutcomeCohortConceptSets(cohortIds = cohortIds) %>%
         dplyr::group_by(.data$cohortDefinitionId) %>%
         dplyr::group_modify(
-          ~cemConnection$getSuggestedControlExposures(.x, nControls = self$config$negativeControlCount)) %>%
-        dplyr::mutate(exposureCohortId = .data$conceptId * 1000)
+          ~cemConnection$getSuggestedControlIngredients(.x, nControls = self$config$negativeControlCount)) %>%
+        dplyr::mutate(targetCohortId = .data$conceptId * 1000)
     },
-            #' Count any query as subquery - (note: will be inneficient in many situations)
-            #' @param query                 Sql query string
-            #' @param ...                   @seealso `SqlRender::render`
-            #' @paran render                Optional - call sqlrender to render first or not
+    #' Count any query as subquery - (note: will be inneficient in many situations)
+    #' @param query                 Sql query string
+    #' @param ...                   @seealso `SqlRender::render`
+    #' @paran render                Optional - call sqlrender to render first or not
     countQuery = function(query, ..., render = TRUE) {
       if (render) {
         query <- SqlRender::render(query, ...)

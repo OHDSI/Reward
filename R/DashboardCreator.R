@@ -318,7 +318,7 @@ computeNullDistributions <- function(targetConnection, dashboardConfig, resultDa
 
   } else {
 
-    sql <- "SELECT sccr.*, o.outcome_type
+    sql <- "SELECT sccr.*
     FROM @schema.scc_result sccr
     INNER JOIN @schema.negative_control nc ON sccr.outcome_cohort_id = nc.cohort_definition_id
       AND sccr.target_cohort_id = nc.negative_control_cohort_id
@@ -330,7 +330,7 @@ computeNullDistributions <- function(targetConnection, dashboardConfig, resultDa
                                                             snakeCaseToCamelCase = TRUE)
 
     nullDistResults <- ncResults %>%
-      dplyr::group_by(.data$targetCohortId, .data$analysisId, .data$sourceId) %>%
+      dplyr::group_by(.data$outcomeCohortId, .data$analysisId, .data$sourceId) %>%
       dplyr::group_modify(~.computeNullDist(.x))
 
     DatabaseConnector::insertTable(
@@ -388,7 +388,7 @@ calibrate <- function(x, nullDist) {
 
   nullDist <- createNullDist(null$mean[1], null$sd[1])
   res <- calibrate(x, nullDist)
-  res$targetCohortId <- x$outcomeCohortId
+  res$targetCohortId <- x$targetCohortId
   return(res)
 }
 
@@ -437,7 +437,6 @@ computeCalibratedEstimates <- function(dashboardConfig, targetConnection, result
     calibratedEstimates <- fullResults %>%
       dplyr::group_by(.data$sourceId,
                       .data$outcomeCohortId,
-                      .data$targetCohortId,
                       .data$analysisId) %>%
       dplyr::group_modify(~.applyExposureCalibration(.x, nulls), .keep = TRUE) %>%
       dplyr::ungroup()
