@@ -148,7 +148,7 @@ rewardUi <- function(id = "Reward",
     shinydashboard::box(
       width = 6,
       title = "Data sources",
-      reactable::reactableOutput(outputId = ns("dataSourceTable")
+      shinycssloaders::withSpinner(reactable::reactableOutput(outputId = ns("dataSourceTable"))
       )
     ),
     shinydashboard::box(
@@ -202,8 +202,15 @@ rewardUi <- function(id = "Reward",
 
   appTitle <- paste(appConfig$dashboardName)
   # Put them together into a dashboardPage
-  ui <- shinydashboard::dashboardPage(shinydashboard::dashboardHeader(title = appTitle),
-                                      sidebar,
-                                      body)
+  ui <- shinydashboard::dashboardPage(
+    shinydashboard::dashboardHeader(
+      title = appTitle,
+      shiny::tags$li(
+        class = "dropdown",
+        style = "margin-top: 8px !important; margin-right : 5px !important")
+    ),
+    sidebar,
+    body
+  )
   return(ui)
 }
