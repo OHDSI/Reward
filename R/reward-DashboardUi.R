@@ -120,22 +120,23 @@ rewardUi <- function(id = "Reward",
     condition = metaDisplayCondtion,
     ns = ns,
     shinydashboard::box(
-      shiny::HTML(paste("<h4 id='mainR'>", textOutput("treatmentOutcomeStr"), "</h4>")),
+      shiny::HTML(paste("<h4 id='mainR'>", textOutput(ns("treatmentOutcomeStr")), "</h4>")),
       shiny::tabsetPanel(
-        id = "outcomeResultsTabs",
-        shiny::tabPanel("Detailed results", metaAnalysisTableUi("metaTable")),
-        shiny::tabPanel("Forest plot", forestPlotUi("forestPlot")),
+        id = ns("outcomeResultsTabs"),
+        type = "pills",
+        shiny::tabPanel("Detailed results", metaAnalysisTableUi(ns("metaTable"))),
+        shiny::tabPanel("Forest plot", forestPlotUi(ns("forestPlot"))),
         shiny::tabPanel("Calibration plot",
-                        calibrationPlotUi("calibrationPlot",
+                        calibrationPlotUi(ns("calibrationPlot"),
                                           figureTitle = "Figure 2.")),
         shiny::tabPanel(
           "Exposure concepts",
           shiny::h4("Exposure Concepts"),
-          shinycssloaders::withSpinner(DT::dataTableOutput("selectedExposureConceptSet"))),
+          shinycssloaders::withSpinner(DT::dataTableOutput(ns("selectedExposureConceptSet")))),
         shiny::tabPanel(
           "Outcome concepts",
           h4("Outcome Concepts"),
-          shinycssloaders::withSpinner(DT::dataTableOutput("selectedOutcomeConceptSet")))),
+          shinycssloaders::withSpinner(DT::dataTableOutput(ns("selectedOutcomeConceptSet"))))),
       width = 12)
   )
 
@@ -147,7 +148,9 @@ rewardUi <- function(id = "Reward",
     shinydashboard::box(
       width = 6,
       title = "Data sources",
-      shinycssloaders::withSpinner(gt::gt_output(outputId = ns("dataSourceTable")))),
+      reactable::reactableOutput(outputId = ns("dataSourceTable")
+      )
+    ),
     shinydashboard::box(
       shiny::p(appConfig$description),
       shiny::p("Click the dashboard option to see the results. The sidebar options allow filtering of results based on risk and benift IRR thresholds"),

@@ -47,15 +47,13 @@ rewardModule <- function(id = "Reward",
                          model) {
   appConfig <- model$config
   ns <- shiny::NS(id)
-  shiny::onStop(function() { model$finalize() })
-
   shiny::moduleServer(id, function(input, output, session) {
 
     dataSourceInfo <- shiny::reactive({ model$getDataSourceInfo() })
-    output$dataSourceTable <- gt::render_gt({
+    output$dataSourceTable <- reactable::renderReactable({
       tbl <- dataSourceInfo()
       colnames(tbl) <- SqlRender::camelCaseToTitleCase(colnames(tbl))
-      tbl
+      reactable::reactable(tbl)
     })
 
     output$requiredDataSources <- shiny::renderUI({
@@ -122,9 +120,9 @@ rewardModule <- function(id = "Reward",
     })
 
     output$mainTablePage <- shiny::renderUI({
-
       numPages <- mainTableMaxPages()
-      shiny::selectInput("mainTablePage", "Page", choices = 1:numPages, selected = mainTablePage())
+      suppressWarnings(obj <- shiny::selectizeInput(ns("mainTablePage"), "Page", choices = 1:numPages, selected = mainTablePage()))
+      obj
     })
 
     shiny::observeEvent(input$mainTablePage, {
@@ -147,23 +145,24 @@ rewardModule <- function(id = "Reward",
 
     exposureCohorts <- shiny::reactive({
       model$getExposureCohorts()
-    }) %>% shiny::bindCache(paste0(appConfig$shortName, "-exposureCohorts"))
+    })
 
     outcomeCohorts <- shiny::reactive({
       model$getOutcomeCohorts()
-    }) %>% shiny::bindCache(paste0(appConfig$shortName, "-outcomeCohorts"))
+    })
 
     shiny::observe({
       ocC <- outcomeCohorts()
-      outcomeCohortChoices <- ocC$cohortDefinitioId
+      outcomeCohortChoices <- ocC$cohortDefinitionId
       names(outcomeCohortChoices) <- ocC$shortName
 
-      ecC <- exposureCohorts()
-      exposureCohortChoices <- ecC$cohortDefinitioId
-      names(outcomeCohortChoices) <- ecC$shortName
+      shiny::updateSelectizeInput(session, "outcomeCohorts", choices = outcomeCohortChoices, server = TRUE)
 
-      shiny::updateSelectizeInput(session, ns("outcomeCohorts"), choices = outcomeCohortChoices, server = TRUE)
-      shiny::updateSelectizeInput(session, ns("targetCohorts"), choices = exposureCohortChoices, server = TRUE)
+      ecC <- exposureCohorts()
+      exposureCohortChoices <- ecC$cohortDefinitionId
+      names(exposureCohortChoices) <- ecC$shortName
+
+      shiny::updateSelectizeInput(session, "targetCohorts", choices = exposureCohortChoices, server = TRUE)
 
       if (!appConfig$exposureDashboard) {
         shiny::updateSelectizeInput(session, "exposureClass", choices = model$getExposureClassNames(), server = TRUE)
@@ -210,14 +209,17 @@ rewardModule <- function(id = "Reward",
       return(filtered2)
     })
 
+    print("Loading shiny modules meta-analysis")
     metaAnalysisTableServer("metaTable", model, selectedExposureOutcome)
+    print("Loading shiny modules forest plot")
     forestPlotServer("forestPlot", model, selectedExposureOutcome)
+    print("Loading shiny modules calibration")
     calibrationPlotServer("calibrationPlot", model, selectedExposureOutcome)
-
+    print("Loading shiny module time on treatment")
     timeOnTreatmentServer("timeOnTreatment", model, selectedExposureOutcome)
     tabPanelTimeOnTreatment <- tabPanel("Time on treatment", boxPlotModuleUi("timeOnTreatment"))
     shiny::appendTab(inputId = "outcomeResultsTabs", tabPanelTimeOnTreatment)
-
+    print("Loading shiny module time to outcome")
     timeToOutcomeServer("timeToOutcome", model, selectedExposureOutcome)
     tabPanelTimeToOutcome <- tabPanel("Time to outcome", boxPlotModuleUi("timeToOutcome"))
     shiny::appendTab(inputId = "outcomeResultsTabs", tabPanelTimeToOutcome)
@@ -314,14 +316,14 @@ rewardModule <- function(id = "Reward",
     output$selectedExposureConceptSet <- DT::renderDataTable({ ingredientConetpInput() })
 
     # Add cem panel if option is present
-    if (!is.null(appConfig$cemConnectionDetails)) {
+    if (!is.null(model$getCemConnection())) {
       message("loading cem api")
-      cemBackend <- do.call(CemConnector::createCemConnection, appConfig$cemConnectionDetails)
-      ceModuleServer <- CemConnector::ceExplorerModule("cemExplorer",
-                                                       cemBackend,
-                                                       ingredientConceptInput = ingredientConetpInput,
-                                                       conditionConceptInput = conditionConceptInput,
-                                                       siblingLookupLevelsInput = shiny::reactive({ 0 }))
+      cemBackend <- model$getCemConnection()
+      CemConnector::ceExplorerModule("cemExplorer",
+                                     cemBackend,
+                                     ingredientConceptInput = ingredientConetpInput,
+                                     conditionConceptInput = conditionConceptInput,
+                                     siblingLookupLevelsInput = shiny::reactive({ 0 }))
       cemPanel <- shiny::tabPanel("Evidence", CemConnector::ceExplorerModuleUi("cemExplorer"))
       shiny::appendTab(inputId = "outcomeResultsTabs", cemPanel)
     }
@@ -331,20 +333,9 @@ rewardModule <- function(id = "Reward",
 dashboardInstance <- function(input,
                               output,
                               session,
-                              dashboardConfigPath = .GlobalEnv$dashboardConfigPath,
-                              connectionDetails = .GlobalEnv$connectionDetails,
-                              resultDatabaseSchema = .GlobalEnv$resultDatabaseSchema,
-                              globalConfigPath = .GlobalEnv$configPath) {
+                              model = .GlobalEnv$.model) {
 
-  if (is.null(connectionDetails)) {
-    config <- loadGlobalConfiguration(globalConfigPath)
-    connectionDetails <- config$connectionDetails
-  }
-
-  model <- DashboardDataModel$new(dashboardConfigPath = dashboardConfigPath,
-                                  connectionDetails = connectionDetails,
-                                  resultDatabaseSchema = resultDatabaseSchema)
-
+  shiny::onStop(function() { model$finalize() })
   rewardModule(model = model)
 }
 
@@ -369,22 +360,13 @@ launchDashboard <- function(dashboardConfigPath,
     stop("Must specify config path or connectionDetails")
   }
 
-  # These are probably null but shiny launch is not easy to modify
-  # .configPath <- .GlobalEnv$configPath
-  # .dashboardConfigPath <- .GlobalEnv$dashboardConfigPath
-  # .connectionDetails <- .GlobalEnv$connectionDetails
-  # .resultDatabaseSchema <- .GlobalEnv$resultDatabaseSchema
-  # # Storing masked variables in a temporary location
-  # on.exit({
-  #   .GlobalEnv$configPath <- .configPath
-  #   .GlobalEnv$dashboardConfigPath <- .dashboardConfigPath
-  #   .GlobalEnv$connectionDetails <- .connectionDetails
-  #   .GlobalEnv$resultDatabaseSchema <- .resultDatabaseSchema
-  # }, add = TRUE)
-
-  .GlobalEnv$configPath <- configPath
   .GlobalEnv$dashboardConfigPath <- normalizePath(dashboardConfigPath)
-  .GlobalEnv$connectionDetails <- connectionDetails
+
+  if (is.null(connectionDetails)) {
+    config <- loadGlobalConfiguration(configPath)
+    connectionDetails <- config$connectionDetails
+  }
+
 
   if (!is.null(connectionDetails) && connectionDetails$dbms == "sqlite") {
     resultDatabaseSchema <- "main"
@@ -392,6 +374,11 @@ launchDashboard <- function(dashboardConfigPath,
     stop("must specify result schema")
   }
 
-  .GlobalEnv$resultDatabaseSchema <- resultDatabaseSchema
+  .GlobalEnv$.model <- DashboardDataModel$new(dashboardConfigPath = dashboardConfigPath,
+                                              connectionDetails = connectionDetails,
+                                              cemConnectionDetails = config$cemConnectionDetails,
+                                              resultDatabaseSchema = resultDatabaseSchema,
+                                              usePooledConnection = FALSE)
+
   shiny::shinyApp(server = dashboardInstance, dashboardUi, enableBookmarking = "url")
 }

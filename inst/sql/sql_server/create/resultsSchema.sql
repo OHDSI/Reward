@@ -27,7 +27,7 @@ create table @schema.scc_result (
     outcome_cohort_id BIGINT NOT NULL,
     target_cohort_id BIGINT NOT NULL,
     {@add_calibrated_columns} ? {
-     calibrated INT NOT NULL,
+     calibrated INT NOT NULL check (calibrated < 2),
     }
     rr NUMERIC,
     se_log_rr NUMERIC,

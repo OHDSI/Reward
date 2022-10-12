@@ -7,7 +7,7 @@
 
 WITH benefit_t AS(
     SELECT TARGET_COHORT_ID, OUTCOME_COHORT_ID, COUNT(DISTINCT(SOURCE_ID)) AS THRESH_COUNT
-    FROM @schema.result
+    FROM @schema.scc_result
     WHERE RR <= @benefit
         AND P_VALUE < @p_cut_value
         AND calibrated = @calibrated
@@ -17,7 +17,7 @@ WITH benefit_t AS(
 
 risk_t AS (
     SELECT TARGET_COHORT_ID, OUTCOME_COHORT_ID, COUNT(DISTINCT(SOURCE_ID)) AS THRESH_COUNT
-    FROM @schema.result
+    FROM @schema.scc_result
     WHERE RR >= @risk
         AND P_VALUE < @p_cut_value
         AND calibrated = @calibrated
@@ -28,7 +28,7 @@ risk_t AS (
 -- inner join to results that are from required data sources only
 req_benefit_sources AS (
     SELECT TARGET_COHORT_ID, OUTCOME_COHORT_ID, COUNT(DISTINCT(SOURCE_ID)) AS required_count
-    FROM @schema.result
+    FROM @schema.scc_result
     WHERE RR <= @benefit
         AND P_VALUE < @p_cut_value
         AND calibrated = @calibrated
@@ -37,12 +37,11 @@ req_benefit_sources AS (
 )
 }
 
-
 SELECT
     fr.TARGET_COHORT_ID,
-    t.COHORT_NAME as TARGET_COHORT_NAME,
+    t.short_name as TARGET_COHORT_NAME,
     fr.OUTCOME_COHORT_ID,
-    o.COHORT_NAME AS OUTCOME_COHORT_NAME,
+    o.short_name AS OUTCOME_COHORT_NAME,
 
     CASE
         WHEN risk_t.THRESH_COUNT IS NULL THEN 0
@@ -56,7 +55,7 @@ SELECT
     mr2.I2 as I2,
     {@show_exposure_classes}?{STRING_AGG(distinct ec.EXPOSURE_CLASS_NAME, ';') as ECN,}
     ROUND(mr.RR, 2) as meta_RR
-FROM @schema.result fr
+FROM @schema.scc_result fr
 
     LEFT JOIN benefit_t ON benefit_t.TARGET_COHORT_ID = fr.TARGET_COHORT_ID AND benefit_t.OUTCOME_COHORT_ID = fr.OUTCOME_COHORT_ID
     LEFT JOIN risk_t ON risk_t.TARGET_COHORT_ID = fr.TARGET_COHORT_ID AND risk_t.OUTCOME_COHORT_ID = fr.OUTCOME_COHORT_ID
@@ -65,20 +64,17 @@ FROM @schema.result fr
     LEFT JOIN req_benefit_sources rbs ON rbs.TARGET_COHORT_ID = fr.TARGET_COHORT_ID AND rbs.OUTCOME_COHORT_ID = fr.OUTCOME_COHORT_ID
     }
 
-    INNER JOIN @schema.target t ON t.target_cohort_id = fr.target_cohort_id
-    INNER JOIN @schema.outcome o ON o.outcome_cohort_id = fr.outcome_cohort_id
+    INNER JOIN @schema.cohort_definition t ON t.cohort_definition_id = fr.target_cohort_id
+    INNER JOIN @schema.cohort_definition o ON o.cohort_definition_id = fr.outcome_cohort_id
+    INNER JOIN @schema.outcome_cohort oc ON o.cohort_definition_id = oc.cohort_definition_id
 
-    LEFT JOIN @schema.negative_control nc ON (
-        nc.outcome_cohort_id = fr.outcome_cohort_id AND nc.target_cohort_id = fr.target_cohort_id
-    )
-
-    LEFT JOIN @schema.result mr ON (
+    LEFT JOIN @schema.scc_result mr ON (
         fr.outcome_cohort_id = mr.outcome_cohort_id AND
         fr.target_cohort_id = mr.target_cohort_id AND
         mr.calibrated = @calibrated AND
         mr.source_id = -99
     )
-    LEFT JOIN @schema.result mr2 ON (
+    LEFT JOIN @schema.scc_result mr2 ON (
         fr.outcome_cohort_id = mr2.outcome_cohort_id AND
         fr.target_cohort_id = mr2.target_cohort_id AND
         mr2.calibrated = 0 AND -- BUG NO META ANALYSIS I2 fo calibrated data, but it should be the same
@@ -90,8 +86,8 @@ FROM @schema.result fr
     }
     WHERE fr.calibrated = @calibrated
 
-    {@outcome_cohort_name_length} ? {AND o.COHORT_NAME IN (@outcome_cohort_names)}
-    {@target_cohort_name_length} ? {AND t.COHORT_NAME IN (@target_cohort_names)}
+    {@outcome_cohort_length} ? {AND o.cohort_definition_id IN (@outcome_cohorts)}
+    {@target_cohort_length} ? {AND t.cohort_definition_id IN (@target_cohorts)}
     {@show_exposure_classes & @exposure_classes != ''} ? {AND ec.EXPOSURE_CLASS_NAME IN (@exposure_classes)}
 
        {@filter_by_meta_analysis} ? {
@@ -110,7 +106,7 @@ FROM @schema.result fr
         ELSE 1
     END
     {@required_benefit_sources != ''} ? {AND rbs.required_count >= @required_benefit_count}
-    {@filter_outcome_types} ? {AND o.type_id IN (@outcome_types)}
-    GROUP BY fr.target_cohort_id, fr.outcome_cohort_id, t.COHORT_NAME, o.COHORT_NAME, risk_t.THRESH_COUNT, benefit_t.THRESH_COUNT, mr2.I2, mr.RR
+    {@filter_outcome_types} ? {AND oc.outcome_type IN (@outcome_types)}
+    GROUP BY fr.target_cohort_id, fr.outcome_cohort_id, t.short_name, o.short_name, risk_t.THRESH_COUNT, benefit_t.THRESH_COUNT, mr2.I2, mr.RR
     {@order_by != ''} ? {ORDER BY @order_by @ascending}
     {@limit != ''} ? {LIMIT @limit {@offset != ''} ? {OFFSET @offset} }

@@ -14,23 +14,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+copyResults <- function(connection, targetConnection, config, dashboardConfig, resultDatabaseSchema, copyData) {
 
-copyResults <- function(connection, targetConnection, config, dashboardConfig, resultDatabaseSchema, dbms) {
-  ## 2. Copy relevant data in to dashboard schema
+  message("Creating subset of valid results for optimal dashboard queries")
+  # Select subset of cohorts that actually exist
+  cohortsUsedSql <- "CREATE TABLE #usable_cohorts AS (
+     SELECT distinct target_cohort_id as cohort_definition_id FROM @schema.scc_result
+     WHERE RR IS NOT NULL AND RR > 0.0
+     {!@exposure_dash} ? {AND outcome_cohort_id IN (@cohort_ids)} : {AND target_cohort_id IN (@cohort_ids)}
+     UNION
+     SELECT distinct outcome_cohort_id FROM @schema.scc_result
+     WHERE RR IS NOT NULL AND RR > 0.0
+     {!@exposure_dash} ? {AND outcome_cohort_id IN (@cohort_ids)} : {AND target_cohort_id IN (@cohort_ids)}
+  )"
+  DatabaseConnector::renderTranslateExecuteSql(connection,
+                                               cohortsUsedSql,
+                                               schema = config$resultsSchema,
+                                               exposure_dash = dashboardConfig$exposureDashboard,
+                                               cohort_ids = dashboardConfig$cohortIds)
+
+  ## Copy relevant data in to dashboard schema
   copyTables <- list(
+
     ### --- Reference Tables ---###
     cohort_definition = list(
-      subQuery = 'SELECT * FROM @results_schema.cohort_definition'
+      subQuery = 'SELECT cd.* FROM @results_schema.cohort_definition cd INNER JOIN #usable_cohorts uc ON uc.cohort_definition_id = cd.cohort_definition_id'
     ),
     exposure_cohort = list(
-      subQuery = "SELECT * FROM @results_schema.exposure_cohort {@is_exposure} ? {WHERE cohort_definition_id IN (@cohort_definition_id)}",
+      subQuery = "SELECT cd.* FROM @results_schema.exposure_cohort cd
+      INNER JOIN #usable_cohorts uc ON uc.cohort_definition_id = cd.cohort_definition_id
+      {@is_exposure} ? {WHERE cd.cohort_definition_id IN (@cohort_definition_id)}",
       params = list(
         cohort_definition_id = dashboardConfig$cohortIds,
         is_exposure = dashboardConfig$exposureDashboard
       )
     ),
     outcome_cohort = list(
-      subQuery = "SELECT * FROM @results_schema.outcome_cohort {!@is_exposure} ? {WHERE cohort_definition_id IN (@cohort_definition_id)}",
+      subQuery = "SELECT cd.* FROM @results_schema.outcome_cohort cd
+      INNER JOIN #usable_cohorts uc ON uc.cohort_definition_id = cd.cohort_definition_id
+      {!@is_exposure} ? {WHERE cd.cohort_definition_id IN (@cohort_definition_id)}",
       params = list(
         cohort_definition_id = dashboardConfig$cohortIds,
         is_exposure = dashboardConfig$exposureDashboard
@@ -46,10 +68,22 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
       subQuery = "SELECT * FROM @results_schema.concept_set_definition"
     ),
     atlas_cohort_reference = list(
-      subQuery = "SELECT * FROM @results_schema.atlas_cohort_reference"
+      subQuery = "SELECT cd.* FROM @results_schema.atlas_cohort_reference cd
+      INNER JOIN #usable_cohorts uc ON uc.cohort_definition_id = cd.cohort_definition_id
+      {@is_exposure} ? {WHERE cd.cohort_definition_id IN (@cohort_definition_id)}",
+      params = list(
+        cohort_definition_id = dashboardConfig$cohortIds,
+        is_exposure = dashboardConfig$exposureDashboard
+      )
     ),
     cohort_concept_set = list(
-      subQuery = "SELECT * FROM @results_schema.cohort_concept_set"
+      subQuery = "SELECT cd.* FROM @results_schema.cohort_concept_set cd
+      INNER JOIN #usable_cohorts uc ON uc.cohort_definition_id = cd.cohort_definition_id
+      {@is_exposure} ? {WHERE cd.cohort_definition_id IN (@cohort_definition_id)}",
+      params = list(
+        cohort_definition_id = dashboardConfig$cohortIds,
+        is_exposure = dashboardConfig$exposureDashboard
+      )
     ),
     analysis_setting = list(
       subQuery = "SELECT * FROM @results_schema.analysis_setting WHERE analysis_id IN (@analysis_id)",
@@ -63,12 +97,20 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
       subQuery = "SELECT * FROM @results_schema.data_source WHERE source_id IN (@source_ids)",
       params = list(source_ids = dashboardConfig$dataSources)
     ),
+
     scc_result = list(
-      subQuery = "SELECT *, 0 as calibrated FROM  @results_schema.scc_result WHERE
-        rr > 0.0 AND rr IS NOT NULL
+      subQuery = "
+  SELECT
+    sr.*,
+    0 as calibrated
+     FROM  @results_schema.scc_result sr
+        WHERE rr > 0.0 and rr is not null
         AND {@is_exposure} ? {target_cohort_id} : {outcome_cohort_id} IN (@cohort_definition_id)
         AND analysis_id IN (@analysis_id)
         AND source_id IN (@source_ids)",
+      colnames = c("source_id", "analysis_id", "outcome_cohort_id", "target_cohort_id", "calibrated",
+                   "rr", "se_log_rr", "log_rr", "c_pt", "t_pt", "t_at_risk", "c_at_risk", "t_cases", "c_cases",
+                   "lb_95", "ub_95", "p_value", "I2", "num_exposures"),
       params = list(cohort_definition_id = dashboardConfig$cohortIds,
                     analysis_id = dashboardConfig$analysisSettings,
                     source_ids = dashboardConfig$dataSources,
@@ -90,22 +132,41 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
     message("Copying table ", table)
     tParams <- copyTables[[table]]
     params <- list(
-      sql = tParams$subQuery,
       results_schema = config$resultsSchema,
-      connection = connection,
-      target_schema = resultDatabaseSchema,
-      target_table = table
+      connection = connection
     )
-    result <- do.call(DatabaseConnector::renderTranslateQuerySql, c(params, tParams$params))
-    DatabaseConnector::insertTable(
-      connection = targetConnection,
-      data = result,
-      databaseSchema = resultDatabaseSchema,
-      tableName = table,
-      createTable = FALSE,
-      bulkLoad = TRUE,
-      dropTableIfExists = FALSE
-    )
+
+    if (copyData | table == "scc_result") {
+      params$sql <- tParams$subQuery
+      result <- do.call(DatabaseConnector::renderTranslateQuerySql, c(params, tParams$params))
+      DatabaseConnector::insertTable(
+        connection = targetConnection,
+        data = result,
+        databaseSchema = resultDatabaseSchema,
+        tableName = table,
+        createTable = FALSE,
+        bulkLoad = TRUE,
+        dropTableIfExists = FALSE
+      )
+
+      if (table == "scc_result" && length(config$dataSources) == 1) {
+        result$SOURCE_ID <- -99
+        DatabaseConnector::insertTable(
+          connection = targetConnection,
+          data = result,
+          databaseSchema = resultDatabaseSchema,
+          tableName = table,
+          createTable = FALSE,
+          bulkLoad = TRUE,
+          dropTableIfExists = FALSE
+        )
+      }
+    } else {
+      params$sql <- paste0("INSERT INTO @target_schema.@target_table ", tParams$subQuery)
+      params$target_schema <- resultDatabaseSchema
+      params$target_table <- table
+      do.call(DatabaseConnector::renderTranslateExecuteSql, c(params, tParams$params))
+    }
   }
 }
 
@@ -187,6 +248,7 @@ addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, d
 
 computeMetaAnalysis <- function(targetConnection, resultDatabaseSchema) {
   message("Computing meta analysis, (may take some time)...")
+
   # NOTE - could apply batched operation for improved memory use
   fullResults <- DatabaseConnector::renderTranslateQuerySql(targetConnection,
                                                             "SELECT * FROM @schema.scc_result WHERE source_id != -99;",
@@ -427,11 +489,13 @@ createDashboardDatabase <- function(configPath,
 
     targetConnection <- DatabaseConnector::connect(targetConnectionDetails)
     on.exit(DatabaseConnector::disconnect(targetConnection))
+    copyData <- TRUE
   } else {
     message("Creating database schema ", resultDatabaseSchema)
     targetConnection <- connection
     targetConnectionDetails <- config$connectionDetails
     dbms <- config$connectionDetails$dbms
+    copyData <- FALSE
   }
 
   if (dbms != "sqlite") {
@@ -463,21 +527,27 @@ createDashboardDatabase <- function(configPath,
                                            include_constraints = dbms != "sqlite")
   DatabaseConnector::executeSql(targetConnection, sql)
 
-  # 2. Copyy results
-  copyResults(connection, targetConnection, config, dashboardConfig, resultDatabaseSchema, dbms)
+  insertSql <- "INSERT INTO @schema.data_source (source_id, source_name, source_key, db_id)
+   VALUES (-99, 'Meta-analysis', 'meta', 'meta');
+                                               "
+  DatabaseConnector::renderTranslateExecuteSql(targetConnection,
+                                               insertSql,
+                                               schema = resultDatabaseSchema)
 
-  # ## 3. Add negative control outcomes for exposures within study
+  # 2. Copyy results
+  copyResults(connection, targetConnection, config, dashboardConfig, resultDatabaseSchema, copyData)
+  # 3. Add negative control outcomes for exposures within study
   model <- DashboardDataModel$new(dashboardConfigPath,
                                   connectionDetails = targetConnectionDetails,
                                   cemConnectionDetails = config$cemConnectionDetails,
                                   resultDatabaseSchema = resultDatabaseSchema,
                                   usePooledConnection = FALSE)
   addNegativeControls(model, targetConnection, resultDatabaseSchema, dashboardConfig)
-
   ## 4. Meta-analysis
-  if (length(dashboardConfig$dataSources) > 1)
+  if (length(config$dataSources) > 1) {
     computeMetaAnalysis(targetConnection, resultDatabaseSchema)
-
+  }
+  # 5. Add null distributions
   computeNullDistributions(targetConnection, dashboardConfig, resultDatabaseSchema)
   # 6. Compute calibrated effect estimates
   computeCalibratedEstimates(dashboardConfig, targetConnection, resultDatabaseSchema)
