@@ -171,8 +171,8 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
 
 .computeNullDist <- function(negatives) {
   negatives <- negatives %>%
-    dplyr::select(.data$rr,
-                  .data$seLogRr) %>%
+    dplyr::select(rr,
+                  seLogRr) %>%
     tidyr::drop_na()
 
   if (nrow(negatives) == 0)
@@ -192,15 +192,15 @@ addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, d
   message("Adding negative controls")
   if (dashboardConfig$exposureDashboard) {
     controlConcepts <- model$getNegativeControlConditions(dashboardConfig$cohortIds) %>%
-      dplyr::select(.data$cohortDefinitionId,
-                    negativeControlConceptId = .data$conceptId,
-                    negativeControlCohortId = .data$outcomeCohortId) %>%
+      dplyr::select(cohortDefinitionId,
+                    negativeControlConceptId = conceptId,
+                    negativeControlCohortId = outcomeCohortId) %>%
       dplyr::mutate(isOutcomeControl = 1)
   } else {
     controlConcepts <- model$getNegativeControlExposures(dashboardConfig$cohortIds) %>%
-      dplyr::select(.data$cohortDefinitionId,
-                    negativeControlConceptId = .data$conceptId,
-                    negativeControlCohortId = .data$targetCohortId) %>%
+      dplyr::select(cohortDefinitionId,
+                    negativeControlConceptId = conceptId,
+                    negativeControlCohortId = targetCohortId) %>%
       dplyr::mutate(isOutcomeControl = 0)
   }
 
@@ -260,7 +260,7 @@ computeMetaAnalysis <- function(targetConnection, resultDatabaseSchema) {
   # Write uncalibrated table
   # Calibrate meta analysis results
   results <- fullResults %>%
-    dplyr::group_by(.data$targetCohortId, .data$outcomeCohortId, .data$analysisId) %>%
+    dplyr::group_by(targetCohortId, outcomeCohortId, analysisId) %>%
     dplyr::group_modify(~.metaAnalysis(.x))
 
   colnames(results) <- SqlRender::camelCaseToSnakeCase(colnames(results))
@@ -293,13 +293,13 @@ computeNullDistributions <- function(targetConnection, dashboardConfig, resultDa
                                                             snakeCaseToCamelCase = TRUE)
 
     nullDistResults <- ncResults %>%
-      dplyr::group_by(.data$targetCohortId, .data$analysisId, .data$sourceId, .data$outcomeType) %>%
+      dplyr::group_by(targetCohortId, analysisId, sourceId, outcomeType) %>%
       dplyr::group_modify(~.computeNullDist(.x)) %>%
       dplyr::ungroup()
 
     # Apply outcome model 2 (1 diagnosis code) to ATLAS cohorts
     atlasDists <- nullDistResults %>%
-      dplyr::filter(.data$outcomeType == 2) %>%
+      dplyr::filter(outcomeType == 2) %>%
       dplyr::mutate(outcomeType = 3)
 
     nullDistResults <- rbind(nullDistResults, atlasDists)
@@ -329,7 +329,7 @@ computeNullDistributions <- function(targetConnection, dashboardConfig, resultDa
                                                             snakeCaseToCamelCase = TRUE)
 
     nullDistResults <- ncResults %>%
-      dplyr::group_by(.data$outcomeCohortId, .data$analysisId, .data$sourceId) %>%
+      dplyr::group_by(outcomeCohortId, analysisId, sourceId) %>%
       dplyr::group_modify(~.computeNullDist(.x))
 
     DatabaseConnector::insertTable(
@@ -369,10 +369,10 @@ calibrate <- function(x, nullDist) {
 
 
 .applyOutcomeCalibration <- function(x, nulls) {
-  null <- nulls %>% dplyr::filter(.data$sourceId == x %>% pull(.data$sourceId) %>% unique(),
-                                  .data$targetCohortId == x %>% pull(.data$targetCohortId) %>% unique(),
-                                  .data$outcomeType == x %>% pull(.data$outcomeType) %>% unique(),
-                                  .data$analysisId == x %>% pull(.data$analysisId) %>% unique())
+  null <- nulls %>% dplyr::filter(sourceId == x %>% pull(sourceId) %>% unique(),
+                                  targetCohortId == x %>% pull(targetCohortId) %>% unique(),
+                                  outcomeType == x %>% pull(outcomeType) %>% unique(),
+                                  analysisId == x %>% pull(analysisId) %>% unique())
 
   nullDist <- createNullDist(null$mean[1], null$sd[1])
   res <- calibrate(x, nullDist)
@@ -381,9 +381,9 @@ calibrate <- function(x, nullDist) {
 }
 
 .applyExposureCalibration <- function(x, nulls) {
-  null <- nulls %>% dplyr::filter(.data$sourceId == x %>% pull(sourceId) %>% unique(),
-                                  .data$outcomeCohortId == x %>% pull(outcomeCohortId) %>% unique(),
-                                  .data$analysisId == x %>% pull(analysisId) %>% unique())
+  null <- nulls %>% dplyr::filter(sourceId == x %>% pull(sourceId) %>% unique(),
+                                  outcomeCohortId == x %>% pull(outcomeCohortId) %>% unique(),
+                                  analysisId == x %>% pull(analysisId) %>% unique())
 
   nullDist <- createNullDist(null$mean[1], null$sd[1])
   res <- calibrate(x, nullDist)
@@ -413,13 +413,13 @@ computeCalibratedEstimates <- function(dashboardConfig, targetConnection, result
 
     # Apply empirical calibration as transformation to grouped entries
     calibratedEstimates <- fullResults %>%
-      dplyr::group_by(.data$sourceId,
-                      .data$targetCohortId,
-                      .data$outcomeType,
-                      .data$analysisId) %>%
+      dplyr::group_by(sourceId,
+                      targetCohortId,
+                      outcomeType,
+                      analysisId) %>%
       dplyr::group_modify(~.applyOutcomeCalibration(.x, nulls), .keep = TRUE) %>%
       dplyr::ungroup() %>%
-      dplyr::select(-.data$outcomeType)
+      dplyr::select(-outcomeType)
   } else {
     sql <- "SELECT sccr.* FROM @schema.scc_result sccr "
     fullResults <- DatabaseConnector::renderTranslateQuerySql(targetConnection,
@@ -434,9 +434,9 @@ computeCalibratedEstimates <- function(dashboardConfig, targetConnection, result
 
     # Apply empirical calibration as transformation to grouped entries
     calibratedEstimates <- fullResults %>%
-      dplyr::group_by(.data$sourceId,
-                      .data$outcomeCohortId,
-                      .data$analysisId) %>%
+      dplyr::group_by(sourceId,
+                      outcomeCohortId,
+                      analysisId) %>%
       dplyr::group_modify(~.applyExposureCalibration(.x, nulls), .keep = TRUE) %>%
       dplyr::ungroup()
   }

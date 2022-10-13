@@ -13,7 +13,8 @@ Depends:
     DatabaseConnector (>= 5.0.0),
     ParallelLogger,
     ResultModelManager,
-    R6
+    R6,
+    checkmate
 Imports:
     dplyr,
     CemConnector,
@@ -35,10 +36,14 @@ Imports:
     shiny,
     shinycssloaders,
     shinyWidgets,
-    gt
+    gt,
+    shinydashboard
 Suggests:
     targets,
     testthat,
+    Eunomia,
+    httpuv,
+    callr,
     Eunomia
 Remotes:
   ohdsi/RewardExecutionPackage,

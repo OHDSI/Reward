@@ -37,7 +37,7 @@ rewardModule <- function(id = "Reward",
 
     dataSourceInfo <- shiny::reactive({ model$getDataSourceInfo() })
     output$dataSourceTable <- reactable::renderReactable({
-      tbl <- dataSourceInfo() %>% dplyr::select(.data$sourceId, .data$sourceName, .data$cdmVersion)
+      tbl <- dataSourceInfo() %>% dplyr::select(sourceId, sourceName, cdmVersion)
       colnames(tbl) <- SqlRender::camelCaseToTitleCase(colnames(tbl))
       reactable::reactable(tbl)
     })

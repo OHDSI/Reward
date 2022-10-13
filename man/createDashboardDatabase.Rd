@@ -2,12 +2,12 @@
 % Please edit documentation in R/DashboardCreator.R
 \name{createDashboardDatabase}
 \alias{createDashboardDatabase}
-\title{Create stand-alone dashboaard database from reward data}
+\title{Create stand-alone dashboaard database reward data}
 \usage{
 createDashboardDatabase(
   configPath,
   dashboardConfigPath,
-  sqliteDbFile = NULL,
+  targetConnectionDetails = NULL,
   resultDatabaseSchema = NULL,
   overwrite = FALSE
 )
@@ -15,12 +15,14 @@ createDashboardDatabase(
 \arguments{
 \item{configPath}{Path to global configuration path}
 
-\item{dashboardConfig}{Dashboard configuration options (see create dashboard configuration file)}
+\item{dashboardConfigPath}{Dashboard configuration path for config options (see create dashboard configuration file)}
+
+\item{targetConnectionDetails}{If Exporting to external database, use these connection details}
 }
 \description{
-Create stand-alone dashboaard database from reward data
+Create stand-alone dashboaard database reward data
 }
 \details{
-Creates and sqlite database from a set of configuration parameters that can be used with the Reward
+Creates and sqlite database a set of configuration parameters that can be used with the Reward
 Shiny application.
 }

@@ -132,3 +132,28 @@ createModelTestDb <- function(outputPath = withTestsRoot("testSqliteDbModel.sqli
   importResults(config, resultsZipPath, cleanup = TRUE)
   file.copy(config$connectionDetails$server(), outputPath, overwrite = TRUE)
 }
+
+#' Load data from CemConnector to create a test server instance
+.loadCemTestFixtures <- function(connectionDetails) {
+  connection <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(connection))
+
+  files <- c(
+    system.file("test", "MATRIX_SUMMARY.csv", package = "CemConnector"),
+    system.file("test", "CEM_UNIFIED.csv", package = "CemConnector"),
+    system.file("test", "CONCEPT_ANCESTOR.csv", package = "CemConnector"),
+    system.file("test", "CONCEPT.csv", package = "CemConnector"),
+    system.file("test", "NC_LU_CONCEPT_UNIVERSE.csv", package = "CemConnector"),
+    system.file("test", "SOURCE.csv", package = "CemConnector")
+  )
+
+  for (tbl in files) {
+    data <- read.csv(tbl)
+    tableName <- gsub(".csv", "", basename(tbl))
+    DatabaseConnector::insertTable(
+      connection = connection,
+      tableName = tableName,
+      data = data
+    )
+  }
+}

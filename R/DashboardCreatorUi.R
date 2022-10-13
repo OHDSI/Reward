@@ -94,7 +94,7 @@ configModule <- function(id, model) {
     shiny::shinyOptions(cache = cachem::cache_disk("~/.rewardUiCache"))
 
     output$analysisTypeSelector <- reactable::renderReactable({
-      data <- model$getAnalysisSettings(FALSE) %>% dplyr::select(-.data$options)
+      data <- model$getAnalysisSettings(FALSE) %>% dplyr::select(-options)
       colnames(data) <- SqlRender::camelCaseToTitleCase(colnames(data))
       reactable::reactable(data, selection = "multiple")
     })
@@ -131,7 +131,7 @@ configModule <- function(id, model) {
 
     output$cohortSelectorTable <- reactable::renderReactable({
       shiny::withProgress({
-        data <- getCohortSet() %>% dplyr::select(.data$cohortDefinitionId, .data$cohortDefinitionName)
+        data <- getCohortSet() %>% dplyr::select(cohortDefinitionId, cohortDefinitionName)
 
         colnames(data) <- SqlRender::camelCaseToTitleCase(colnames(data))
         table <- reactable::reactable(data = data,

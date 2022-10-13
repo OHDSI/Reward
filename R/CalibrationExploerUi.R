@@ -73,8 +73,8 @@ calibrationExplorerModule <- function(id, model) {
 
     shiny::observe({
       analysisSettingChoices <- model$getAnalysisSettings() %>%
-        dplyr::select(.data$analysisName,
-                      .data$analysisId)
+        dplyr::select(analysisName,
+                      analysisId)
 
       analysisSetting <- analysisSettingChoices$analysisId
       names(analysisSetting) <- analysisSettingChoices$analysisName
@@ -91,8 +91,8 @@ calibrationExplorerModule <- function(id, model) {
       cohortSet <- getCohortSet()
       selectedName <- input$cohortSelection
       cohortDefinitionId <- cohortSet %>%
-        dplyr::filter(.data$shortName == selectedName) %>%
-        dplyr::select(.data$cohortDefinitionId) %>%
+        dplyr::filter(shortName == selectedName) %>%
+        dplyr::select(cohortDefinitionId) %>%
         dplyr::pull()
 
       if (length(cohortDefinitionId))

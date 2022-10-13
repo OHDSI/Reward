@@ -59,7 +59,7 @@ saveAtlasCohortRefs <- function(config,
     files <- c(files, jsonFileName, sqlFileName)
   }
 
-  cohortInfo <- data %>% select(.data$cohortId, .data$atlasId, .data$cohortName)
+  cohortInfo <- data %>% dplyr::select(cohortId, atlasId, cohortName)
   cohortInfoFile <- file.path(exportPath, "atlas_cohorts.csv")
 
   colnames(cohortInfo) <- SqlRender::camelCaseToSnakeCase(colnames(cohortInfo))
@@ -112,7 +112,7 @@ exportReferenceTables <- function(config,
                                                        table = table)
 
     if (table == "atlas_cohort_reference") {
-      data <- data %>% select(-.data$SQL_DEFINITION, -.data$DEFINITION)
+      data <- data %>% dplyr::select(-SQL_DEFINITION, -.data$DEFINITION)
     }
 
     file <- file.path(exportPath, paste0(table, ".csv"))

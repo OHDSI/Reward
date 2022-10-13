@@ -11,9 +11,9 @@ test_that("data model loads", {
   on.exit(dataModel$finalize())
   ecs <- dataModel$getExposureCohortConceptSets()
 
-  ecohorts <- dataModel$getExposureCohortDefinitionSet()
-
-  ocohorts <- dataModel$getOutcomeCohortDefinitionSet()
-
+  eCohorts <- dataModel$getExposureCohortDefinitionSet()
+  checkmate::expect_data_frame(eCohorts)
+  oCohorts <- dataModel$getOutcomeCohortDefinitionSet()
+  checkmate::expect_data_frame(oCohorts)
   dataModel$finalize()
 })

@@ -59,10 +59,10 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
 
       nulls <- data.frame()
       for (sourceId in unique(negatives$sourceId)) {
-        subset <- negatives %>% dplyr::filter(.data$sourceId == sourceId,
-                                              .data$analysisId == cohort$analysisId,
-                                              !is.na(.data$rr),
-                                              !is.null(.data$rr))
+        subset <- negatives %>% dplyr::filter(sourceId == sourceId,
+                                              analysisId == cohort$analysisId,
+                                              !is.na(rr),
+                                              !is.null(rr))
         null <- EmpiricalCalibration::fitNull(log(subset$rr), subset$seLogRr)
         systematicError <- EmpiricalCalibration::computeExpectedAbsoluteSystematicError(null)
         df <- data.frame(
@@ -81,12 +81,12 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
 
     getNullDistTable <- shiny::reactive({
       nullDistData() %>%
-        dplyr::select(.data$sourceName,
-                      .data$sourceKey,
-                      .data$n,
-                      .data$mean,
-                      .data$sd,
-                      .data$EASE)
+        dplyr::select(sourceName,
+                      sourceKey,
+                      n,
+                      mean,
+                      sd,
+                      EASE)
     })
 
     output$nullDistribution <- reactable::renderReactable({
@@ -109,7 +109,7 @@ calibrationPlotServer <- function(id, model, selectedCohort) {
                                                         outcomeType = cohort$selectedOutcomeType,
                                                         conceptSet = cohort$conceptSet)
         negatives <- negatives %>%
-          dplyr::filter(.data$analysisId == cohort$analysisId)
+          dplyr::filter(analysisId == cohort$analysisId)
 
         if (length(validsourceIds) == 0) {
           validsourceIds <- dataSources$sourceId[1]

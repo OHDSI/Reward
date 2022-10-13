@@ -248,18 +248,18 @@ RewardDataModel <- R6::R6Class(
       # Use CemConnector to get control outcome concepts
       # This will take a long time with the web api utility
       suggestedControlConditions <- self$getExposureCohortConceptSets(cohortIds = cohortIds) %>%
-        dplyr::group_by(.data$cohortDefinitionId) %>%
+        dplyr::group_by(cohortDefinitionId) %>%
         dplyr::group_modify(
           ~cemConnection$getSuggestedControlCondtions(.x, nControls = self$config$negativeControlCount)) %>%
         # Map control outcome concepts to cohorts (* 1000)
-        dplyr::mutate(outcomeCohortId = .data$conceptId * 1000, outcomeType = 0)
+        dplyr::mutate(outcomeCohortId = conceptId * 1000, outcomeType = 0)
 
       # Map other outcome types
       suggestedControlConditions <- suggestedControlConditions %>%
         dplyr::bind_rows(suggestedControlConditions %>%
-                           dplyr::mutate(outcomeCohortId = .data$outcomeCohortId + 1, outcomeType = 1)) %>%
+                           dplyr::mutate(outcomeCohortId = outcomeCohortId + 1, outcomeType = 1)) %>%
         dplyr::bind_rows(suggestedControlConditions %>%
-                           dplyr::mutate(outcomeCohortId = .data$outcomeCohortId + 2, outcomeType = 2))
+                           dplyr::mutate(outcomeCohortId = outcomeCohortId + 2, outcomeType = 2))
 
       suggestedControlConditions
     },
@@ -273,10 +273,10 @@ RewardDataModel <- R6::R6Class(
       # Use CemConnector to get control outcome concepts
       # This will take a long time with the web api utility
       suggestedControlExposures <- self$getOutcomeCohortConceptSets(cohortIds = cohortIds) %>%
-        dplyr::group_by(.data$cohortDefinitionId) %>%
+        dplyr::group_by(cohortDefinitionId) %>%
         dplyr::group_modify(
           ~cemConnection$getSuggestedControlIngredients(.x, nControls = self$config$negativeControlCount)) %>%
-        dplyr::mutate(targetCohortId = .data$conceptId * 1000)
+        dplyr::mutate(targetCohortId = conceptId * 1000)
     },
                     #' Count any query as subquery - (note: will be inneficient in many situations)
                     #' @param query                 Sql query string
@@ -471,8 +471,8 @@ DashboardDataModel <- R6::R6Class(
       ORDER BY r.SOURCE_ID
       "
       table <- self$queryDb(sql, treatment = exposureId, outcome = outcomeId, calibrated = calibrated)
-      calibratedTable <- table %>% dplyr::filter(.data$calibrated == 1)
-      uncalibratedTable <- table %>% dplyr::filter(.data$calibrated == 0)
+      calibratedTable <- table %>% dplyr::filter(calibrated == 1)
+      uncalibratedTable <- table %>% dplyr::filter(calibrated == 0)
 
       if (nrow(calibratedTable) & nrow(uncalibratedTable)) {
         calibratedTable$calibrated <- "Calibrated"
