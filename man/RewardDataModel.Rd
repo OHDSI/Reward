@@ -3,16 +3,11 @@
 \name{RewardDataModel}
 \alias{RewardDataModel}
 \title{CEM Database Backend Class}
+\value{
+data.frame of data sources
+}
 \description{
 An interface to the common evidence model that uses works directly with a database schema
-}
-\examples{
-
-## ------------------------------------------------
-## Method `RewardDataModel$getAnalysisSettings`
-## ------------------------------------------------
-
-Decode raw base 64
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -109,7 +104,8 @@ Query database
 
 \item{\code{results_schema}}{(optional) schema string}
 
-\item{\code{...}}{@seealso `SqlRender::render`}
+\item{\code{...}}{@seealso `SqlRender::render`
+Get Data Sources available}
 }
 \if{html}{\out{</div>}}
 }
@@ -118,7 +114,7 @@ Query database
 \if{html}{\out{<a id="method-getDataSources"></a>}}
 \if{latex}{\out{\hypertarget{method-getDataSources}{}}}
 \subsection{Method \code{getDataSources()}}{
-Get Data Sources available
+List of data sources
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getDataSources()}\if{html}{\out{</div>}}
 }
@@ -241,21 +237,11 @@ Get analysis settings}
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{decode}}{convert json to r list}
+\item{\code{decode}}{convert json to r list
+Decode raw base 64}
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Returns}{
-
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{Decode raw base 64
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getCohortStats"></a>}}

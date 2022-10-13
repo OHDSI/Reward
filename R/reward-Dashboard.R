@@ -28,14 +28,14 @@ strQueryWrap <- function(vec) {
 #' @param output shiny output object
 #' @param session shiny session
 #' @importFrom gt render_gt
-#' @import shiny
+#' @import shiny DT R.utils RJSONIO SqlRender cachem ggplot2 plotly reactable readr shinyAce stringi tibble tidyr
 rewardModule <- function(id = "Reward",
                          model) {
   appConfig <- model$config
   ns <- shiny::NS(id)
   shiny::moduleServer(id, function(input, output, session) {
 
-    dataSourceInfo <- shiny::reactive({ model$getDataSourceInfo() })
+    dataSourceInfo <- shiny::reactive({ model$getDataSources() })
     output$dataSourceTable <- reactable::renderReactable({
       tbl <- dataSourceInfo() %>% dplyr::select(sourceId, sourceName, cdmVersion)
       colnames(tbl) <- SqlRender::camelCaseToTitleCase(colnames(tbl))

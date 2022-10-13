@@ -96,8 +96,11 @@ RewardDataModel <- R6::R6Class(
       self$connection$queryDb(sql, results_schema = self$resultsSchema, ...)
     },
 
-    #' @description
     #' Get Data Sources available
+    #' @description
+    #' List of data sources
+    #' @returns data.frame of data sources
+    #'
     getDataSources = function() {
       self$connection$queryDb("SELECT * FROM  @results_schema.data_source",
                               results_schema = self$resultsSchema)
@@ -193,11 +196,7 @@ RewardDataModel <- R6::R6Class(
     #' Get analysis settings
     #'
     #' @param decode convert json to r list
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+
     getAnalysisSettings = function(decode = TRUE) {
       sql <- "SELECT * FROM @results_schema.analysis_setting"
       rows <-
@@ -372,11 +371,7 @@ DashboardDataModel <- R6::R6Class(
     #' @param cemConnectionDetails    Cem Connection details
     #' @param resultDatabaseSchema    Results database schema
     #' @param usePooledConnection     Use a poooled database connection
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+
     initialize = function(dashboardConfigPath = NULL,
                           connectionDetails,
                           cemConnectionDetails = NULL,
@@ -405,23 +400,9 @@ DashboardDataModel <- R6::R6Class(
       self$cemConnectionDetails <- cemConnectionDetails
     },
 
-    #' Get Data SOurce info
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
-    getDataSourceInfo = function() {
-      sql <- "SELECT * FROM @results_schema.data_source"
-      self$connection$queryDb(sql, results_schema = self$resultsSchema)
-    },
-
     #' Get Outcome Cohorts
     #'
     #' @return data.frame of cohorts
-    #' @export
-    #'
-    #' @examples
     getOutcomeCohorts = function() {
       sql <- "
       SELECT cd.*, ec.outcome_type FROM @results_schema.cohort_definition cd
@@ -433,9 +414,6 @@ DashboardDataModel <- R6::R6Class(
     #' Get Exposure Cohorts
     #'
     #' @return data.frame of cohorts
-    #' @export
-    #'
-    #' @examples
     getExposureCohorts = function() {
       sql <- "
       SELECT cd.*, ec.atc_flg FROM @results_schema.cohort_definition cd
@@ -462,11 +440,6 @@ DashboardDataModel <- R6::R6Class(
     #' @param ascending ascending order?
     #' @param limit Row limit
     #' @param offset Row Offset
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
     getFilteredTableResultsQuery = function(benefitThreshold = 0.5,
                                             riskThreshold = 2.0,
                                             pValueCut = 0.05,
@@ -522,7 +495,6 @@ DashboardDataModel <- R6::R6Class(
     #' @return
     #' @export
     #'
-    #' @examples
     getFilteredTableResults = function(...) {
       sql <- self$getFilteredTableResultsQuery(...)
       self$connection$queryDb(sql)
@@ -533,8 +505,6 @@ DashboardDataModel <- R6::R6Class(
     #'
     #' @return count
     #' @export
-    #'
-    #' @examples
     getFilteredTableResultsCount = function(...) {
       sql <- self$getFilteredTableResultsQuery(...)
       self$countQuery(sql, render = FALSE)
@@ -544,11 +514,7 @@ DashboardDataModel <- R6::R6Class(
     #'
     #' @param exposureId exposure cohort id
     #' @param outcomeId outcome Cohort id
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+
     getMetaAnalysisTable = function(exposureId, outcomeId) {
       sql <- "
         SELECT r.SOURCE_ID,
@@ -590,11 +556,7 @@ DashboardDataModel <- R6::R6Class(
     #' @param exposureId  exposure Id
     #' @param outcomeId   outcome Id
     #' @param calibrated  get calibrated results?
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
+
     getForestPlotTable = function(exposureId, outcomeId, calibrated) {
       sql <- "
       {DEFAULT @use_calibration = TRUE}
@@ -653,11 +615,6 @@ DashboardDataModel <- R6::R6Class(
     #' @param sourceIds       cohort source ids
     #' @param tableName       table name
     #' @param analysisId      Analysis setting id
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
     getSummaryStats = function(statType,
                                exposureId,
                                outcomeId,
@@ -694,14 +651,9 @@ DashboardDataModel <- R6::R6Class(
       )
     },
 
-    #' Title
+    #' getTimeOnTreatmentStats
     #'
     #' @param ...
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
     getTimeToOutcomeStats = function(...) {
       self$getSummaryStats(statType = "time_to_outcome", ...)
     },
@@ -709,11 +661,6 @@ DashboardDataModel <- R6::R6Class(
     #' getTimeOnTreatmentStats
     #'
     #' @param ...
-    #'
-    #' @return
-    #' @export
-    #'
-    #' @examples
     getTimeOnTreatmentStats = function(...) {
       self$getSummaryStats(statType = "time_on_treatment", ...)
     },
@@ -724,9 +671,6 @@ DashboardDataModel <- R6::R6Class(
     #' @param isExposure      is exposure or outcome?
     #' @param outcomeType     Outcome Type
     #' @param conceptSet      consept set data.frame
-    #'
-    #' @return
-    #' @export
     getNegativeControlSccResults = function(cohortDefinitionId,
                                             isExposure,
                                             outcomeType = NULL,

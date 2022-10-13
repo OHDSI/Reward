@@ -5,7 +5,7 @@ Version: 0.1.0
 Author: Jamie Gilbert
 Maintainer: Jamie Gilbert <jpg@azimov.co.uk>
 Description: REWARD base package for managing data and constructing studies.
-License: Apache 2.0
+License: Apache
 Encoding: UTF-8
 LazyData: true
 Depends:
@@ -37,14 +37,26 @@ Imports:
     shinycssloaders,
     shinyWidgets,
     gt,
-    shinydashboard
+    shinydashboard,
+    DT,
+    R.utils,
+    RJSONIO,
+    SqlRender,
+    cachem,
+    ggplot2,
+    plotly,
+    reactable,
+    readr,
+    shinyAce,
+    stringi,
+    tibble,
+    tidyr
 Suggests:
     targets,
     testthat,
     Eunomia,
     httpuv,
-    callr,
-    Eunomia
+    callr
 Remotes:
   ohdsi/RewardExecutionPackage,
   ohdsi/CohortGenerator,
