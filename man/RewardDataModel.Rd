@@ -6,6 +6,14 @@
 \description{
 An interface to the common evidence model that uses works directly with a database schema
 }
+\examples{
+
+## ------------------------------------------------
+## Method `RewardDataModel$getAnalysisSettings`
+## ------------------------------------------------
+
+Decode raw base 64
+}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -16,6 +24,8 @@ An interface to the common evidence model that uses works directly with a databa
 \item{\code{resultsSchema}}{schema containing reward references and results}
 
 \item{\code{config}}{Reward configuration s3 object}
+
+\item{\code{cemConnectionDetails}}{Cem COnnector connection details object}
 }
 \if{html}{\out{</div>}}
 }
@@ -78,6 +88,7 @@ Closes connection
 \if{latex}{\out{\hypertarget{method-getCemConnection}{}}}
 \subsection{Method \code{getCemConnection()}}{
 Get cem connector api connection
+Query database
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getCemConnection()}\if{html}{\out{</div>}}
 }
@@ -91,11 +102,23 @@ Get cem connector api connection
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$queryDb(sql, results_schema = config$resultsSchema, ...)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{sql}}{query string}
+
+\item{\code{results_schema}}{(optional) schema string}
+
+\item{\code{...}}{@seealso `SqlRender::render`}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getDataSources"></a>}}
 \if{latex}{\out{\hypertarget{method-getDataSources}{}}}
 \subsection{Method \code{getDataSources()}}{
+Get Data Sources available
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getDataSources()}\if{html}{\out{</div>}}
 }
@@ -164,7 +187,8 @@ Get outcome cohort concept sets for all cohorts specified
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{cohortIds}}{numeric vector of cohort ids or null}
+\item{\code{cohortIds}}{numeric vector of cohort ids or null
+Get concept set for cohort}
 }
 \if{html}{\out{</div>}}
 }
@@ -177,6 +201,16 @@ Get outcome cohort concept sets for all cohorts specified
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getCohortConceptSet(cohortDefinitionId = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{cohortDefinitionId}}{Cohort definition id}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getCohort"></a>}}
@@ -191,7 +225,7 @@ Get getCohort data for one cohort
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{cohortDefinitionId}}{cohort identifier (not null, integer)
-Decode raw base 64}
+Get analysis settings}
 }
 \if{html}{\out{</div>}}
 }
@@ -202,6 +236,24 @@ Decode raw base 64}
 \subsection{Method \code{getAnalysisSettings()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getAnalysisSettings(decode = TRUE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{decode}}{convert json to r list}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{Decode raw base 64
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
@@ -220,9 +272,7 @@ Get getCohortStats
 \item{\code{cohortDefinitionId}}{cohort identifier (not null, integer)}
 
 \item{\code{isExposure}}{Logical exposure cohort or not
-
-Returns SCC results for a cohort id
-Count any query as subquery - (note: will be inneficient in many situations)}
+Returns SCC results for a cohort id}
 }
 \if{html}{\out{</div>}}
 }
@@ -240,6 +290,20 @@ Count any query as subquery - (note: will be inneficient in many situations)}
 )}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{cohortDefinitionId}}{Cohort Id}
+
+\item{\code{isExposure}}{Boolean - is this for exposure cohort?
+Get negative control condition rr values}
+
+\item{\code{outcomeType}}{Outcome types}
+
+\item{\code{conceptSet}}{conceptset type}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getNegativeControlConditions"></a>}}
@@ -249,6 +313,14 @@ Count any query as subquery - (note: will be inneficient in many situations)}
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getNegativeControlConditions(cohortIds = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{cohortIds}}{(Optional) List of cohort identifiers
+Get negative control exposures}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getNegativeControlExposures"></a>}}
@@ -258,6 +330,14 @@ Count any query as subquery - (note: will be inneficient in many situations)}
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getNegativeControlExposures(cohortIds = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{cohortIds}}{(Optional) List of cohort identifiers
+Count any query as subquery - (note: will be inneficient in many situations)}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-countQuery"></a>}}
@@ -273,6 +353,8 @@ Count any query as subquery - (note: will be inneficient in many situations)}
 \item{\code{query}}{Sql query string}
 
 \item{\code{...}}{@seealso `SqlRender::render`}
+
+\item{\code{render}}{Optional - call sqlrender to render first or not}
 }
 \if{html}{\out{</div>}}
 }
