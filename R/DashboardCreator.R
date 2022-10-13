@@ -18,15 +18,14 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
 
   message("Creating subset of valid results for optimal dashboard queries")
   # Select subset of cohorts that actually exist
-  cohortsUsedSql <- "CREATE TABLE #usable_cohorts AS (
+  cohortsUsedSql <- "CREATE TABLE #usable_cohorts AS
      SELECT distinct target_cohort_id as cohort_definition_id FROM @schema.scc_result
      WHERE RR IS NOT NULL AND RR > 0.0
      {!@exposure_dash} ? {AND outcome_cohort_id IN (@cohort_ids)} : {AND target_cohort_id IN (@cohort_ids)}
      UNION
      SELECT distinct outcome_cohort_id FROM @schema.scc_result
      WHERE RR IS NOT NULL AND RR > 0.0
-     {!@exposure_dash} ? {AND outcome_cohort_id IN (@cohort_ids)} : {AND target_cohort_id IN (@cohort_ids)}
-  )"
+     {!@exposure_dash} ? {AND outcome_cohort_id IN (@cohort_ids)} : {AND target_cohort_id IN (@cohort_ids)}"
   DatabaseConnector::renderTranslateExecuteSql(connection,
                                                cohortsUsedSql,
                                                schema = config$resultsSchema,
@@ -137,29 +136,21 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
     if (copyData | table == "scc_result") {
       params$sql <- tParams$subQuery
       result <- do.call(DatabaseConnector::renderTranslateQuerySql, c(params, tParams$params))
+      # Repeat upload if meta-analysis is just for a single data source
+      if (table == "scc_result" && length(dashboardConfig$dataSources) == 1 && nrow(result) > 0) {
+        result2 <- result
+        result2$SOURCE_ID <- -99
+        result <- rbind(result, result2)
+      }
       DatabaseConnector::insertTable(
         connection = targetConnection,
         data = result,
         databaseSchema = resultDatabaseSchema,
         tableName = table,
-        createTable = FALSE,
+        createTable = DatabaseConnector::dbms(targetConnection) == "sqlite",
         bulkLoad = TRUE,
-        dropTableIfExists = FALSE
+        dropTableIfExists = DatabaseConnector::dbms(targetConnection) == "sqlite"
       )
-
-      # Repeat upload if meta-analysis is just for a single data source
-      if (table == "scc_result" && length(dashboardConfig$dataSources) == 1) {
-        result$SOURCE_ID <- -99
-        DatabaseConnector::insertTable(
-          connection = targetConnection,
-          data = result,
-          databaseSchema = resultDatabaseSchema,
-          tableName = table,
-          createTable = FALSE,
-          bulkLoad = TRUE,
-          dropTableIfExists = FALSE
-        )
-      }
     } else {
       params$sql <- paste0("INSERT INTO @target_schema.@target_table ", tParams$subQuery)
       params$target_schema <- resultDatabaseSchema
@@ -191,30 +182,32 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
 addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, dashboardConfig) {
   message("Adding negative controls")
   if (dashboardConfig$exposureDashboard) {
-    controlConcepts <- model$getNegativeControlConditions(dashboardConfig$cohortIds) %>%
-      dplyr::select(cohortDefinitionId,
-                    negativeControlConceptId = conceptId,
-                    negativeControlCohortId = outcomeCohortId) %>%
-      dplyr::mutate(isOutcomeControl = 1)
+    controlConcepts <- model$getNegativeControlConditions(dashboardConfig$cohortIds)
+    isOutcomeControl <- 1
   } else {
-    controlConcepts <- model$getNegativeControlExposures(dashboardConfig$cohortIds) %>%
-      dplyr::select(cohortDefinitionId,
-                    negativeControlConceptId = conceptId,
-                    negativeControlCohortId = targetCohortId) %>%
-      dplyr::mutate(isOutcomeControl = 0)
+    controlConcepts <- model$getNegativeControlExposures(dashboardConfig$cohortIds)
+    isOutcomeControl <- 0
   }
 
-  # Map concepts to outcomes/exposure cohorts
-  DatabaseConnector::insertTable(
-    connection = targetConnection,
-    data = controlConcepts,
-    databaseSchema = resultDatabaseSchema,
-    tableName = "negative_control",
-    createTable = FALSE,
-    bulkLoad = TRUE,
-    dropTableIfExists = FALSE,
-    camelCaseToSnakeCase = TRUE
-  )
+  if (nrow(controlConcepts)) {
+    controlConcepts <- controlConcepts %>%
+        dplyr::select(cohortDefinitionId,
+                      negativeControlConceptId = conceptId,
+                      negativeControlCohortId = targetCohortId) %>%
+        dplyr::mutate(isOutcomeControl = isOutcomeControl)
+
+    # Map concepts to outcomes/exposure cohorts
+    DatabaseConnector::insertTable(
+      connection = targetConnection,
+      data = controlConcepts,
+      databaseSchema = resultDatabaseSchema,
+      tableName = "negative_control",
+      createTable = FALSE,
+      bulkLoad = TRUE,
+      dropTableIfExists = FALSE,
+      camelCaseToSnakeCase = TRUE
+    )
+  }
 }
 
 .metaAnalysis <- function(table) {

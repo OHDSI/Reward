@@ -1,0 +1,8 @@
+dashboardName: "Test dashboard"
+shortName: "test_dash"
+description: "For testing"
+exposureDashboard: yes
+analysisSettings: 1
+dataSources: 1
+cohortIds:
+  - "1118088000"

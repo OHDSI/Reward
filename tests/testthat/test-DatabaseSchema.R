@@ -78,5 +78,6 @@ test_that("Build database schema, add test cohorts", {
                                                            table = table)
       expect_true(result >= 0)
     }
+
   })
 })

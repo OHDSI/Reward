@@ -102,8 +102,7 @@ RewardDataModel <- R6::R6Class(
     #' @returns data.frame of data sources
     #'
     getDataSources = function() {
-      self$connection$queryDb("SELECT * FROM  @results_schema.data_source",
-                              results_schema = self$resultsSchema)
+      self$queryDb("SELECT * FROM  @results_schema.data_source")
     },
 
     #' @description
