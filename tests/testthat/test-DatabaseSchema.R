@@ -47,7 +47,7 @@ test_that("Build database schema, add test cohorts", {
                            exposure = TRUE)
     }, regexp = "Cohort 101 already in database, use removeAtlasCohort to clear entry references")
 
-    referenceZipFile <- tempfile(fileext = "zip")
+    referenceZipFile <- tempfile(fileext = ".zip")
     on.exit(unlink(referenceZipFile), add = TRUE)
     unlink(config$exportPath, recursive = TRUE, force = TRUE)
     dir.create(config$exportPath)
@@ -60,7 +60,10 @@ test_that("Build database schema, add test cohorts", {
     unlink(cdmConfig$connectionDetails$server())
     connectionDetails <- Eunomia::getEunomiaConnectionDetails(databaseFile = cdmConfig$connectionDetails$server())
     on.exit(unlink(cdmConfig$connectionDetails$server()), add = TRUE)
+    on.exit(unlink(cdmConfig$referencePath), add = TRUE)
+    unlink(cdmConfig$referencePath, recursive = TRUE, force = TRUE)
     RewardExecutionPackage::execute(cdmConfigPath, referenceZipFile)
+
     resultsZipPath <- file.path(paste0(cdmConfig$database, "RewardResults.zip"))
     unlink(config$exportPath, recursive = TRUE, force = TRUE)
     on.exit(unlink(unlink(config$exportPath), recursive = TRUE, force = TRUE), add = TRUE)
