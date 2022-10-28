@@ -20,16 +20,18 @@ Reward has 2 main database setup configurations; the main postgresql back end, w
 As it is assumed that the CDM is separate from the postgresql backend all references that are shared between data sources must be imported each time data are generated to allow the correct identifiers to line up when results are combined.
 
 ```{r run = FALSE}
-library(rewardb)
+library(Reward)
 ```
 
 # Postgres db configuration
-It is assumed that the postgres database is configured and you have been given an account that can create schemas.
+It is assumed that your postgres database is configured and you have been given an account that can create schemas.
 
 ## Adding a vocabulary
 TODO - add an omop vocabulary to the reward database.
 This is out of scope for these docs.
 Please see the standard vocabulary documentation on how to do this.
+Note, your vocabulary must include standard SNOMED and RxNorm ingredients.
+Please check SNOMED-CT licencing to see if you can do this withing your organisation.
 
 ## Creating the postgres configuration
 
@@ -39,7 +41,7 @@ This is the global shared config across many CDMs and shiny dashboards.
 Fill this out as per an example here:
 
 ```{yaml}
-webApiUrl: "https://epi.jnj.com:8443/WebAPI"
+webApiUrl: "https://myAtlasUrl.com:8443/WebAPI" # Atlas url for loading custom cohorts
 exportPath: "export"
 
 connectionDetails:
@@ -106,7 +108,10 @@ analysis <- SelfControlledCohort::createRunSelfControlledCohortArgs(firstExposur
                                                                     washoutPeriod = 0,
                                                                     followupPeriod = 0)
 
+connection <- DatabaseConnector::connect(config$connectionDetails)
 addAnalysisSetting(connection, config, name, typeId, description, analysis)
+DatabaseConnector::disconnect(connection)
+
 ```
 
 Consult the OHDSI SelfControlledCohort package for more details on the settings.
@@ -265,7 +270,11 @@ Once a cdm config is created it can be registered in the REWARD postgres instanc
 Note that this just sets the ID and name. No CDM access is required to do this.
 It is up to the user to track the CDM updates and configure reward accordingly.
 ```{r eval=FALSE}
-registerCdm(connection, globalConfig, cdmConfig)
+cdmConfig <- loadCdmConfiguration(cdmConfig)
+registerCdm(connection, config, cdmConfig)
 ```
+
+Once the CDM is registered you can execute Reward.
+Please note that every time you add cohorts to your Reward postgres database you should export and update your references.
 
 
