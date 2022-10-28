@@ -26,16 +26,16 @@ boxPlotDist <- function(data) {
   }
 
   plot <- ggplot2::ggplot(data = data) +
-    ggplot2::aes(x = .data$sourceName,
-                 ymin = .data$min,
-                 lower = .data$p25,
-                 middle = .data$median,
-                 upper = .data$p75,
-                 ymax = .data$max,
-                 average = .data$mean,
-                 sd = .data$sd,
-                 group = .data$sourceName,
-                 y = .data$median) +
+    ggplot2::aes(x = sourceName,
+                 ymin = min,
+                 lower = p25,
+                 middle = median,
+                 upper = p75,
+                 ymax = max,
+                 average = mean,
+                 sd = sd,
+                 group = sourceName,
+                 y = median) +
     ggplot2::geom_errorbar(size = 0.5) +
     ggplot2::geom_boxplot(stat = "identity", fill = rgb(0, 0, 0.8, alpha = 0.25), size = 0.2) +
     ggplot2::xlab("Data source") +

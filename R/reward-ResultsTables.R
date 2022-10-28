@@ -55,13 +55,13 @@ metaAnalysisTableServer <- function(id, model, selectedExposureOutcome) {
         table3$calibratedPValue <- formatC(table3$calibratedPValue, digits = 2, format = "f")
 
         table3 <- table3 %>% dplyr::select(
-          .data$sourceName,
-          .data$rr,
-          .data$ci95,
-          .data$pValue,
-          .data$calibratedRr,
-          .data$calibratedCi95,
-          .data$calibratedPValue
+          sourceName,
+          rr,
+          ci95,
+          pValue,
+          calibratedRr,
+          calibratedCi95,
+          calibratedPValue
         )
 
         colnames(table3) <- SqlRender::camelCaseToTitleCase(colnames(table3))

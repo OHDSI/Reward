@@ -15,3 +15,5 @@ if (dbms == "sqlite") {
     unlink(jdbcDriverFolder, recursive = TRUE, force = TRUE)
   }, testthat::teardown_env())
 }
+
+testDashboardConnectionDetails <- DatabaseConnector::createConnectionDetails(dbms = "sqlite", server = "testDashboard.sqlite")

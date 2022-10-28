@@ -6,10 +6,14 @@ Note: this software is under heavy development and is not recommended for use in
 
 # Background - what is Reward?
 
-OMOP CDM
-SelfControlledCohort
-Reproducible
-RewardExecutionPackage
+`Reward` is an R package based around the OMOP CDM and `SelfControlledCohort` OHDSI R HADES package designed to 
+generate population level effect estimates at the scale of all drug ingredient exposures by all condition outcomes.
+The general purpose of this framework is to generate hypotheses about the unexpected benefits of existing medications.
+
+
+For executing reward (i.e. you don't want to setup a postgres database) please see 
+(`RewardExecutionPackage`) [https://github.com/OHDSI/RewardExecutionPackage] which contains
+the only things you need to generate results.
 
 ## Installation
 Inside an RStudio session, run the following:
@@ -18,7 +22,7 @@ devtools::install_github("OHDSI/Reward")
 ```
 
 ## Configuring databases
-
+Note: much of this documentation is currently out of date 
 ```
 vignette("Configuring Databases")
 ```

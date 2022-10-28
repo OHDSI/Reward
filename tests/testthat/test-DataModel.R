@@ -11,9 +11,34 @@ test_that("data model loads", {
   on.exit(dataModel$finalize())
   ecs <- dataModel$getExposureCohortConceptSets()
 
-  ecohorts <- dataModel$getExposureCohortDefinitionSet()
+  eCohorts <- dataModel$getExposureCohortDefinitionSet()
+  checkmate::expect_data_frame(eCohorts)
+  oCohorts <- dataModel$getOutcomeCohortDefinitionSet()
+  checkmate::expect_data_frame(oCohorts)
 
-  ocohorts <- dataModel$getOutcomeCohortDefinitionSet()
+  dashDataModel <- DashboardDataModel$new("config/testDashboard.yml",
+                                          connectionDetails = testDashboardConnectionDetails,
+                                          cemConnectionDetails = dataModel$config$cemConnectionDetails,
+                                          resultDatabaseSchema = "main")
 
-  dataModel$finalize()
+  cemConnection <- dashDataModel$getCemConnection()
+  checkmate::expect_class(cemConnection, "CemDatabaseBackend")
+  cemConnection$finalize()
+  on.exit(dashDataModel$finalize())
+  ecs <- dashDataModel$getExposureCohortConceptSets()
+
+  eCohorts <- dashDataModel$getExposureCohortDefinitionSet()
+  checkmate::expect_data_frame(eCohorts)
+  oCohorts <- dashDataModel$getOutcomeCohortDefinitionSet()
+  checkmate::expect_data_frame(oCohorts)
+  # checkmate::expect_data_frame(dataModel$getCohort(1))
+  checkmate::expect_data_frame(dataModel$getAnalysisSettings())
+  # checkmate::expect_data_frame(dataModel$getCohortStats(1, FALSE))
+  # checkmate::expect_data_frame(dataModel$getCohortStats(1, FALSE))
+
+  ds <- dashDataModel$getDataSources()
+  checkmate::expect_data_frame(ds)
+
+  checkmate::expect_data_frame(dashDataModel$getOutcomeCohortConceptSets())
+  dashDataModel$finalize()
 })

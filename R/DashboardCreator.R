@@ -18,15 +18,14 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
 
   message("Creating subset of valid results for optimal dashboard queries")
   # Select subset of cohorts that actually exist
-  cohortsUsedSql <- "CREATE TABLE #usable_cohorts AS (
+  cohortsUsedSql <- "CREATE TABLE #usable_cohorts AS
      SELECT distinct target_cohort_id as cohort_definition_id FROM @schema.scc_result
      WHERE RR IS NOT NULL AND RR > 0.0
      {!@exposure_dash} ? {AND outcome_cohort_id IN (@cohort_ids)} : {AND target_cohort_id IN (@cohort_ids)}
      UNION
      SELECT distinct outcome_cohort_id FROM @schema.scc_result
      WHERE RR IS NOT NULL AND RR > 0.0
-     {!@exposure_dash} ? {AND outcome_cohort_id IN (@cohort_ids)} : {AND target_cohort_id IN (@cohort_ids)}
-  )"
+     {!@exposure_dash} ? {AND outcome_cohort_id IN (@cohort_ids)} : {AND target_cohort_id IN (@cohort_ids)}"
   DatabaseConnector::renderTranslateExecuteSql(connection,
                                                cohortsUsedSql,
                                                schema = config$resultsSchema,
@@ -137,29 +136,21 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
     if (copyData | table == "scc_result") {
       params$sql <- tParams$subQuery
       result <- do.call(DatabaseConnector::renderTranslateQuerySql, c(params, tParams$params))
+      # Repeat upload if meta-analysis is just for a single data source
+      if (table == "scc_result" && length(dashboardConfig$dataSources) == 1 && nrow(result) > 0) {
+        result2 <- result
+        result2$SOURCE_ID <- -99
+        result <- rbind(result, result2)
+      }
       DatabaseConnector::insertTable(
         connection = targetConnection,
         data = result,
         databaseSchema = resultDatabaseSchema,
         tableName = table,
-        createTable = FALSE,
+        createTable = DatabaseConnector::dbms(targetConnection) == "sqlite",
         bulkLoad = TRUE,
-        dropTableIfExists = FALSE
+        dropTableIfExists = DatabaseConnector::dbms(targetConnection) == "sqlite"
       )
-
-      # Repeat upload if meta-analysis is just for a single data source
-      if (table == "scc_result" && length(dashboardConfig$dataSources) == 1) {
-        result$SOURCE_ID <- -99
-        DatabaseConnector::insertTable(
-          connection = targetConnection,
-          data = result,
-          databaseSchema = resultDatabaseSchema,
-          tableName = table,
-          createTable = FALSE,
-          bulkLoad = TRUE,
-          dropTableIfExists = FALSE
-        )
-      }
     } else {
       params$sql <- paste0("INSERT INTO @target_schema.@target_table ", tParams$subQuery)
       params$target_schema <- resultDatabaseSchema
@@ -171,8 +162,8 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
 
 .computeNullDist <- function(negatives) {
   negatives <- negatives %>%
-    dplyr::select(.data$rr,
-                  .data$seLogRr) %>%
+    dplyr::select(rr,
+                  seLogRr) %>%
     tidyr::drop_na()
 
   if (nrow(negatives) == 0)
@@ -191,30 +182,32 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
 addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, dashboardConfig) {
   message("Adding negative controls")
   if (dashboardConfig$exposureDashboard) {
-    controlConcepts <- model$getNegativeControlConditions(dashboardConfig$cohortIds) %>%
-      dplyr::select(.data$cohortDefinitionId,
-                    negativeControlConceptId = .data$conceptId,
-                    negativeControlCohortId = .data$outcomeCohortId) %>%
-      dplyr::mutate(isOutcomeControl = 1)
+    controlConcepts <- model$getNegativeControlConditions(dashboardConfig$cohortIds)
+    isOutcomeControl <- 1
   } else {
-    controlConcepts <- model$getNegativeControlExposures(dashboardConfig$cohortIds) %>%
-      dplyr::select(.data$cohortDefinitionId,
-                    negativeControlConceptId = .data$conceptId,
-                    negativeControlCohortId = .data$targetCohortId) %>%
-      dplyr::mutate(isOutcomeControl = 0)
+    controlConcepts <- model$getNegativeControlExposures(dashboardConfig$cohortIds)
+    isOutcomeControl <- 0
   }
 
-  # Map concepts to outcomes/exposure cohorts
-  DatabaseConnector::insertTable(
-    connection = targetConnection,
-    data = controlConcepts,
-    databaseSchema = resultDatabaseSchema,
-    tableName = "negative_control",
-    createTable = FALSE,
-    bulkLoad = TRUE,
-    dropTableIfExists = FALSE,
-    camelCaseToSnakeCase = TRUE
-  )
+  if (nrow(controlConcepts)) {
+    controlConcepts <- controlConcepts %>%
+        dplyr::select(cohortDefinitionId,
+                      negativeControlConceptId = conceptId,
+                      negativeControlCohortId = targetCohortId) %>%
+        dplyr::mutate(isOutcomeControl = isOutcomeControl)
+
+    # Map concepts to outcomes/exposure cohorts
+    DatabaseConnector::insertTable(
+      connection = targetConnection,
+      data = controlConcepts,
+      databaseSchema = resultDatabaseSchema,
+      tableName = "negative_control",
+      createTable = FALSE,
+      bulkLoad = TRUE,
+      dropTableIfExists = FALSE,
+      camelCaseToSnakeCase = TRUE
+    )
+  }
 }
 
 .metaAnalysis <- function(table) {
@@ -260,7 +253,7 @@ computeMetaAnalysis <- function(targetConnection, resultDatabaseSchema) {
   # Write uncalibrated table
   # Calibrate meta analysis results
   results <- fullResults %>%
-    dplyr::group_by(.data$targetCohortId, .data$outcomeCohortId, .data$analysisId) %>%
+    dplyr::group_by(targetCohortId, outcomeCohortId, analysisId) %>%
     dplyr::group_modify(~.metaAnalysis(.x))
 
   colnames(results) <- SqlRender::camelCaseToSnakeCase(colnames(results))
@@ -293,13 +286,13 @@ computeNullDistributions <- function(targetConnection, dashboardConfig, resultDa
                                                             snakeCaseToCamelCase = TRUE)
 
     nullDistResults <- ncResults %>%
-      dplyr::group_by(.data$targetCohortId, .data$analysisId, .data$sourceId, .data$outcomeType) %>%
+      dplyr::group_by(targetCohortId, analysisId, sourceId, outcomeType) %>%
       dplyr::group_modify(~.computeNullDist(.x)) %>%
       dplyr::ungroup()
 
     # Apply outcome model 2 (1 diagnosis code) to ATLAS cohorts
     atlasDists <- nullDistResults %>%
-      dplyr::filter(.data$outcomeType == 2) %>%
+      dplyr::filter(outcomeType == 2) %>%
       dplyr::mutate(outcomeType = 3)
 
     nullDistResults <- rbind(nullDistResults, atlasDists)
@@ -329,7 +322,7 @@ computeNullDistributions <- function(targetConnection, dashboardConfig, resultDa
                                                             snakeCaseToCamelCase = TRUE)
 
     nullDistResults <- ncResults %>%
-      dplyr::group_by(.data$outcomeCohortId, .data$analysisId, .data$sourceId) %>%
+      dplyr::group_by(outcomeCohortId, analysisId, sourceId) %>%
       dplyr::group_modify(~.computeNullDist(.x))
 
     DatabaseConnector::insertTable(
@@ -369,10 +362,10 @@ calibrate <- function(x, nullDist) {
 
 
 .applyOutcomeCalibration <- function(x, nulls) {
-  null <- nulls %>% dplyr::filter(.data$sourceId == x %>% pull(.data$sourceId) %>% unique(),
-                                  .data$targetCohortId == x %>% pull(.data$targetCohortId) %>% unique(),
-                                  .data$outcomeType == x %>% pull(.data$outcomeType) %>% unique(),
-                                  .data$analysisId == x %>% pull(.data$analysisId) %>% unique())
+  null <- nulls %>% dplyr::filter(sourceId == x %>% pull(sourceId) %>% unique(),
+                                  targetCohortId == x %>% pull(targetCohortId) %>% unique(),
+                                  outcomeType == x %>% pull(outcomeType) %>% unique(),
+                                  analysisId == x %>% pull(analysisId) %>% unique())
 
   nullDist <- createNullDist(null$mean[1], null$sd[1])
   res <- calibrate(x, nullDist)
@@ -381,9 +374,9 @@ calibrate <- function(x, nullDist) {
 }
 
 .applyExposureCalibration <- function(x, nulls) {
-  null <- nulls %>% dplyr::filter(.data$sourceId == x %>% pull(sourceId) %>% unique(),
-                                  .data$outcomeCohortId == x %>% pull(outcomeCohortId) %>% unique(),
-                                  .data$analysisId == x %>% pull(analysisId) %>% unique())
+  null <- nulls %>% dplyr::filter(sourceId == x %>% pull(sourceId) %>% unique(),
+                                  outcomeCohortId == x %>% pull(outcomeCohortId) %>% unique(),
+                                  analysisId == x %>% pull(analysisId) %>% unique())
 
   nullDist <- createNullDist(null$mean[1], null$sd[1])
   res <- calibrate(x, nullDist)
@@ -413,13 +406,13 @@ computeCalibratedEstimates <- function(dashboardConfig, targetConnection, result
 
     # Apply empirical calibration as transformation to grouped entries
     calibratedEstimates <- fullResults %>%
-      dplyr::group_by(.data$sourceId,
-                      .data$targetCohortId,
-                      .data$outcomeType,
-                      .data$analysisId) %>%
+      dplyr::group_by(sourceId,
+                      targetCohortId,
+                      outcomeType,
+                      analysisId) %>%
       dplyr::group_modify(~.applyOutcomeCalibration(.x, nulls), .keep = TRUE) %>%
       dplyr::ungroup() %>%
-      dplyr::select(-.data$outcomeType)
+      dplyr::select(-outcomeType)
   } else {
     sql <- "SELECT sccr.* FROM @schema.scc_result sccr "
     fullResults <- DatabaseConnector::renderTranslateQuerySql(targetConnection,
@@ -434,9 +427,9 @@ computeCalibratedEstimates <- function(dashboardConfig, targetConnection, result
 
     # Apply empirical calibration as transformation to grouped entries
     calibratedEstimates <- fullResults %>%
-      dplyr::group_by(.data$sourceId,
-                      .data$outcomeCohortId,
-                      .data$analysisId) %>%
+      dplyr::group_by(sourceId,
+                      outcomeCohortId,
+                      analysisId) %>%
       dplyr::group_modify(~.applyExposureCalibration(.x, nulls), .keep = TRUE) %>%
       dplyr::ungroup()
   }
