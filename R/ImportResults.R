@@ -226,9 +226,6 @@ importResultsFromS3 <- function(config,
                                 connection = NULL,
                                 computeStatsTables = TRUE,
                                 numberOfThreads = 4) {
-  if (cleanup) {
-    on.exit(unlink(config$exportPath, recursive = TRUE, force = TRUE), add = TRUE)
-  }
   # connect to database
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails = config$connectionDetails)
