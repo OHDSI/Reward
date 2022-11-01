@@ -172,6 +172,7 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
     fileRef <- manifestDf[i,]
 
     tryCatch({
+      ParallelLogger::logInfo("Starting insert object: ", fileRef$object)
       chunk <- aws.s3::s3read_using(readr::read_csv,
                                     object = fileRef$object,
                                     bucket = fileRef$bucket)
@@ -191,6 +192,7 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
                                        bulkLoad = TRUE)
       }
       # delete file/chunk if upload success or it's empty
+      ParallelLogger::logInfo("Removing object: ", fileRef$object)
       aws.s3::delete_object(fileRef$object, bucket = fileRef$bucket)
     }, error = function(err) {
       ParallelLogger::logError("Error uploading ", fileRef$object, "\n", err)
@@ -216,14 +218,12 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
 #' @param config                        Reward configuration object
 #' @param cdmManifest                   Path to cdm manifest json including location of s3 objects
 #' @param connection                    DatabaseConnector connection to reward databases
-#' @param cleanup                       Remove extracted csv files after inserting results
-#' @param computeAggregateTables        compute tables that count aggregated stats across different data sources
+#' @param computeStatsTables        compute tables that count aggregated stats across different data sources
 #' @param numberOfThreads               Number of upload jobs to pull and uploads
 #' @export
 importResultsFromS3 <- function(config,
                                 cdmManifestPath,
                                 connection = NULL,
-                                cleanup = TRUE,
                                 computeStatsTables = TRUE,
                                 numberOfThreads = 4) {
   if (cleanup) {
@@ -238,6 +238,7 @@ importResultsFromS3 <- function(config,
   cdmManifest <- ParallelLogger::loadSettingsFromJson(cdmManifestPath)
   cdmInfo <- registerCdm(config, connection, cdmManifestPath)
 
+  ParallelLogger::logInfo("Starting insert")
   cluster <- ParallelLogger::makeCluster(numberOfThreads = numberOfThreads)
   on.exit(ParallelLogger::stopCluster(cluster), add = TRUE)
   manifestDf <- as.data.frame(cdmManifest$manifest)
