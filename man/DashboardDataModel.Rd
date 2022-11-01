@@ -12,45 +12,45 @@ An interface to the common evidence model that uses works directly with a databa
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{DashboardDataModel$new()}}
-\item \href{#method-getOutcomeCohorts}{\code{DashboardDataModel$getOutcomeCohorts()}}
-\item \href{#method-getExposureCohorts}{\code{DashboardDataModel$getExposureCohorts()}}
-\item \href{#method-getFilteredTableResultsQuery}{\code{DashboardDataModel$getFilteredTableResultsQuery()}}
-\item \href{#method-getFilteredTableResults}{\code{DashboardDataModel$getFilteredTableResults()}}
-\item \href{#method-getFilteredTableResultsCount}{\code{DashboardDataModel$getFilteredTableResultsCount()}}
-\item \href{#method-getMetaAnalysisTable}{\code{DashboardDataModel$getMetaAnalysisTable()}}
-\item \href{#method-getForestPlotTable}{\code{DashboardDataModel$getForestPlotTable()}}
-\item \href{#method-getSummaryStats}{\code{DashboardDataModel$getSummaryStats()}}
-\item \href{#method-getTimeToOutcomeStats}{\code{DashboardDataModel$getTimeToOutcomeStats()}}
-\item \href{#method-getTimeOnTreatmentStats}{\code{DashboardDataModel$getTimeOnTreatmentStats()}}
-\item \href{#method-getNegativeControlSccResults}{\code{DashboardDataModel$getNegativeControlSccResults()}}
-\item \href{#method-clone}{\code{DashboardDataModel$clone()}}
+\item \href{#method-DashboardDataModel-new}{\code{DashboardDataModel$new()}}
+\item \href{#method-DashboardDataModel-getOutcomeCohorts}{\code{DashboardDataModel$getOutcomeCohorts()}}
+\item \href{#method-DashboardDataModel-getExposureCohorts}{\code{DashboardDataModel$getExposureCohorts()}}
+\item \href{#method-DashboardDataModel-getFilteredTableResultsQuery}{\code{DashboardDataModel$getFilteredTableResultsQuery()}}
+\item \href{#method-DashboardDataModel-getFilteredTableResults}{\code{DashboardDataModel$getFilteredTableResults()}}
+\item \href{#method-DashboardDataModel-getFilteredTableResultsCount}{\code{DashboardDataModel$getFilteredTableResultsCount()}}
+\item \href{#method-DashboardDataModel-getMetaAnalysisTable}{\code{DashboardDataModel$getMetaAnalysisTable()}}
+\item \href{#method-DashboardDataModel-getForestPlotTable}{\code{DashboardDataModel$getForestPlotTable()}}
+\item \href{#method-DashboardDataModel-getSummaryStats}{\code{DashboardDataModel$getSummaryStats()}}
+\item \href{#method-DashboardDataModel-getTimeToOutcomeStats}{\code{DashboardDataModel$getTimeToOutcomeStats()}}
+\item \href{#method-DashboardDataModel-getTimeOnTreatmentStats}{\code{DashboardDataModel$getTimeOnTreatmentStats()}}
+\item \href{#method-DashboardDataModel-getNegativeControlSccResults}{\code{DashboardDataModel$getNegativeControlSccResults()}}
+\item \href{#method-DashboardDataModel-clone}{\code{DashboardDataModel$clone()}}
 }
 }
-\if{html}{
-\out{<details ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="countQuery">}\href{../../Reward/html/RewardDataModel.html#method-countQuery}{\code{Reward::RewardDataModel$countQuery()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="finalize">}\href{../../Reward/html/RewardDataModel.html#method-finalize}{\code{Reward::RewardDataModel$finalize()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getAnalysisSettings">}\href{../../Reward/html/RewardDataModel.html#method-getAnalysisSettings}{\code{Reward::RewardDataModel$getAnalysisSettings()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCemConnection">}\href{../../Reward/html/RewardDataModel.html#method-getCemConnection}{\code{Reward::RewardDataModel$getCemConnection()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohort">}\href{../../Reward/html/RewardDataModel.html#method-getCohort}{\code{Reward::RewardDataModel$getCohort()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohortConceptSet">}\href{../../Reward/html/RewardDataModel.html#method-getCohortConceptSet}{\code{Reward::RewardDataModel$getCohortConceptSet()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohortStats">}\href{../../Reward/html/RewardDataModel.html#method-getCohortStats}{\code{Reward::RewardDataModel$getCohortStats()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getDataSources">}\href{../../Reward/html/RewardDataModel.html#method-getDataSources}{\code{Reward::RewardDataModel$getDataSources()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getExposureCohortConceptSets">}\href{../../Reward/html/RewardDataModel.html#method-getExposureCohortConceptSets}{\code{Reward::RewardDataModel$getExposureCohortConceptSets()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getExposureCohortDefinitionSet">}\href{../../Reward/html/RewardDataModel.html#method-getExposureCohortDefinitionSet}{\code{Reward::RewardDataModel$getExposureCohortDefinitionSet()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getNegativeControlConditions">}\href{../../Reward/html/RewardDataModel.html#method-getNegativeControlConditions}{\code{Reward::RewardDataModel$getNegativeControlConditions()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getNegativeControlExposures">}\href{../../Reward/html/RewardDataModel.html#method-getNegativeControlExposures}{\code{Reward::RewardDataModel$getNegativeControlExposures()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getOutcomeCohortConceptSets">}\href{../../Reward/html/RewardDataModel.html#method-getOutcomeCohortConceptSets}{\code{Reward::RewardDataModel$getOutcomeCohortConceptSets()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getOutcomeCohortDefinitionSet">}\href{../../Reward/html/RewardDataModel.html#method-getOutcomeCohortDefinitionSet}{\code{Reward::RewardDataModel$getOutcomeCohortDefinitionSet()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="queryDb">}\href{../../Reward/html/RewardDataModel.html#method-queryDb}{\code{Reward::RewardDataModel$queryDb()}}\out{</span>}
-}
-\out{</details>}
-}
+\if{html}{\out{
+<details><summary>Inherited methods</summary>
+<ul>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="countQuery"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-countQuery'><code>Reward::RewardDataModel$countQuery()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="finalize"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-finalize'><code>Reward::RewardDataModel$finalize()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getAnalysisSettings"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getAnalysisSettings'><code>Reward::RewardDataModel$getAnalysisSettings()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCemConnection"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCemConnection'><code>Reward::RewardDataModel$getCemConnection()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohort"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCohort'><code>Reward::RewardDataModel$getCohort()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohortConceptSet"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCohortConceptSet'><code>Reward::RewardDataModel$getCohortConceptSet()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohortStats"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCohortStats'><code>Reward::RewardDataModel$getCohortStats()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getDataSources"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getDataSources'><code>Reward::RewardDataModel$getDataSources()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getExposureCohortConceptSets"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getExposureCohortConceptSets'><code>Reward::RewardDataModel$getExposureCohortConceptSets()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getExposureCohortDefinitionSet"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getExposureCohortDefinitionSet'><code>Reward::RewardDataModel$getExposureCohortDefinitionSet()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getNegativeControlConditions"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getNegativeControlConditions'><code>Reward::RewardDataModel$getNegativeControlConditions()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getNegativeControlExposures"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getNegativeControlExposures'><code>Reward::RewardDataModel$getNegativeControlExposures()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getOutcomeCohortConceptSets"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getOutcomeCohortConceptSets'><code>Reward::RewardDataModel$getOutcomeCohortConceptSets()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getOutcomeCohortDefinitionSet"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getOutcomeCohortDefinitionSet'><code>Reward::RewardDataModel$getOutcomeCohortDefinitionSet()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="queryDb"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-queryDb'><code>Reward::RewardDataModel$queryDb()</code></a></li>
+</ul>
+</details>
+}}
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-new"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-new}{}}}
 \subsection{Method \code{new()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$new(
@@ -80,8 +80,8 @@ Get Outcome Cohorts}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getOutcomeCohorts"></a>}}
-\if{latex}{\out{\hypertarget{method-getOutcomeCohorts}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getOutcomeCohorts"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getOutcomeCohorts}{}}}
 \subsection{Method \code{getOutcomeCohorts()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getOutcomeCohorts()}\if{html}{\out{</div>}}
@@ -93,8 +93,8 @@ Get Exposure Cohorts
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getExposureCohorts"></a>}}
-\if{latex}{\out{\hypertarget{method-getExposureCohorts}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getExposureCohorts"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getExposureCohorts}{}}}
 \subsection{Method \code{getExposureCohorts()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getExposureCohorts()}\if{html}{\out{</div>}}
@@ -106,8 +106,8 @@ Shiny Dashboard - main query
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getFilteredTableResultsQuery"></a>}}
-\if{latex}{\out{\hypertarget{method-getFilteredTableResultsQuery}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getFilteredTableResultsQuery"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getFilteredTableResultsQuery}{}}}
 \subsection{Method \code{getFilteredTableResultsQuery()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getFilteredTableResultsQuery(
@@ -170,8 +170,8 @@ Main table query in dashboard}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getFilteredTableResults"></a>}}
-\if{latex}{\out{\hypertarget{method-getFilteredTableResults}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getFilteredTableResults"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getFilteredTableResults}{}}}
 \subsection{Method \code{getFilteredTableResults()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getFilteredTableResults(...)}\if{html}{\out{</div>}}
@@ -184,13 +184,10 @@ Main table query in dashboard}
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Returns}{
-
-}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getFilteredTableResultsCount"></a>}}
-\if{latex}{\out{\hypertarget{method-getFilteredTableResultsCount}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getFilteredTableResultsCount"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getFilteredTableResultsCount}{}}}
 \subsection{Method \code{getFilteredTableResultsCount()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getFilteredTableResultsCount(...)}\if{html}{\out{</div>}}
@@ -208,8 +205,8 @@ count
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getMetaAnalysisTable"></a>}}
-\if{latex}{\out{\hypertarget{method-getMetaAnalysisTable}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getMetaAnalysisTable"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getMetaAnalysisTable}{}}}
 \subsection{Method \code{getMetaAnalysisTable()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getMetaAnalysisTable(exposureId, outcomeId)}\if{html}{\out{</div>}}
@@ -227,8 +224,8 @@ Get Forest plot table}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getForestPlotTable"></a>}}
-\if{latex}{\out{\hypertarget{method-getForestPlotTable}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getForestPlotTable"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getForestPlotTable}{}}}
 \subsection{Method \code{getForestPlotTable()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getForestPlotTable(exposureId, outcomeId, calibrated)}\if{html}{\out{</div>}}
@@ -248,8 +245,8 @@ Get Summary Statistics}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getSummaryStats"></a>}}
-\if{latex}{\out{\hypertarget{method-getSummaryStats}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getSummaryStats"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getSummaryStats}{}}}
 \subsection{Method \code{getSummaryStats()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getSummaryStats(
@@ -282,8 +279,8 @@ getTimeOnTreatmentStats}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getTimeToOutcomeStats"></a>}}
-\if{latex}{\out{\hypertarget{method-getTimeToOutcomeStats}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getTimeToOutcomeStats"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getTimeToOutcomeStats}{}}}
 \subsection{Method \code{getTimeToOutcomeStats()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getTimeToOutcomeStats(...)}\if{html}{\out{</div>}}
@@ -298,8 +295,8 @@ getTimeOnTreatmentStats}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getTimeOnTreatmentStats"></a>}}
-\if{latex}{\out{\hypertarget{method-getTimeOnTreatmentStats}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getTimeOnTreatmentStats"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getTimeOnTreatmentStats}{}}}
 \subsection{Method \code{getTimeOnTreatmentStats()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getTimeOnTreatmentStats(...)}\if{html}{\out{</div>}}
@@ -314,8 +311,8 @@ getTimeOnTreatmentStats}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getNegativeControlSccResults"></a>}}
-\if{latex}{\out{\hypertarget{method-getNegativeControlSccResults}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-getNegativeControlSccResults"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getNegativeControlSccResults}{}}}
 \subsection{Method \code{getNegativeControlSccResults()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getNegativeControlSccResults(
@@ -341,8 +338,8 @@ getTimeOnTreatmentStats}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-DashboardDataModel-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

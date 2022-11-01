@@ -27,6 +27,7 @@
 #' @export
 registerCdm <- function(config, connection, cdmInfoFile) {
   cdmInfo <- RJSONIO::fromJSON(SqlRender::readSql(cdmInfoFile))
+
   getSourceInfo <- function() {
     sql <- "SELECT source_id, source_name, source_key FROM @schema.data_source ds WHERE ds.source_key = '@database';"
     DatabaseConnector::renderTranslateQuerySql(connection,
@@ -163,3 +164,91 @@ importResults <- function(config,
   }
 }
 
+
+uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) {
+  connection <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(connection))
+  for (i in 1:nrow(manifestDf)) {
+    fileRef <- manifestDf[i,]
+
+    tryCatch({
+      chunk <- aws.s3::s3read_using(readr::read_csv,
+                                    object = fileRef$object,
+                                    bucket = fileRef$bucket)
+
+      if (nrow(chunk)) {
+        if (cdmInfo$changedSourceId) {
+          chunk$source_id <- cdmInfo$sourceId
+        }
+        # Will use PGcopy to upload
+        DatabaseConnector::insertTable(connection,
+                                       databaseSchema = targetSchema,
+                                       tableName = fileRef$target,
+                                       data = chunk,
+                                       dropTableIfExists = FALSE,
+                                       createTable = FALSE,
+                                       tempTable = FALSE,
+                                       bulkLoad = TRUE)
+      }
+      # delete file/chunk if upload success or it's empty
+      aws.s3::delete_object(fileRef$object, bucket = fileRef$bucket)
+    }, error = function(err) {
+      ParallelLogger::logError("Error uploading ", fileRef$object, "\n", err)
+    })
+  }
+}
+
+
+#' Import Results from CDM
+#' @description
+#' Verify and import results exported from CDMs into S3 bucket(s)
+#'
+#' It is strongly advised that you use this utility on an EC2 box or elsewhere within the AWS cloud
+#'
+#' Requires aws.s3 package and configured environment variables:
+#' AWS_SSE_TYPE="AES256"
+#' AWS_BUCKET_NAME
+#' AWS_OBJECT_KEY
+#' AWS_ACCESS_KEY_ID
+#' AWS_SECRET_ACCESS_KEY
+#' AWS_DEFAULT_REGION
+#'
+#' @param config                        Reward configuration object
+#' @param cdmManifest                   Path to cdm manifest json including location of s3 objects
+#' @param connection                    DatabaseConnector connection to reward databases
+#' @param cleanup                       Remove extracted csv files after inserting results
+#' @param computeAggregateTables        compute tables that count aggregated stats across different data sources
+#' @param numberOfThreads               Number of upload jobs to pull and uploads
+#' @export
+importResultsFromS3 <- function(config,
+                                cdmManifestPath,
+                                connection = NULL,
+                                cleanup = TRUE,
+                                computeStatsTables = TRUE,
+                                numberOfThreads = 4) {
+  if (cleanup) {
+    on.exit(unlink(config$exportPath, recursive = TRUE, force = TRUE), add = TRUE)
+  }
+  # connect to database
+  if (is.null(connection)) {
+    connection <- DatabaseConnector::connect(connectionDetails = config$connectionDetails)
+    on.exit(DatabaseConnector::disconnect(connection), add = TRUE)
+  }
+
+  cdmManifest <- ParallelLogger::loadSettingsFromJson(cdmManifestPath)
+  cdmInfo <- registerCdm(config, connection, cdmManifestPath)
+
+  cluster <- ParallelLogger::makeCluster(numberOfThreads = numberOfThreads)
+  on.exit(ParallelLogger::stopCluster(cluster), add = TRUE)
+  manifestDf <- as.data.frame(cdmManifest$manifest)
+
+  ParallelLogger::clusterApply(cluster,
+                               split(manifestDf, rep_len(1:numberOfThreads, nrow(manifestDf))),
+                               fun = uploadS3Files,
+                               connectionDetails = config$connectionDetails,
+                               targetSchema = config$resultsSchema,
+                               cdmInfo = cdmInfo)
+  if (computeStatsTables) {
+    computeSourceCounts(config, connection)
+  }
+}

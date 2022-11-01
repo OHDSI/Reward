@@ -27,29 +27,29 @@ An interface to the common evidence model that uses works directly with a databa
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
-\item \href{#method-new}{\code{RewardDataModel$new()}}
-\item \href{#method-finalize}{\code{RewardDataModel$finalize()}}
-\item \href{#method-getCemConnection}{\code{RewardDataModel$getCemConnection()}}
-\item \href{#method-queryDb}{\code{RewardDataModel$queryDb()}}
-\item \href{#method-getDataSources}{\code{RewardDataModel$getDataSources()}}
-\item \href{#method-getOutcomeCohortDefinitionSet}{\code{RewardDataModel$getOutcomeCohortDefinitionSet()}}
-\item \href{#method-getExposureCohortDefinitionSet}{\code{RewardDataModel$getExposureCohortDefinitionSet()}}
-\item \href{#method-getExposureCohortConceptSets}{\code{RewardDataModel$getExposureCohortConceptSets()}}
-\item \href{#method-getOutcomeCohortConceptSets}{\code{RewardDataModel$getOutcomeCohortConceptSets()}}
-\item \href{#method-getCohortConceptSet}{\code{RewardDataModel$getCohortConceptSet()}}
-\item \href{#method-getCohort}{\code{RewardDataModel$getCohort()}}
-\item \href{#method-getAnalysisSettings}{\code{RewardDataModel$getAnalysisSettings()}}
-\item \href{#method-getCohortStats}{\code{RewardDataModel$getCohortStats()}}
-\item \href{#method-getNegativeControlSccResults}{\code{RewardDataModel$getNegativeControlSccResults()}}
-\item \href{#method-getNegativeControlConditions}{\code{RewardDataModel$getNegativeControlConditions()}}
-\item \href{#method-getNegativeControlExposures}{\code{RewardDataModel$getNegativeControlExposures()}}
-\item \href{#method-countQuery}{\code{RewardDataModel$countQuery()}}
-\item \href{#method-clone}{\code{RewardDataModel$clone()}}
+\item \href{#method-RewardDataModel-new}{\code{RewardDataModel$new()}}
+\item \href{#method-RewardDataModel-finalize}{\code{RewardDataModel$finalize()}}
+\item \href{#method-RewardDataModel-getCemConnection}{\code{RewardDataModel$getCemConnection()}}
+\item \href{#method-RewardDataModel-queryDb}{\code{RewardDataModel$queryDb()}}
+\item \href{#method-RewardDataModel-getDataSources}{\code{RewardDataModel$getDataSources()}}
+\item \href{#method-RewardDataModel-getOutcomeCohortDefinitionSet}{\code{RewardDataModel$getOutcomeCohortDefinitionSet()}}
+\item \href{#method-RewardDataModel-getExposureCohortDefinitionSet}{\code{RewardDataModel$getExposureCohortDefinitionSet()}}
+\item \href{#method-RewardDataModel-getExposureCohortConceptSets}{\code{RewardDataModel$getExposureCohortConceptSets()}}
+\item \href{#method-RewardDataModel-getOutcomeCohortConceptSets}{\code{RewardDataModel$getOutcomeCohortConceptSets()}}
+\item \href{#method-RewardDataModel-getCohortConceptSet}{\code{RewardDataModel$getCohortConceptSet()}}
+\item \href{#method-RewardDataModel-getCohort}{\code{RewardDataModel$getCohort()}}
+\item \href{#method-RewardDataModel-getAnalysisSettings}{\code{RewardDataModel$getAnalysisSettings()}}
+\item \href{#method-RewardDataModel-getCohortStats}{\code{RewardDataModel$getCohortStats()}}
+\item \href{#method-RewardDataModel-getNegativeControlSccResults}{\code{RewardDataModel$getNegativeControlSccResults()}}
+\item \href{#method-RewardDataModel-getNegativeControlConditions}{\code{RewardDataModel$getNegativeControlConditions()}}
+\item \href{#method-RewardDataModel-getNegativeControlExposures}{\code{RewardDataModel$getNegativeControlExposures()}}
+\item \href{#method-RewardDataModel-countQuery}{\code{RewardDataModel$countQuery()}}
+\item \href{#method-RewardDataModel-clone}{\code{RewardDataModel$clone()}}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-new"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-new}{}}}
 \subsection{Method \code{new()}}{
 initialize backend object.
 \subsection{Usage}{
@@ -69,8 +69,8 @@ initialize backend object.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-finalize"></a>}}
-\if{latex}{\out{\hypertarget{method-finalize}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-finalize"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-finalize}{}}}
 \subsection{Method \code{finalize()}}{
 Closes connection
 \subsection{Usage}{
@@ -79,8 +79,8 @@ Closes connection
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getCemConnection"></a>}}
-\if{latex}{\out{\hypertarget{method-getCemConnection}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getCemConnection"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getCemConnection}{}}}
 \subsection{Method \code{getCemConnection()}}{
 Get cem connector api connection
 Query database
@@ -90,8 +90,8 @@ Query database
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-queryDb"></a>}}
-\if{latex}{\out{\hypertarget{method-queryDb}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-queryDb"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-queryDb}{}}}
 \subsection{Method \code{queryDb()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$queryDb(sql, results_schema = config$resultsSchema, ...)}\if{html}{\out{</div>}}
@@ -111,8 +111,8 @@ Get Data Sources available}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getDataSources"></a>}}
-\if{latex}{\out{\hypertarget{method-getDataSources}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getDataSources"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getDataSources}{}}}
 \subsection{Method \code{getDataSources()}}{
 List of data sources
 \subsection{Usage}{
@@ -121,8 +121,8 @@ List of data sources
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getOutcomeCohortDefinitionSet"></a>}}
-\if{latex}{\out{\hypertarget{method-getOutcomeCohortDefinitionSet}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getOutcomeCohortDefinitionSet"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getOutcomeCohortDefinitionSet}{}}}
 \subsection{Method \code{getOutcomeCohortDefinitionSet()}}{
 Get outcome cohort definition set
 \subsection{Usage}{
@@ -138,8 +138,8 @@ Get outcome cohort definition set
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getExposureCohortDefinitionSet"></a>}}
-\if{latex}{\out{\hypertarget{method-getExposureCohortDefinitionSet}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getExposureCohortDefinitionSet"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getExposureCohortDefinitionSet}{}}}
 \subsection{Method \code{getExposureCohortDefinitionSet()}}{
 Get exposure cohort definition set
 \subsection{Usage}{
@@ -155,8 +155,8 @@ Get exposure cohort definition set
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getExposureCohortConceptSets"></a>}}
-\if{latex}{\out{\hypertarget{method-getExposureCohortConceptSets}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getExposureCohortConceptSets"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getExposureCohortConceptSets}{}}}
 \subsection{Method \code{getExposureCohortConceptSets()}}{
 Get expsoure cohort concept sets
 \subsection{Usage}{
@@ -172,8 +172,8 @@ Get expsoure cohort concept sets
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getOutcomeCohortConceptSets"></a>}}
-\if{latex}{\out{\hypertarget{method-getOutcomeCohortConceptSets}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getOutcomeCohortConceptSets"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getOutcomeCohortConceptSets}{}}}
 \subsection{Method \code{getOutcomeCohortConceptSets()}}{
 Get outcome cohort concept sets for all cohorts specified
 \subsection{Usage}{
@@ -190,8 +190,8 @@ Get concept set for cohort}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getCohortConceptSet"></a>}}
-\if{latex}{\out{\hypertarget{method-getCohortConceptSet}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getCohortConceptSet"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getCohortConceptSet}{}}}
 \subsection{Method \code{getCohortConceptSet()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getCohortConceptSet(cohortDefinitionId = NULL)}\if{html}{\out{</div>}}
@@ -204,13 +204,10 @@ Get concept set for cohort}
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Returns}{
-
-}
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getCohort"></a>}}
-\if{latex}{\out{\hypertarget{method-getCohort}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getCohort"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getCohort}{}}}
 \subsection{Method \code{getCohort()}}{
 Get getCohort data for one cohort
 \subsection{Usage}{
@@ -227,8 +224,8 @@ Get analysis settings}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getAnalysisSettings"></a>}}
-\if{latex}{\out{\hypertarget{method-getAnalysisSettings}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getAnalysisSettings"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getAnalysisSettings}{}}}
 \subsection{Method \code{getAnalysisSettings()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getAnalysisSettings(decode = TRUE)}\if{html}{\out{</div>}}
@@ -244,8 +241,8 @@ Decode raw base 64}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getCohortStats"></a>}}
-\if{latex}{\out{\hypertarget{method-getCohortStats}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getCohortStats"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getCohortStats}{}}}
 \subsection{Method \code{getCohortStats()}}{
 Get getCohortStats
 \subsection{Usage}{
@@ -264,8 +261,8 @@ Returns SCC results for a cohort id}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getNegativeControlSccResults"></a>}}
-\if{latex}{\out{\hypertarget{method-getNegativeControlSccResults}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getNegativeControlSccResults"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getNegativeControlSccResults}{}}}
 \subsection{Method \code{getNegativeControlSccResults()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getNegativeControlSccResults(
@@ -292,8 +289,8 @@ Get negative control condition rr values}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getNegativeControlConditions"></a>}}
-\if{latex}{\out{\hypertarget{method-getNegativeControlConditions}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getNegativeControlConditions"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getNegativeControlConditions}{}}}
 \subsection{Method \code{getNegativeControlConditions()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getNegativeControlConditions(cohortIds = NULL)}\if{html}{\out{</div>}}
@@ -309,8 +306,8 @@ Get negative control exposures}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-getNegativeControlExposures"></a>}}
-\if{latex}{\out{\hypertarget{method-getNegativeControlExposures}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-getNegativeControlExposures"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-getNegativeControlExposures}{}}}
 \subsection{Method \code{getNegativeControlExposures()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$getNegativeControlExposures(cohortIds = NULL)}\if{html}{\out{</div>}}
@@ -326,8 +323,8 @@ Count any query as subquery - (note: will be inneficient in many situations)}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-countQuery"></a>}}
-\if{latex}{\out{\hypertarget{method-countQuery}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-countQuery"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-countQuery}{}}}
 \subsection{Method \code{countQuery()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{RewardDataModel$countQuery(query, ..., render = TRUE)}\if{html}{\out{</div>}}
@@ -346,8 +343,8 @@ Count any query as subquery - (note: will be inneficient in many situations)}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
+\if{html}{\out{<a id="method-RewardDataModel-clone"></a>}}
+\if{latex}{\out{\hypertarget{method-RewardDataModel-clone}{}}}
 \subsection{Method \code{clone()}}{
 The objects of this class are cloneable with this method.
 \subsection{Usage}{

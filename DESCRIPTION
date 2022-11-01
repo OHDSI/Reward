@@ -57,7 +57,8 @@ Suggests:
     Eunomia,
     httpuv,
     withr,
-    callr
+    callr,
+    aws.s3
 Remotes:
   ohdsi/RewardExecutionPackage,
   ohdsi/CohortGenerator,
