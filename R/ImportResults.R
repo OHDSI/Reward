@@ -170,6 +170,14 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
   on.exit(DatabaseConnector::disconnect(connection))
   for (i in 1:nrow(manifestDf)) {
     fileRef <- manifestDf[i,]
+    head <- aws.s3::head_object(object = fileRef$object,
+                                bucket = fileRef$bucket)
+
+    # Skip any removed objects - this means they have been inserted or there is an error we can't control
+    if (isFALSE(head)) {
+      ParallelLogger::logInfo("S3 object not found: ", fileRef$object)
+      next
+    }
 
     tryCatch({
       ParallelLogger::logInfo("Starting insert object: ", fileRef$object)
@@ -226,6 +234,10 @@ importResultsFromS3 <- function(config,
                                 connection = NULL,
                                 computeStatsTables = TRUE,
                                 numberOfThreads = 4) {
+
+  ParallelLogger::clearLoggers()
+  ParallelLogger::addDefaultFileLogger(file.path(config$exportPath, "fileImportLogger.txt"))
+  ParallelLogger::addDefaultConsoleLogger()
   # connect to database
   if (is.null(connection)) {
     connection <- DatabaseConnector::connect(connectionDetails = config$connectionDetails)
