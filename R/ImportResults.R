@@ -171,7 +171,7 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
 
   bucketInfo <- list()
   for (bucket in unique(manifestDf$bucket)) {
-    bucketInfo[[bucket]] <- as.data.frame(aws.s3::get_bucket(bucket = manifestDf$bucket))$Key
+    bucketInfo[[bucket]] <- as.data.frame(aws.s3::get_bucket(bucket = bucket))$Key
   }
 
 
