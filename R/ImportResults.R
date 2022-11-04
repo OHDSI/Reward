@@ -165,9 +165,16 @@ importResults <- function(config,
 }
 
 
-uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) {
+uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTables, cdmInfo) {
   connection <- DatabaseConnector::connect(connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
+
+  bucketInfo <- list()
+  for (bucket in unique(manifestDf$bucket)) {
+    bucketInfo[[bucket]] <- as.data.frame(aws.s3::get_bucket(bucket = manifestDf$bucket))$Key
+  }
+
+
   for (i in 1:nrow(manifestDf)) {
     fileRef <- manifestDf[i,]
     head <- aws.s3::head_object(object = fileRef$object,
@@ -194,9 +201,28 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
           chunk$source_id <- cdmInfo$sourceId
         }
         # Will use PGcopy to upload
+        if (is.null(loadTables[[fileRef$target]])) {
+          targetTable <- fileRef$target
+        } else {
+          targetTable <- loadTables[[fileRef$target]]$table
+          # Get primary key columns for first element - if they are already in the db error out
+          sql <- "SELECT @key_cols FROM @schema.@table WHERE @key_col_conditions"
+          rowVals <- chunk[1,] %>% dplyr::select(dplyr::all_of(loadTables[[fileRef$target]]$keyCols))
+          keyColConditions <- paste(loadTables[[fileRef$target]]$keyCols, " = ", rowVals, collapse = " AND ")
+          testEntry <- DatabaseConnector::renderTranslateQuerySql(connection,
+                                                                  sql,
+                                                                  keyCols = loadTables[[fileRef$target]]$keyCols,
+                                                                  key_col_conditions = keyColConditions,
+                                                                  table = fileRef$target,
+                                                                  schema = targetSchema)
+          if (nrow(testEntry) != 0) {
+            stop("key value violates unique constraint")
+          }
+        }
+
         DatabaseConnector::insertTable(connection,
                                        databaseSchema = targetSchema,
-                                       tableName = fileRef$target,
+                                       tableName = targetTable,
                                        data = chunk,
                                        dropTableIfExists = FALSE,
                                        createTable = FALSE,
@@ -207,9 +233,9 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
       deleteObject <- TRUE
     }, error = function(err) {
       ParallelLogger::logError("Error uploading ", fileRef$object, "\n", err)
-      if (grepl("duplicate key value violates unique constraint", err)) {
+      if (grepl("key value violates unique constraint", err)) {
         ParallelLogger::logInfo("Removing object due to primary key duplication")
-        deleteObject <- TRUE
+        deleteObject <<- TRUE
       }
     })
 
@@ -265,12 +291,47 @@ importResultsFromS3 <- function(config,
   on.exit(ParallelLogger::stopCluster(cluster), add = TRUE)
   manifestDf <- as.data.frame(cdmManifest$manifest)
 
+  loadTables <- list(
+    "scc_result" = list(
+      keyCols = c("source_id", "analysis_id", "outcome_cohort_id", "target_cohort_id"),
+      table = "scc_result_load_table"
+    ),
+    "scc_stat" = list(
+      keyCols = c("source_id", "analysis_id", "outcome_cohort_id", "target_cohort_id", "stat_type"),
+      table = "scc_stat_load_table"
+    )
+  )
+  # Create load tables
+  if (length(loadTables)) {
+    sql <- SqlRender::loadRenderTranslateSql(file.path("create", "loadTables.sql"),
+                                             packageName = utils::packageName(),
+                                             schema = config$resultsSchema)
+
+    DatabaseConnector::executeSql(connection, sql)
+  }
+
   ParallelLogger::clusterApply(cluster,
                                split(manifestDf, rep_len(1:numberOfThreads, nrow(manifestDf))),
                                fun = uploadS3Files,
                                connectionDetails = config$connectionDetails,
                                targetSchema = config$resultsSchema,
+                               loadTables = loadTables,
                                cdmInfo = cdmInfo)
+
+
+  for (table in names(loadTables)) {
+
+    DatabaseConnector::renderTranslateExecuteSql(connection,
+                                                 "INSERT INTO @schema.@table SELECT * FROM @schema.@load_table;
+                                                 TRUNCATE TABLE @schema.@load_table;
+                                                 DROP TABLE @schema.@load_table;
+                                                 ",
+                                                 schema = config$resultsSchema,
+                                                 table = table,
+                                                 load_table = loadTables[[table]])
+  }
+
+
   if (computeStatsTables) {
     computeSourceCounts(config, connection)
   }
