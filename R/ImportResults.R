@@ -177,9 +177,7 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
 
   for (i in 1:nrow(manifestDf)) {
     fileRef <- manifestDf[i,]
-    head <- aws.s3::head_object(object = fileRef$object,
-                                bucket = fileRef$bucket)
-
+    head <- fileRef$object %in% bucketInfo[[fileRef$bucket]]
     # Skip any removed objects - this means they have been inserted or there is an error we can't control
     if (isFALSE(head)) {
       ParallelLogger::logInfo("S3 object not found: ", fileRef$object)
