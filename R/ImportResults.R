@@ -211,7 +211,7 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
           keyColConditions <- paste(loadTables[[fileRef$target]]$keyCols, " = ", rowVals, collapse = " AND ")
           testEntry <- DatabaseConnector::renderTranslateQuerySql(connection,
                                                                   sql,
-                                                                  keyCols = loadTables[[fileRef$target]]$keyCols,
+                                                                  key_cols = loadTables[[fileRef$target]]$keyCols,
                                                                   key_col_conditions = keyColConditions,
                                                                   table = fileRef$target,
                                                                   schema = targetSchema)
@@ -305,13 +305,13 @@ importResultsFromS3 <- function(config,
     )
   )
   # Create load tables
-  if (length(loadTables)) {
-    sql <- SqlRender::loadRenderTranslateSql(file.path("create", "loadTables.sql"),
-                                             packageName = utils::packageName(),
-                                             schema = config$resultsSchema)
-
-    DatabaseConnector::executeSql(connection, sql)
-  }
+  # if (length(loadTables)) {
+  #   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "loadTables.sql"),
+  #                                            packageName = utils::packageName(),
+  #                                            schema = config$resultsSchema)
+  #
+  #   DatabaseConnector::executeSql(connection, sql)
+  # }
 
   ParallelLogger::clusterApply(cluster,
                                split(manifestDf, rep_len(1:numberOfThreads, nrow(manifestDf))),
@@ -323,12 +323,8 @@ importResultsFromS3 <- function(config,
 
 
   for (table in names(loadTables)) {
-
     DatabaseConnector::renderTranslateExecuteSql(connection,
-                                                 "INSERT INTO @schema.@table SELECT * FROM @schema.@load_table;
-                                                 TRUNCATE TABLE @schema.@load_table;
-                                                 DROP TABLE @schema.@load_table;
-                                                 ",
+                                                 "INSERT INTO @schema.@table SELECT DISTINCT * FROM @schema.@load_table;",
                                                  schema = config$resultsSchema,
                                                  table = table,
                                                  load_table = loadTables[[table]])
