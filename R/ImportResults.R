@@ -174,80 +174,79 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
     bucketInfo[[bucket]] <- as.data.frame(aws.s3::get_bucket(bucket = bucket))$Key
   }
 
-
-  for (i in 1:nrow(manifestDf)) {
-    fileRef <- manifestDf[i,]
-    head <- fileRef$object %in% bucketInfo[[fileRef$bucket]]
-    # Skip any removed objects - this means they have been inserted or there is an error we can't control
-    if (isFALSE(head)) {
-      ParallelLogger::logInfo("S3 object not found: ", fileRef$object)
-      next
-    }
-    deleteObject <- FALSE
-    tryCatch({
-      ParallelLogger::logDebug("Loading chunk into file: ")
-
-      tempd <- tempfile()
-      dir.create(tempd)
-      on.exit(unlink(tempd, TRUE, TRUE), add = TRUE)
-      withr::with_envvar(list(VROOM_TEMP_PATH = tempd), {
+  tempd <- tempfile()
+  dir.create(tempd)
+  on.exit(unlink(tempd, TRUE, TRUE), add = TRUE)
+  withr::with_envvar(list(VROOM_TEMP_PATH = tempd), {
+    for (i in 1:nrow(manifestDf)) {
+      fileRef <- manifestDf[i,]
+      head <- fileRef$object %in% bucketInfo[[fileRef$bucket]]
+      # Skip any removed objects - this means they have been inserted or there is an error we can't control
+      if (isFALSE(head)) {
+        ParallelLogger::logInfo("S3 object not found: ", fileRef$object)
+        next
+      }
+      deleteObject <- FALSE
+      tryCatch({
+        ParallelLogger::logDebug("Loading chunk into file: ")
         chunk <- aws.s3::s3read_using(readr::read_csv,
                                       object = fileRef$object,
                                       bucket = fileRef$bucket)
+        if (nrow(chunk)) {
+          if (cdmInfo$changedSourceId) {
+            chunk$source_id <- cdmInfo$sourceId
+          }
+          # Will use PGcopy to upload
+          if (is.null(loadTables[[fileRef$target]])) {
+            targetTable <- fileRef$target
+          } else {
+            targetTable <- loadTables[[fileRef$target]]$table
+            # Get primary key columns for first element - if they are already in the db error out
+            sql <- "SELECT @key_cols FROM @schema.@table WHERE @key_col_conditions"
+            rowVals <- chunk[1,] %>% dplyr::select(dplyr::all_of(loadTables[[fileRef$target]]$keyCols))
+            keyColConditions <- paste(loadTables[[fileRef$target]]$keyCols, " = ", rowVals, collapse = " AND ")
+            testEntry <- DatabaseConnector::renderTranslateQuerySql(connection,
+                                                                    sql,
+                                                                    key_cols = loadTables[[fileRef$target]]$keyCols,
+                                                                    key_col_conditions = keyColConditions,
+                                                                    table = fileRef$target,
+                                                                    schema = targetSchema)
+            if (nrow(testEntry) != 0) {
+              stop("key value violates unique constraint")
+            }
+          }
+
+          DatabaseConnector::insertTable(connection,
+                                         databaseSchema = targetSchema,
+                                         tableName = targetTable,
+                                         data = chunk,
+                                         dropTableIfExists = FALSE,
+                                         createTable = FALSE,
+                                         tempTable = FALSE,
+                                         bulkLoad = TRUE)
+        }
+        # delete file/chunk if upload success or it's empty
+        deleteObject <- TRUE
+      }, error = function(err) {
+        ParallelLogger::logError("Error uploading ", fileRef$object, "\n", err)
+        if (grepl("key value violates unique constraint", err)) {
+          ParallelLogger::logInfo("Removing object due to primary key duplication")
+          deleteObject <<- TRUE
+        }
+      }, finally = {
+        # Manually cleanup temp cache so we don't fill disk up!
+        rm(chunk)
+        unlink(list.files(tempd))
       })
 
-      if (nrow(chunk)) {
-        if (cdmInfo$changedSourceId) {
-          chunk$source_id <- cdmInfo$sourceId
-        }
-        # Will use PGcopy to upload
-        if (is.null(loadTables[[fileRef$target]])) {
-          targetTable <- fileRef$target
-        } else {
-          targetTable <- loadTables[[fileRef$target]]$table
-          # Get primary key columns for first element - if they are already in the db error out
-          sql <- "SELECT @key_cols FROM @schema.@table WHERE @key_col_conditions"
-          rowVals <- chunk[1,] %>% dplyr::select(dplyr::all_of(loadTables[[fileRef$target]]$keyCols))
-          keyColConditions <- paste(loadTables[[fileRef$target]]$keyCols, " = ", rowVals, collapse = " AND ")
-          testEntry <- DatabaseConnector::renderTranslateQuerySql(connection,
-                                                                  sql,
-                                                                  key_cols = loadTables[[fileRef$target]]$keyCols,
-                                                                  key_col_conditions = keyColConditions,
-                                                                  table = fileRef$target,
-                                                                  schema = targetSchema)
-          if (nrow(testEntry) != 0) {
-            stop("key value violates unique constraint")
-          }
-        }
-
-        DatabaseConnector::insertTable(connection,
-                                       databaseSchema = targetSchema,
-                                       tableName = targetTable,
-                                       data = chunk,
-                                       dropTableIfExists = FALSE,
-                                       createTable = FALSE,
-                                       tempTable = FALSE,
-                                       bulkLoad = TRUE)
+      if (deleteObject) {
+        ParallelLogger::logInfo("Removing object: ", fileRef$object)
+        aws.s3::delete_object(fileRef$object, bucket = fileRef$bucket)
       }
-      # Manually cleanup temp cache so we don't fill disk up!
-      rm(chunk)
-      unlink(list.files(tempd))
-      # delete file/chunk if upload success or it's empty
-      deleteObject <- TRUE
-    }, error = function(err) {
-      ParallelLogger::logError("Error uploading ", fileRef$object, "\n", err)
-      if (grepl("key value violates unique constraint", err)) {
-        ParallelLogger::logInfo("Removing object due to primary key duplication")
-        deleteObject <<- TRUE
-      }
-    })
 
-    if (deleteObject) {
-      ParallelLogger::logInfo("Removing object: ", fileRef$object)
-      aws.s3::delete_object(fileRef$object, bucket = fileRef$bucket)
     }
+  })
 
-  }
 }
 
 
