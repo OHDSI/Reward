@@ -178,13 +178,17 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
       ParallelLogger::logInfo("S3 object not found: ", fileRef$object)
       next
     }
-
+    deleteObject <- FALSE
     tryCatch({
-      ParallelLogger::logInfo("Starting insert object: ", fileRef$object)
-      chunk <- aws.s3::s3read_using(readr::read_csv,
-                                    object = fileRef$object,
-                                    bucket = fileRef$bucket)
-
+      withr::with_tempfile(new = "tfile",
+                           fileext = ".csv.gz",
+                           code = {
+                             ParallelLogger::logDebug("Loading chunk into file: ", tfile)
+                             chunk <- aws.s3::s3read_using(readr::read_csv,
+                                                           object = fileRef$object,
+                                                           bucket = fileRef$bucket,
+                                                           filename = tfile)
+                           })
       if (nrow(chunk)) {
         if (cdmInfo$changedSourceId) {
           chunk$source_id <- cdmInfo$sourceId
@@ -200,11 +204,20 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
                                        bulkLoad = TRUE)
       }
       # delete file/chunk if upload success or it's empty
-      ParallelLogger::logInfo("Removing object: ", fileRef$object)
-      aws.s3::delete_object(fileRef$object, bucket = fileRef$bucket)
+      deleteObject <- TRUE
     }, error = function(err) {
       ParallelLogger::logError("Error uploading ", fileRef$object, "\n", err)
+      if (grepl("duplicate key value violates unique constraint", err)) {
+        ParallelLogger::logInfo("Removing object due to primary key duplication")
+        deleteObject <- TRUE
+      }
     })
+
+    if (deleteObject) {
+      ParallelLogger::logInfo("Removing object: ", fileRef$object)
+      aws.s3::delete_object(fileRef$object, bucket = fileRef$bucket)
+    }
+
   }
 }
 
