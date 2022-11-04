@@ -236,14 +236,12 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
       }, finally = {
         # Manually cleanup temp cache so we don't fill disk up!
         rm(chunk)
-        unlink(list.files(tempd))
       })
-
+      unlink(list.files(tempd), force = TRUE, recursive = TRUE)
       if (deleteObject) {
         ParallelLogger::logInfo("Removing object: ", fileRef$object)
         aws.s3::delete_object(fileRef$object, bucket = fileRef$bucket)
       }
-
     }
   })
 
