@@ -185,15 +185,17 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
     }
     deleteObject <- FALSE
     tryCatch({
-      withr::with_tempfile(new = "tfile",
-                           fileext = ".csv.gz",
-                           code = {
-                             ParallelLogger::logDebug("Loading chunk into file: ", tfile)
-                             chunk <- aws.s3::s3read_using(readr::read_csv,
-                                                           object = fileRef$object,
-                                                           bucket = fileRef$bucket,
-                                                           filename = tfile)
-                           })
+      ParallelLogger::logDebug("Loading chunk into file: ")
+
+      tempd <- tempfile()
+      dir.create(tempd)
+      on.exit(unlink(tempd, TRUE, TRUE), add = TRUE)
+      withr::with_envvar(list(VROOM_TEMP_PATH = tempd), {
+        chunk <- aws.s3::s3read_using(readr::read_csv,
+                                      object = fileRef$object,
+                                      bucket = fileRef$bucket)
+      })
+
       if (nrow(chunk)) {
         if (cdmInfo$changedSourceId) {
           chunk$source_id <- cdmInfo$sourceId
@@ -227,6 +229,9 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
                                        tempTable = FALSE,
                                        bulkLoad = TRUE)
       }
+      # Manually cleanup temp cache so we don't fill disk up!
+      rm(chunk)
+      unlink(list.files(tempd))
       # delete file/chunk if upload success or it's empty
       deleteObject <- TRUE
     }, error = function(err) {
