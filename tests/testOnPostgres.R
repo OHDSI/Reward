@@ -1,0 +1,5 @@
+library(Reward)
+library(testthat)
+library(checkmate)
+options(dbms="postgresql")
+test_check("Reward")

@@ -1,6 +1,7 @@
+{DEFAULT @table_id = 1}
 
-DROP TABLE IF EXISTS @schema.scc_result_load_table;
-create table @schema.scc_result_load_table (
+DROP TABLE IF EXISTS @schema.scc_result_load_table_@table_id;
+create table @schema.scc_result_load_table_@table_id (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
     outcome_cohort_id BIGINT NOT NULL,
@@ -21,8 +22,8 @@ create table @schema.scc_result_load_table (
     num_exposures NUMERIC
 );
 
-DROP TABLE IF EXISTS @schema.scc_stat_load_table;
-create TABLE @schema.scc_stat_load_table (
+DROP TABLE IF EXISTS @schema.scc_stat_load_table_@table_id;
+create TABLE @schema.scc_stat_load_table_@table_id (
     source_id INT NOT NULL,
     analysis_id INT NOT NULL,
     outcome_cohort_id BIGINT NOT NULL,

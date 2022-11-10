@@ -1,0 +1,18 @@
+## NOTE - ONLY A TEMPLATE - written to by tests
+webApiUrl: "https://epi.jnj.com:8443/WebAPI"
+#exportPath: "resultsImport"
+
+#connectionDetails:
+#  dbms: "postgresql"
+#
+#resultsSchema: "main"
+#vocabularySchema: "main"
+
+cemConnectionDetails:
+  connectionDetails:
+    dbms: "sqlite"
+    server: "cem_test_db/cemTestInstance.sqlite"
+
+  cemSchema: "main"
+  vocabularySchema: "main"
+  sourceSchema: "main"

@@ -47,7 +47,6 @@ createRewardSchema <- function(configFilePath,
                                            include_constraints = config$connectionDetails$dbms != "sqlite")
   DatabaseConnector::executeSql(connection, sql)
 
-
   message("creating bulk cohort references")
   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "cohortReferences.sql"),
                                            packageName = utils::packageName(),

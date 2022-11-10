@@ -10,7 +10,7 @@ Encoding: UTF-8
 LazyData: true
 Depends:
     R (>= 4.0.0),
-    DatabaseConnector (>= 5.0.0),
+    DatabaseConnector (>= 5.1.0),
     ParallelLogger,
     ResultModelManager,
     R6,

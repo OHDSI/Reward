@@ -64,6 +64,46 @@ registerCdm <- function(config, connection, cdmInfoFile) {
                                                  source_name = cdmInfo$name,
                                                  source_key = cdmInfo$database,
                                                  dt = Sys.time())
+
+    # Handle table partitioning
+    if (DatabaseConnector::dbms(connection) == "postgresql") {
+      sql <- "
+      CREATE TABLE @schema.scc_result_s@source_id
+      PARTITION OF @schema.scc_result FOR VALUES IN (@source_id)
+      PARTITION BY LIST (analysis_id);
+
+      CREATE TABLE @schema.scc_stat_s@source_id
+      PARTITION OF @schema.scc_stat FOR VALUES IN (@source_id)
+      PARTITION BY LIST (analysis_id);
+      "
+      DatabaseConnector::renderTranslateExecuteSql(connection,
+                                                   sql,
+                                                   schema = config$resultsSchema,
+                                                   source_id = sourceId)
+
+      sql <- "SELECT analysis_id FROM @schema.analysis_setting"
+      ids <- DatabaseConnector::renderTranslateQuerySql(connection,
+                                                        sql,
+                                                        schema = config$resultsSchema,
+                                                        snakeCaseToCamelCase = TRUE) %>%
+        dplyr::select(analysisId) %>%
+        dplyr::pull()
+
+      # Create an analysis id table
+      for (id in ids) {
+        sql <- "
+        CREATE TABLE @schema.scc_result_s@source_id_a@analysis_id
+        PARTITION OF @schema.scc_result_s@source_id FOR VALUES IN (@analysis_id);
+
+        CREATE TABLE @schema.scc_stat_s@source_id_a@analysis_id
+        PARTITION OF @schema.scc_stat_s@source_id FOR VALUES IN (@analysis_id);"
+        DatabaseConnector::renderTranslateExecuteSql(connection,
+                                                     sql,
+                                                     analysis_id = id,
+                                                     schema = config$resultsSchema,
+                                                     source_id = sourceId)
+      }
+    }
   }
   sourceInfo <- getSourceInfo()
   cdmInfo$changedSourceId <- cdmInfo$sourceId != sourceInfo$sourceId
@@ -164,8 +204,30 @@ importResults <- function(config,
   }
 }
 
-
-uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTables, cdmInfo) {
+#' Insert a set of files into DB from s3 bucket objects
+#' @description
+#' Creates a load table for insert of all objects.
+#'
+#' Checks insert of chunks by validating last entry of data file into table - if entry is found then data is not inserted
+#' S3 Object is deleted when it is inserted or if it clashes with a primary key
+#'
+#' This caused the insert to succeed but the error code causes a crash in R
+#'
+#' Note, this function also works around a bug in readr/vroom whereby a temproary file is created when opening the
+#' s3 bucket. This file is not deleted until the thread closes
+#'
+#' This file is the size of the csv.gz so quickly fills up the system's temp space which will lead to a catestrophic
+#' failure on windows.
+#'
+#' Consequently, we set VROOM_TEMP_PATH to a customizable dir. This process is also lightning
+#' fast if you use the ram as a disk store for the tempdir as DatabaseConnector also writes a tempfile.
+#' On linux this is trivial but this can be achieved on windows server with some configuration:
+#' @seealso http://woshub.com/create-ram-disk-windows-server/
+#'
+#'
+#' Note the use of load per thread tables is because pgcopy is not threadsafe with inserts (i.e. there is no locking)
+#' @return list of load tables (which are based on spawned proc ids) - to be merged by calling proc
+uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) {
   connection <- DatabaseConnector::connect(connectionDetails)
   on.exit(DatabaseConnector::disconnect(connection))
 
@@ -173,6 +235,27 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
   for (bucket in unique(manifestDf$bucket)) {
     bucketInfo[[bucket]] <- as.data.frame(aws.s3::get_bucket(bucket = bucket))$Key
   }
+
+  tableId <- Sys.getpid()
+  loadTables <- list(
+    "scc_result" = list(
+      keyCols = c("source_id", "analysis_id", "outcome_cohort_id", "target_cohort_id"),
+      table = paste0("scc_result_load_table_", tableId)
+    ),
+    "scc_stat" = list(
+      keyCols = c("source_id", "analysis_id", "outcome_cohort_id", "target_cohort_id", "stat_type"),
+      table = paste0("scc_stat_load_table_", tableId)
+    )
+  )
+
+  sql <- SqlRender::loadRenderTranslateSql(file.path("create", "loadTables.sql"),
+                                           packageName = utils::packageName(),
+                                           analysisId = 1,
+                                           sourceId = cdmInfo$sourceId,
+                                           table_id = tableId,
+                                           schema = config$resultsSchema)
+
+  DatabaseConnector::executeSql(connection, sql)
 
   tempd <- tempfile()
   dir.create(tempd)
@@ -245,6 +328,12 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
     }
   })
 
+  return(
+    list(
+      scc_result = paste0("scc_result_load_table_", tableId),
+      scc_stat = paste0("scc_stat_load_table_", tableId)
+    )
+  )
 }
 
 
@@ -265,14 +354,14 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, loadTable
 #' @param config                        Reward configuration object
 #' @param cdmManifest                   Path to cdm manifest json including location of s3 objects
 #' @param connection                    DatabaseConnector connection to reward databases
-#' @param computeStatsTables        compute tables that count aggregated stats across different data sources
+#' @param computeStatsTables            compute tables that count aggregated stats across different data sources
 #' @param numberOfThreads               Number of upload jobs to pull and uploads
 #' @export
 importResultsFromS3 <- function(config,
                                 cdmManifestPath,
                                 connection = NULL,
                                 computeStatsTables = TRUE,
-                                numberOfThreads = 4) {
+                                numberOfThreads = 12) {
 
   ParallelLogger::clearLoggers()
   ParallelLogger::addDefaultFileLogger(file.path(config$exportPath, "fileImportLogger.txt"))
@@ -286,47 +375,36 @@ importResultsFromS3 <- function(config,
   cdmManifest <- ParallelLogger::loadSettingsFromJson(cdmManifestPath)
   cdmInfo <- registerCdm(config, connection, cdmManifestPath)
 
+
+  manifestDf <- as.data.frame(cdmManifest$manifest)
+
   ParallelLogger::logInfo("Starting insert")
   cluster <- ParallelLogger::makeCluster(numberOfThreads = numberOfThreads)
   on.exit(ParallelLogger::stopCluster(cluster), add = TRUE)
-  manifestDf <- as.data.frame(cdmManifest$manifest)
 
-  loadTables <- list(
-    "scc_result" = list(
-      keyCols = c("source_id", "analysis_id", "outcome_cohort_id", "target_cohort_id"),
-      table = "scc_result_load_table"
-    ),
-    "scc_stat" = list(
-      keyCols = c("source_id", "analysis_id", "outcome_cohort_id", "target_cohort_id", "stat_type"),
-      table = "scc_stat_load_table"
-    )
-  )
-  # Create load tables
-  # if (length(loadTables)) {
-  #   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "loadTables.sql"),
-  #                                            packageName = utils::packageName(),
-  #                                            schema = config$resultsSchema)
-  #
-  #   DatabaseConnector::executeSql(connection, sql)
-  # }
+  # Fast load map - no constraints allows this to scale to a many threaded async data insert
+  loadTableIds <- ParallelLogger::clusterApply(cluster,
+                                              split(manifestDf, rep_len(1:numberOfThreads, nrow(manifestDf))),
+                                              fun = uploadS3Files,
+                                              connectionDetails = config$connectionDetails,
+                                              targetSchema = config$resultsSchema,
+                                              loadTables = loadTables,
+                                              cdmInfo = cdmInfo)
 
-  ParallelLogger::clusterApply(cluster,
-                               split(manifestDf, rep_len(1:numberOfThreads, nrow(manifestDf))),
-                               fun = uploadS3Files,
-                               connectionDetails = config$connectionDetails,
-                               targetSchema = config$resultsSchema,
-                               loadTables = loadTables,
-                               cdmInfo = cdmInfo)
-
-
-  for (table in names(loadTables)) {
-    DatabaseConnector::renderTranslateExecuteSql(connection,
-                                                 "INSERT INTO @schema.@table SELECT DISTINCT * FROM @schema.@load_table;",
-                                                 schema = config$resultsSchema,
-                                                 table = table,
-                                                 load_table = loadTables[[table]])
+  # Merge results step - this will likely be slow. Parallel operation is a hindrance here
+  for (res in loadTableIds) {
+    for (table in names(res)) {
+      ParallelLogger::logInfo("MERGING RESULTS ::: INSERT INTO ", config$resultsSchema, ".", table, " AS SELECT * FROM ", config$resultsSchema, ".", table)
+      DatabaseConnector::renderTranslateExecuteSql(connection,
+                                                   "INSERT INTO @schema.@table SELECT * FROM @schema.@load_table;
+                                                   TRUNCATE TABLE @schema.@load_table;
+                                                   DROP TABLE @schema.@load_table;
+                                                   ",
+                                                   schema = config$resultsSchema,
+                                                   table = table,
+                                                   load_table = res[[table]])
+    }
   }
-
 
   if (computeStatsTables) {
     computeSourceCounts(config, connection)
