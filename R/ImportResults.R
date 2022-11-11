@@ -388,7 +388,6 @@ importResultsFromS3 <- function(config,
                                               fun = uploadS3Files,
                                               connectionDetails = config$connectionDetails,
                                               targetSchema = config$resultsSchema,
-                                              loadTables = loadTables,
                                               cdmInfo = cdmInfo)
 
   # Merge results step - this will likely be slow. Parallel operation is a hindrance here
