@@ -253,7 +253,7 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
                                            analysisId = 1,
                                            sourceId = cdmInfo$sourceId,
                                            table_id = tableId,
-                                           schema = config$resultsSchema)
+                                           schema = targetSchema)
 
   DatabaseConnector::executeSql(connection, sql)
 
