@@ -250,8 +250,6 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
 
   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "loadTables.sql"),
                                            packageName = utils::packageName(),
-                                           analysisId = 1,
-                                           sourceId = cdmInfo$sourceId,
                                            table_id = tableId,
                                            schema = targetSchema)
 
@@ -275,6 +273,13 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
         chunk <- aws.s3::s3read_using(readr::read_csv,
                                       object = fileRef$object,
                                       bucket = fileRef$bucket)
+
+        if (fileRef$target == "scc_result") {
+          chunk <- chunk %>% dplyr::filter(!is.null(rr),
+                                           rr > 0,
+                                           !is.na(rr))
+        }
+
         if (nrow(chunk)) {
           if (cdmInfo$changedSourceId) {
             chunk$source_id <- cdmInfo$sourceId
