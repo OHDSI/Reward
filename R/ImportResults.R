@@ -389,18 +389,36 @@ importResultsFromS3 <- function(config,
 
   # Fast load map - no constraints allows this to scale to a many threaded async data insert
   loadTableIds <- ParallelLogger::clusterApply(cluster,
-                                              split(manifestDf, rep_len(1:numberOfThreads, nrow(manifestDf))),
-                                              fun = uploadS3Files,
-                                              connectionDetails = config$connectionDetails,
-                                              targetSchema = config$resultsSchema,
-                                              cdmInfo = cdmInfo)
+                                               split(manifestDf, rep_len(1:numberOfThreads, nrow(manifestDf))),
+                                               fun = uploadS3Files,
+                                               connectionDetails = config$connectionDetails,
+                                               targetSchema = config$resultsSchema,
+                                               cdmInfo = cdmInfo)
 
-  # Merge results step - this will likely be slow. Parallel operation is a hindrance here
+  # map individiual tablers to where they're loaded
+  loadTableRes <- list()
   for (res in loadTableIds) {
     for (table in names(res)) {
-      ParallelLogger::logInfo("MERGING RESULTS ::: INSERT INTO ", config$resultsSchema, ".", table, " AS SELECT * FROM ", config$resultsSchema, ".", table)
+      loadTableRes[[table]] <- c(loadTableRes[[table]], res[[table]])
+    }
+  }
+
+  # Merge results step - this will likely be slow. Parallel operation is a hindrance here
+  # This part ensures inserts are distinct
+  ParallelLogger::logInfo("MERGING RESULTS ...")
+  for (table in names(loadTableRes)) {
+    insertSql <- paste("INSERT INTO @schema.@table",
+                       paste(paste0("SELECT * FROM @schema.", loadTableRes[[table]]), collapse = " UNION "))
+    DatabaseConnector::renderTranslateExecuteSql(connection,
+                                                 insertSql,
+                                                 schema = config$resultsSchema,
+                                                 table = table)
+  }
+
+  for (res in loadTableIds) {
+    for (table in names(res)) {
       DatabaseConnector::renderTranslateExecuteSql(connection,
-                                                   "INSERT INTO @schema.@table SELECT * FROM @schema.@load_table;
+                                                   "
                                                    TRUNCATE TABLE @schema.@load_table;
                                                    DROP TABLE @schema.@load_table;
                                                    ",
