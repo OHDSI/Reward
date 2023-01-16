@@ -423,7 +423,6 @@ importResultsFromS3 <- function(config,
                                                    DROP TABLE @schema.@load_table;
                                                    ",
                                                    schema = config$resultsSchema,
-                                                   table = table,
                                                    load_table = res[[table]])
     }
   }
