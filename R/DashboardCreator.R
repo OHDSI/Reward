@@ -179,21 +179,23 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
   )
 }
 
-addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, dashboardConfig) {
+addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, dashboardConfig) {  browser()
   message("Adding negative controls")
   if (dashboardConfig$exposureDashboard) {
     controlConcepts <- model$getNegativeControlConditions(dashboardConfig$cohortIds)
     isOutcomeControl <- 1
+    cohortVar <- "outcomeCohortId"
   } else {
     controlConcepts <- model$getNegativeControlExposures(dashboardConfig$cohortIds)
     isOutcomeControl <- 0
+    cohortVar <- "targetCohortId"
   }
 
   if (nrow(controlConcepts)) {
     controlConcepts <- controlConcepts %>%
-        dplyr::select(cohortDefinitionId,
+        dplyr::select("cohortDefinitionId",
                       negativeControlConceptId = conceptId,
-                      negativeControlCohortId = targetCohortId) %>%
+                      negativeControlCohortId = .data[[cohortVar]]) %>%
         dplyr::mutate(isOutcomeControl = isOutcomeControl)
 
     # Map concepts to outcomes/exposure cohorts
@@ -362,10 +364,10 @@ calibrate <- function(x, nullDist) {
 
 
 .applyOutcomeCalibration <- function(x, nulls) {
-  null <- nulls %>% dplyr::filter(sourceId == x %>% pull(sourceId) %>% unique(),
-                                  targetCohortId == x %>% pull(targetCohortId) %>% unique(),
-                                  outcomeType == x %>% pull(outcomeType) %>% unique(),
-                                  analysisId == x %>% pull(analysisId) %>% unique())
+  null <- nulls %>% dplyr::filter(sourceId == x %>% dplyr::pull(sourceId) %>% unique(),
+                                  targetCohortId == x %>% dplyr::pull(targetCohortId) %>% unique(),
+                                  outcomeType == x %>% dplyr::pull(outcomeType) %>% unique(),
+                                  analysisId == x %>% dplyr::pull(analysisId) %>% unique())
 
   nullDist <- createNullDist(null$mean[1], null$sd[1])
   res <- calibrate(x, nullDist)
@@ -374,9 +376,9 @@ calibrate <- function(x, nullDist) {
 }
 
 .applyExposureCalibration <- function(x, nulls) {
-  null <- nulls %>% dplyr::filter(sourceId == x %>% pull(sourceId) %>% unique(),
-                                  outcomeCohortId == x %>% pull(outcomeCohortId) %>% unique(),
-                                  analysisId == x %>% pull(analysisId) %>% unique())
+  null <- nulls %>% dplyr::filter(sourceId == x %>% dplyr::pull(sourceId) %>% unique(),
+                                  outcomeCohortId == x %>% dplyr::pull(outcomeCohortId) %>% unique(),
+                                  analysisId == x %>% dplyr::pull(analysisId) %>% unique())
 
   nullDist <- createNullDist(null$mean[1], null$sd[1])
   res <- calibrate(x, nullDist)
