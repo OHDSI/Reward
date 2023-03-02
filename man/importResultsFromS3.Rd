@@ -8,9 +8,8 @@ importResultsFromS3(
   config,
   cdmManifestPath,
   connection = NULL,
-  cleanup = TRUE,
   computeStatsTables = TRUE,
-  numberOfThreads = 4
+  numberOfThreads = 12
 )
 }
 \arguments{
@@ -18,13 +17,11 @@ importResultsFromS3(
 
 \item{connection}{DatabaseConnector connection to reward databases}
 
-\item{cleanup}{Remove extracted csv files after inserting results}
+\item{computeStatsTables}{compute tables that count aggregated stats across different data sources}
 
 \item{numberOfThreads}{Number of upload jobs to pull and uploads}
 
 \item{cdmManifest}{Path to cdm manifest json including location of s3 objects}
-
-\item{computeAggregateTables}{compute tables that count aggregated stats across different data sources}
 }
 \description{
 Verify and import results exported from CDMs into S3 bucket(s)

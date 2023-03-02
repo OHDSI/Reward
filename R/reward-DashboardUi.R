@@ -16,11 +16,6 @@
 
 #' Ui for rewardb dashboard
 #' @param request shiny request object
-#' @importFrom gt gt_output
-#' @import shiny
-#' @import shinyWidgets
-#' @importFrom shinycssloaders withSpinner
-#' @import shinydashboard
 #' @export
 rewardUi <- function(id = "Reward",
                      appConfig) {

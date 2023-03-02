@@ -2,7 +2,7 @@
 % Please edit documentation in R/DataModel.R
 \name{RewardDataModel}
 \alias{RewardDataModel}
-\title{CEM Database Backend Class}
+\title{RewardDataModel}
 \value{
 data.frame of data sources
 }

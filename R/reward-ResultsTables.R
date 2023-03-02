@@ -22,7 +22,6 @@ metaAnalysisTableUi <- function(id) {
   )
 }
 
-#' @import shiny
 metaAnalysisTableServer <- function(id, model, selectedExposureOutcome) {
   server <- shiny::moduleServer(id, function(input, output, session) {
     metaAnalysisTbl <- shiny::reactive({

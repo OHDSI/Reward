@@ -184,6 +184,9 @@ Main table query in dashboard}
 }
 \if{html}{\out{</div>}}
 }
+\subsection{Returns}{
+Get main query results count
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-DashboardDataModel-getFilteredTableResultsCount"></a>}}
@@ -202,6 +205,7 @@ Main table query in dashboard}
 }
 \subsection{Returns}{
 count
+Get table of meta analysis results
 }
 }
 \if{html}{\out{<hr>}}

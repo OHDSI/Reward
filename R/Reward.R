@@ -17,11 +17,7 @@
 #' @keywords internal
 "_PACKAGE"
 
-#' @import DatabaseConnector
-#' @importFrom utils packageName
-#' @importFrom jsonlite fromJSON toJSON
 #' @importFrom dplyr `%>%`
-#' @import ParallelLogger
 NULL
 
 #' @importFrom RewardExecutionPackage createCdmConfiguration

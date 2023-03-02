@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#' CEM Database Backend Class
+#' RewardDataModel
 #' @description
 #' An interface to the common evidence model that uses works directly with a database schema
 #' @field connection DatabaseConnector::connection instance
@@ -22,9 +22,6 @@
 #' @field resultsSchema schema containing reward references and results
 #' @field config    Reward configuration s3 object
 #' @field cemConnectionDetails  Cem COnnector connection details object
-
-#' @import checkmate
-#' @import R6
 RewardDataModel <- R6::R6Class(
   "RewardDataModel",
   private = list(cemConnection = NULL),
@@ -163,9 +160,6 @@ RewardDataModel <- R6::R6Class(
     #' Get concept set for cohort
     #'
     #' @param cohortDefinitionId  Cohort definition id
-    #'
-    #' @return
-    #' @export
     getCohortConceptSet = function(cohortDefinitionId = NULL) {
       sql <- "SELECT ccs.* FROM @results_schema.cohort_concept_set ccs
       {@cohort_definition_id != ''} ? {WHERE cohort_definition_id = @cohort_definition_id}"
@@ -357,8 +351,6 @@ RewardDataModel <- R6::R6Class(
 #' CEM Database Backend Class
 #' @description
 #' An interface to the common evidence model that uses works directly with a database schema
-#' @import checkmate
-#' @import R6
 DashboardDataModel <- R6::R6Class(
   "DashboardDataModel",
   inherit = RewardDataModel,
@@ -492,7 +484,6 @@ DashboardDataModel <- R6::R6Class(
     #' @param ...
     #'
     #' @return
-    #' @export
     #'
     getFilteredTableResults = function(...) {
       sql <- self$getFilteredTableResultsQuery(...)
@@ -503,7 +494,6 @@ DashboardDataModel <- R6::R6Class(
     #' @param ...
     #'
     #' @return count
-    #' @export
     getFilteredTableResultsCount = function(...) {
       sql <- self$getFilteredTableResultsQuery(...)
       self$countQuery(sql, render = FALSE)

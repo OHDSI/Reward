@@ -27,8 +27,6 @@ strQueryWrap <- function(vec) {
 #' @param input shiny input object
 #' @param output shiny output object
 #' @param session shiny session
-#' @importFrom gt render_gt
-#' @import shiny DT R.utils RJSONIO SqlRender cachem ggplot2 plotly reactable readr shinyAce stringi tibble tidyr
 rewardModule <- function(id = "Reward",
                          model) {
   appConfig <- model$config
@@ -366,7 +364,6 @@ dashboardUi <- function(...) {
 #' Launches a Shiny app for a given configuration file
 #' @param appConfigPath path to configuration file. This is loaded in to the local environment with the appConfig variable
 #'
-#' @import shiny
 #' @export
 launchDashboard <- function(dashboardConfigPath,
                             configPath = NULL,

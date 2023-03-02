@@ -22,7 +22,6 @@
 #' of known assocations for OMOP Standard Vocabulary terms. This is required for generating any stats that require negative controls
 #' @param configFilePath                        path to global reward config
 #'
-#' @importFrom utils packageVersion
 #' @export
 createRewardSchema <- function(configFilePath,
                                settingsFilePath = system.file("settings", "defaultSccArgs.json", package = utils::packageName())) {
