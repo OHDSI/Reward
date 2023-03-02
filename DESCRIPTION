@@ -12,10 +12,10 @@ Depends:
     R (>= 4.0.0),
     DatabaseConnector (>= 5.1.0),
     ParallelLogger,
-    ResultModelManager,
     R6,
     checkmate
 Imports:
+    ResultModelManager,
     dplyr,
     CemConnector,
     EmpiricalCalibration,

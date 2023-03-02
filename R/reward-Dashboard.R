@@ -230,17 +230,12 @@ rewardModule <- function(id = "Reward",
       )
     })
 
-    print("Loading shiny modules meta-analysis")
     metaAnalysisTableServer("metaTable", model, selectedExposureOutcome)
-    print("Loading shiny modules forest plot")
     forestPlotServer("forestPlot", model, selectedExposureOutcome)
-    print("Loading shiny modules calibration")
     calibrationPlotServer("calibrationPlot", model, selectedCohort)
-    print("Loading shiny module time on treatment")
     timeOnTreatmentServer("timeOnTreatment", model, selectedExposureOutcome)
     tabPanelTimeOnTreatment <- tabPanel("Time on treatment", boxPlotModuleUi(ns("timeOnTreatment")))
     shiny::appendTab(inputId = "outcomeResultsTabs", tabPanelTimeOnTreatment)
-    print("Loading shiny module time to outcome")
     timeToOutcomeServer("timeToOutcome", model, selectedExposureOutcome)
     tabPanelTimeToOutcome <- tabPanel("Time to outcome", boxPlotModuleUi(ns("timeToOutcome")))
     shiny::appendTab(inputId = "outcomeResultsTabs", tabPanelTimeToOutcome)
@@ -317,18 +312,6 @@ rewardModule <- function(id = "Reward",
         write.csv(mainTableDownload(), file, row.names = FALSE)
       }
     )
-
-    output$selectedOutcomeConceptSet <- DT::renderDataTable({
-      dt <- conditionConceptInput()
-      colnames(dt) <- SqlRender::camelCaseToTitleCase(colnames(dt))
-      dt
-    })
-
-    output$selectedExposureConceptSet <- DT::renderDataTable({
-      dt <- ingredientConetpInput()
-      colnames(dt) <- SqlRender::camelCaseToTitleCase(colnames(dt))
-      dt
-    })
 
     # Add cem panel if option is present
     if (!is.null(model$getCemConnection())) {

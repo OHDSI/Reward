@@ -123,15 +123,7 @@ rewardUi <- function(id = "Reward",
         shiny::tabPanel("Forest plot", forestPlotUi(ns("forestPlot"))),
         shiny::tabPanel("Calibration plot",
                         calibrationPlotUi(ns("calibrationPlot"),
-                                          figureTitle = "Figure 2.")),
-        shiny::tabPanel(
-          "Exposure concepts",
-          shiny::h4("Exposure Concepts"),
-          shinycssloaders::withSpinner(DT::dataTableOutput(ns("selectedExposureConceptSet")))),
-        shiny::tabPanel(
-          "Outcome concepts",
-          h4("Outcome Concepts"),
-          shinycssloaders::withSpinner(DT::dataTableOutput(ns("selectedOutcomeConceptSet"))))),
+                                          figureTitle = "Figure 2."))),
       width = 12)
   )
 
