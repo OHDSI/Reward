@@ -3,6 +3,7 @@
 export(addCohortDefinitionSet)
 export(calibrationPlotServer)
 export(createCdmConfiguration)
+export(createDashboardDatabase)
 export(createGlobalConfig)
 export(createRewardSchema)
 export(exportReferenceTables)

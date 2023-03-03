@@ -20,9 +20,6 @@ createDashboardDatabase(
 \item{targetConnectionDetails}{If Exporting to external database, use these connection details}
 }
 \description{
-Create stand-alone dashboaard database reward data
-}
-\details{
 Creates and sqlite database a set of configuration parameters that can be used with the Reward
 Shiny application.
 }

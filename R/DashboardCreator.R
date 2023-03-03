@@ -179,7 +179,7 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
   )
 }
 
-addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, dashboardConfig) {  browser()
+addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, dashboardConfig) {
   message("Adding negative controls")
   if (dashboardConfig$exposureDashboard) {
     controlConcepts <- model$getNegativeControlConditions(dashboardConfig$cohortIds)
@@ -235,6 +235,7 @@ addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, d
                     lb95 = exp(results$lower.random),
                     ub95 = exp(results$upper.random),
                     pValue = results$pval.random,
+                    calibrated = 0,
                     i2 = ifelse(is.na(results$I2), 0.0, results$I2))
 
   return(row)
@@ -242,7 +243,6 @@ addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, d
 
 computeMetaAnalysis <- function(targetConnection, resultDatabaseSchema) {
   message("Computing meta analysis, (may take some time)...")
-
   # NOTE - could apply batched operation for improved memory use
   fullResults <- DatabaseConnector::renderTranslateQuerySql(targetConnection,
                                                             "SELECT * FROM @schema.scc_result WHERE source_id != -99;",
@@ -452,7 +452,8 @@ computeCalibratedEstimates <- function(dashboardConfig, targetConnection, result
 }
 
 #' Create stand-alone dashboaard database reward data
-#' @details
+#' @export
+#' @description
 #' Creates and sqlite database a set of configuration parameters that can be used with the Reward
 #' Shiny application.
 #'
@@ -537,7 +538,7 @@ createDashboardDatabase <- function(configPath,
                                   usePooledConnection = FALSE)
   addNegativeControls(model, targetConnection, resultDatabaseSchema, dashboardConfig)
   ## 4. Meta-analysis
-  if (length(config$dataSources) > 1) {
+  if (length(dashboardConfig$dataSources) > 1) {
     computeMetaAnalysis(targetConnection, resultDatabaseSchema)
   }
   # 5. Add null distributions
