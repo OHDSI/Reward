@@ -232,6 +232,8 @@ addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, d
                     cPt = sum(table$cPt),
                     cCases = sum(table$cCases),
                     rr = exp(results$TE.random),
+                    logRr = results$TE.random,
+                    seLogRr =  results$seTE.random,
                     lb95 = exp(results$lower.random),
                     ub95 = exp(results$upper.random),
                     pValue = results$pval.random,

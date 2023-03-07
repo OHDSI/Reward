@@ -166,8 +166,8 @@ rewardModule <- function(id = "Reward",
 
     output$mainTable <- DT::renderDataTable({
       df <- mainTableReac()
-      if (length(df$I2)) {
-        df$I2 <- formatC(df$I2, digits = 2, format = "f")
+      if (length(df$i2)) {
+        df$i2 <- formatC(df$i2, digits = 2, format = "f")
       }
 
       colnames(df) <- SqlRender::camelCaseToTitleCase(colnames(df))
