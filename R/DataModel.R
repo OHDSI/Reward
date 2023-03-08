@@ -189,7 +189,6 @@ RewardDataModel <- R6::R6Class(
     #' Get analysis settings
     #'
     #' @param decode convert json to r list
-
     getAnalysisSettings = function(decode = TRUE) {
       sql <- "SELECT * FROM @results_schema.analysis_setting"
       rows <-
@@ -411,6 +410,13 @@ DashboardDataModel <- R6::R6Class(
       INNER JOIN @results_schema.exposure_cohort ec ON cd.cohort_definition_id = ec.cohort_definition_id
       ORDER BY short_name"
       self$connection$queryDb(sql, results_schema = self$resultsSchema)
+    },
+
+    #' Get exposure class names
+    #' @return string of names for exposure classes
+    getExposureClassNames = function() {
+      # TODO: exposure class table currently not generated
+      return(c())
     },
 
     #' Shiny Dashboard - main query

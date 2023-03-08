@@ -529,9 +529,20 @@ createDashboardDatabase <- function(configPath,
   DatabaseConnector::renderTranslateExecuteSql(targetConnection,
                                                insertSql,
                                                schema = resultDatabaseSchema)
-
   # 2. Copyy results
   copyResults(connection, targetConnection, config, dashboardConfig, resultDatabaseSchema, copyData)
+
+
+  message("creating exposure class references")
+  sql <- SqlRender::loadRenderTranslateSql(file.path("create", "exposureClassReferences.sql"),
+                                           packageName = utils::packageName(),
+                                           dbms = dbms,
+                                           schema = resultDatabaseSchema,
+                                           vocabulary_schema = config$vocabularySchema,
+                                           add_calibrated_columns = TRUE,
+                                           include_constraints = dbms != "sqlite")
+  DatabaseConnector::executeSql(targetConnection, sql)
+
   # 3. Add negative control outcomes for exposures within study
   model <- DashboardDataModel$new(dashboardConfigPath,
                                   connectionDetails = targetConnectionDetails,

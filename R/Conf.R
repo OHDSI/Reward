@@ -202,6 +202,7 @@ loadDashboardConfiguration <- function(dashboardConfigPath, validate = TRUE) {
     validateDashboardConfig(dashboardConfig)
   }
   dashboardConfig$cohortIds <- bit64::as.integer64(dashboardConfig$cohortIds)
+  class(dashboardConfig) <- "RewardDashboarConfig"
   return(dashboardConfig)
 }
 

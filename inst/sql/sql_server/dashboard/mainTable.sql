@@ -81,7 +81,7 @@ FROM @schema.scc_result fr
         mr2.source_id = -99
     )
     {@show_exposure_classes}?{
-    INNER JOIN @schema.target_exposure_class tec ON tec.target_cohort_id = t.target_cohort_id
+    INNER JOIN @schema.cohort_exposure_class tec ON tec.cohort_definition_id = t.cohort_definition_id
     INNER JOIN @schema.exposure_class ec ON ec.exposure_class_id = tec.exposure_class_id
     }
     WHERE fr.calibrated = @calibrated
