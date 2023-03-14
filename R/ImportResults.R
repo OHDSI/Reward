@@ -292,6 +292,12 @@ uploadS3Files <- function(manifestDf, connectionDetails, targetSchema, cdmInfo) 
             # Get primary key columns for first element - if they are already in the db error out
             sql <- "SELECT @key_cols FROM @schema.@table WHERE @key_col_conditions"
             rowVals <- chunk[1,] %>% dplyr::select(dplyr::all_of(loadTables[[fileRef$target]]$keyCols))
+            # Check if row value is character
+            for (col in colnames(rowVals)) {
+              if (is.character(rowVals[[col]])) {
+                rowVals[[col]] <- paste0("'", rowVals[[col]], "'")
+              }
+            }
             keyColConditions <- paste(loadTables[[fileRef$target]]$keyCols, " = ", rowVals, collapse = " AND ")
             testEntry <- DatabaseConnector::renderTranslateQuerySql(connection,
                                                                     sql,
