@@ -534,7 +534,7 @@ createDashboardDatabase <- function(configPath,
 
 
   message("creating exposure class references")
-  sql <- SqlRender::loadRenderTranslateSql(file.path("create", "exposureClassReferences.sql"),
+  sql <- SqlRender::loadRenderTranslateSql(file.path("create", "exposureClassRefefences.sql"),
                                            packageName = utils::packageName(),
                                            dbms = dbms,
                                            schema = resultDatabaseSchema,
