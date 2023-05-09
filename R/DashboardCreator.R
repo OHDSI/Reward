@@ -534,13 +534,12 @@ createDashboardDatabase <- function(configPath,
 
 
   message("creating exposure class references")
-  sql <- SqlRender::loadRenderTranslateSql(file.path("create", "exposureClassRefefences.sql"),
+  sql <- SqlRender::loadRenderTranslateSql(file.path("create", "exposureClassReferences.sql"),
                                            packageName = utils::packageName(),
                                            dbms = dbms,
                                            schema = resultDatabaseSchema,
-                                           vocabulary_schema = config$vocabularySchema,
-                                           add_calibrated_columns = TRUE,
-                                           include_constraints = dbms != "sqlite")
+                                           vocabulary_schema = config$vocabularySchema)
+
   DatabaseConnector::executeSql(targetConnection, sql)
 
   # 3. Add negative control outcomes for exposures within study
