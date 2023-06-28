@@ -84,8 +84,16 @@ FROM @schema.scc_result fr
     INNER JOIN @schema.cohort_exposure_class tec ON tec.cohort_definition_id = t.cohort_definition_id
     INNER JOIN @schema.exposure_class ec ON ec.exposure_class_id = tec.exposure_class_id
     }
-    WHERE fr.calibrated = @calibrated
 
+    WHERE fr.calibrated = @calibrated
+    {@excluded_concepts != '' & @vocabulary_schema != ''} ? { AND
+        {@show_exposure_classes} ? {t.cohort_definition_id} : {o.cohort_definition_id} NOT IN
+        (
+            SELECT DISTINCT cohort_definition_id FROM @schema.cohort_concept_set ccs
+            INNER JOIN @vocabulary_schema.concept_ancestor ca ON ca.descendant_concept_id = ccs.concept_id
+            WHERE ca.ancestor_concept_id IN (@excluded_concepts)
+        )
+    }
     {@outcome_cohort_length} ? {AND o.cohort_definition_id IN (@outcome_cohorts)}
     {@target_cohort_length} ? {AND t.cohort_definition_id IN (@target_cohorts)}
     {@show_exposure_classes & @exposure_classes != ''} ? {AND ec.EXPOSURE_CLASS_NAME IN (@exposure_classes)}
@@ -99,7 +107,6 @@ FROM @schema.scc_result fr
         ELSE 0
     END
     }
-
     AND 1 = CASE
         WHEN risk_t.THRESH_COUNT IS NULL AND @risk_count = 0 THEN 1
         WHEN risk_t.THRESH_COUNT > @risk_count THEN 0

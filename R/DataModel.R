@@ -361,11 +361,11 @@ DashboardDataModel <- R6::R6Class(
     #' @param cemConnectionDetails    Cem Connection details
     #' @param resultDatabaseSchema    Results database schema
     #' @param usePooledConnection     Use a poooled database connection
-
     initialize = function(dashboardConfigPath = NULL,
                           connectionDetails,
                           cemConnectionDetails = NULL,
                           resultDatabaseSchema = NULL,
+                          vocabularyDatabaseSchema = resultDatabaseSchema,
                           usePooledConnection = TRUE) {
       stopifnot(
         "Must specify either database schema or sqlite file " = connectionDetails$dbms != "sqlite" |
@@ -387,6 +387,7 @@ DashboardDataModel <- R6::R6Class(
         cemConnectionDetails <- list()
       }
 
+      self$vocabularySchema <- vocabularyDatabaseSchema
       self$cemConnectionDetails <- cemConnectionDetails
     },
 
@@ -451,6 +452,7 @@ DashboardDataModel <- R6::R6Class(
                                             exposureClasses = NULL,
                                             orderByCol = NULL,
                                             ascending = NULL,
+                                            excludedConcepts = NULL,
                                             limit = NULL,
                                             offset = NULL) {
       calibrated <- ifelse(calibrated, 1, 0)
@@ -476,6 +478,8 @@ DashboardDataModel <- R6::R6Class(
         exposure_classes = exposureClasses,
         required_benefit_sources = requiredBenefitSources,
         required_benefit_count = length(requiredBenefitSources),
+        excluded_concepts = excludedConcepts,
+        vocabulary_schema = self$vocabularySchema,
         order_by = orderByCol,
         ascending = ascending,
         limit = limit,

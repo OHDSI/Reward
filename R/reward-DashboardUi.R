@@ -51,6 +51,8 @@ rewardUi <- function(id = "Reward",
           noneSelectedText = "Filter by subset"
         ),
         multiple = TRUE),
+      shiny::textAreaInput(inputId = ns("excludedConcepts"), label = "Exclude concept ids", NULL),
+      shiny::tags$p("Excludes and child concepts of specified concept ids. Separate with comma"),
       width = 6
     ),
     width = 12,

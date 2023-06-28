@@ -53,6 +53,17 @@ rewardModule <- function(id = "Reward",
       dsi[dsi$sourceName %in% input$requiredDataSources,]$sourceId
     })
 
+    # Concepts to exclude from search
+    excludedConcepts <- shiny::reactive({
+      concepts <- c()
+      if (length(input$excludedConcepts) > 0) {
+        tryCatch({
+          concepts <- unlist(lapply(strsplit(input$excludedConcepts, ","), as.numeric))
+        }, error = function(...) {})
+      }
+      return(concepts)
+    })
+
     getMainTableParams <- shiny::reactive({
       exposureClassNames <- if (!appConfig$exposureDashboard & length(input$exposureClass)) strQueryWrap(input$exposureClass) else NULL
       outcomeTypes <- input$outcomeCohortTypes
@@ -68,6 +79,7 @@ rewardModule <- function(id = "Reward",
                      riskCount = input$scRisk,
                      outcomeCohorts = input$outcomeCohorts,
                      targetCohorts = input$targetCohorts,
+                     excludedConcepts = excludedConcepts(),
                      exposureClasses = exposureClassNames)
 
       return(params)
@@ -367,14 +379,18 @@ launchDashboard <- function(dashboardConfigPath,
 
   if (!is.null(connectionDetails) && connectionDetails$dbms == "sqlite") {
     resultDatabaseSchema <- "main"
+    vocabularyDatabaseSchema <- "main"
   } else if (is.null(resultDatabaseSchema)) {
     stop("must specify result schema")
+  } else {
+    vocabularyDatabaseSchema <- config$vocabularySchema
   }
 
   .GlobalEnv$.model <- DashboardDataModel$new(dashboardConfigPath = dashboardConfigPath,
                                               connectionDetails = connectionDetails,
                                               cemConnectionDetails = config$cemConnectionDetails,
                                               resultDatabaseSchema = resultDatabaseSchema,
+                                              vocabularyDatabaseSchema = vocabularyDatabaseSchema,
                                               usePooledConnection = FALSE)
 
   shiny::shinyApp(server = dashboardInstance, dashboardUi, enableBookmarking = "url")
