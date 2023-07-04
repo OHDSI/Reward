@@ -15,6 +15,7 @@ An interface to the common evidence model that uses works directly with a databa
 \item \href{#method-DashboardDataModel-new}{\code{DashboardDataModel$new()}}
 \item \href{#method-DashboardDataModel-getOutcomeCohorts}{\code{DashboardDataModel$getOutcomeCohorts()}}
 \item \href{#method-DashboardDataModel-getExposureCohorts}{\code{DashboardDataModel$getExposureCohorts()}}
+\item \href{#method-DashboardDataModel-getExposureClassNames}{\code{DashboardDataModel$getExposureClassNames()}}
 \item \href{#method-DashboardDataModel-getFilteredTableResultsQuery}{\code{DashboardDataModel$getFilteredTableResultsQuery()}}
 \item \href{#method-DashboardDataModel-getFilteredTableResults}{\code{DashboardDataModel$getFilteredTableResults()}}
 \item \href{#method-DashboardDataModel-getFilteredTableResultsCount}{\code{DashboardDataModel$getFilteredTableResultsCount()}}
@@ -58,6 +59,7 @@ An interface to the common evidence model that uses works directly with a databa
   connectionDetails,
   cemConnectionDetails = NULL,
   resultDatabaseSchema = NULL,
+  vocabularyDatabaseSchema = resultDatabaseSchema,
   usePooledConnection = TRUE
 )}\if{html}{\out{</div>}}
 }
@@ -102,6 +104,19 @@ Get Exposure Cohorts
 
 \subsection{Returns}{
 data.frame of cohorts
+Get exposure class names
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DashboardDataModel-getExposureClassNames"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getExposureClassNames}{}}}
+\subsection{Method \code{getExposureClassNames()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getExposureClassNames()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+string of names for exposure classes
 Shiny Dashboard - main query
 }
 }
@@ -125,6 +140,7 @@ Shiny Dashboard - main query
   exposureClasses = NULL,
   orderByCol = NULL,
   ascending = NULL,
+  excludedConcepts = NULL,
   limit = NULL,
   offset = NULL
 )}\if{html}{\out{</div>}}

@@ -43,9 +43,11 @@ saveAtlasCohortRefs <- function(config,
                                                      csql,
                                                      schema = config$resultsSchema,
                                                      snakeCaseToCamelCase = TRUE)
+
   # Create atlasCohortsDefinitions csv
   dir.create(file.path(exportPath, "cohorts"), showWarnings = FALSE)
   dir.create(file.path(exportPath, "sql"), showWarnings = FALSE)
+  dir.create(file.path(exportPath, "subset_definitions"), showWarnings = FALSE)
 
   files <- c()
   for (i in 1:nrow(data)) {
@@ -62,8 +64,26 @@ saveAtlasCohortRefs <- function(config,
   cohortInfo <- data %>% dplyr::select(cohortId, atlasId, cohortName)
   cohortInfoFile <- file.path(exportPath, "atlas_cohorts.csv")
 
+
   colnames(cohortInfo) <- SqlRender::camelCaseToSnakeCase(colnames(cohortInfo))
   write.csv(cohortInfo, cohortInfoFile, row.names = FALSE, na = "")
+
+
+  csql <- "
+  SELECT * FROM @schema.cohort_subset_definition"
+
+  subsetData <- DatabaseConnector::renderTranslateQuerySql(connection,
+                                                           csql,
+                                                           schema = config$resultsSchema,
+                                                           snakeCaseToCamelCase = TRUE)
+
+  for (i in 1:nrow(subsetData)) {
+    row <- subsetData[i,]
+    json <- rawToChar(base64enc::base64decode(row$json))
+    jsonFileName <- file.path(exportPath, "subset_definitions", paste0(row$subsetDefinitionId, ".json"))
+    write(json, file = jsonFileName)
+  }
+
   files <- c(files, cohortInfoFile)
   return(files)
 }
@@ -112,7 +132,7 @@ exportReferenceTables <- function(config,
                                                        table = table)
 
     if (table == "atlas_cohort_reference") {
-      data <- data %>% dplyr::select(-SQL_DEFINITION, -.data$DEFINITION)
+      data <- data %>% dplyr::select(-"SQL_DEFINITION", -"DEFINITION")
     }
 
     file <- file.path(exportPath, paste0(table, ".csv"))

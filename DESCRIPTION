@@ -1,7 +1,7 @@
 Package: Reward
 Type: Package
 Title: REal World Assessment and Research of Drug (REWARD) performance
-Version: 0.1.0
+Version: 0.2.0
 Author: Jamie Gilbert
 Maintainer: Jamie Gilbert <jpg@azimov.co.uk>
 Description: REWARD base package for managing data and constructing studies.
@@ -24,7 +24,7 @@ Imports:
     DBI,
     yaml,
     vroom,
-    RewardExecutionPackage,
+    RewardExecutionPackage (>= 0.2.0),
     CirceR,
     ROhdsiWebApi,
     jsonlite,

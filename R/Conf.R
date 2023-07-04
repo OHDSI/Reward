@@ -46,7 +46,9 @@ loadGlobalConfiguration <- function(globalConfigPath, keyring = NULL) {
     conceptSetDefinition = 'concept_set_definition',
     atlasCohortReference = 'atlas_cohort_reference',
     cohortConceptSet = 'cohort_concept_set',
-    analysisSetting = 'analysis_setting'
+    analysisSetting = 'analysis_setting',
+    cohortSubsetDefinition = 'cohort_subset_definition',
+    cohortSubsetTarget = 'cohort_subset_target'
   )
 
   config$referenceTables <- .setDefaultOptions(config$referenceTables, referenceTables)

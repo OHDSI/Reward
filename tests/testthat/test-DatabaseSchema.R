@@ -18,25 +18,25 @@ test_that("Build database schema, add test cohorts", {
                                                    file.info(file.path("cohorts", "atlasCohort1.json"))$size))
     sqlDefinition <- readChar(file.path("cohorts", "atlasCohort1.sql"),
                               file.info(file.path("cohorts", "atlasCohort1.sql"))$size)
-    insertAtlasCohortRef(connection,
-                         config,
-                         100,
-                         webApiUrl = "test_url.com",
-                         cohortDefinition = cohortDefinition,
-                         sqlDefinition = sqlDefinition,
-                         exposure = FALSE)
+    subsetOpCohortId <- insertAtlasCohortRef(connection,
+                                             config,
+                                             100,
+                                             webApiUrl = "test_url.com",
+                                             cohortDefinition = cohortDefinition,
+                                             sqlDefinition = sqlDefinition,
+                                             exposure = FALSE)
 
     cohortDefinition <- RJSONIO::fromJSON(readChar(file.path("cohorts", "atlasExposureCohort19321.json"),
                                                    file.info(file.path("cohorts", "atlasExposureCohort19321.json"))$size))
     sqlDefinition <- readChar(file.path("cohorts", "atlasExposureCohort19321.sql"),
                               file.info(file.path("cohorts", "atlasExposureCohort19321.sql"))$size)
-    insertAtlasCohortRef(connection,
-                         config,
-                         101,
-                         webApiUrl = "test_url.com",
-                         cohortDefinition = cohortDefinition,
-                         sqlDefinition = sqlDefinition,
-                         exposure = TRUE)
+    subsetTargetId <- insertAtlasCohortRef(connection,
+                                           config,
+                                           101,
+                                           webApiUrl = "test_url.com",
+                                           cohortDefinition = cohortDefinition,
+                                           sqlDefinition = sqlDefinition,
+                                           exposure = TRUE)
     expect_error({
       insertAtlasCohortRef(connection,
                            config,
@@ -46,6 +46,36 @@ test_that("Build database schema, add test cohorts", {
                            sqlDefinition = sqlDefinition,
                            exposure = TRUE)
     }, regexp = "Cohort 101 already in database, use removeAtlasCohort to clear entry references")
+
+
+    cohortSubsetDefinition <- CohortGenerator::createCohortSubsetDefinition(
+      name = "Subset Test 1",
+      definitionId = 1,
+      subsetOperators = list(
+        CohortGenerator::createCohortSubset(
+          name = "Subset to patients in cohort 1778213",
+          cohortIds = subsetOpCohortId,
+          cohortCombinationOperator = "any",
+          negate = FALSE,
+          startWindow = CohortGenerator::createSubsetCohortWindow(
+            startDay = -9999,
+            endDay = 0,
+            targetAnchor = "cohortStart"
+          ),
+          endWindow = CohortGenerator::createSubsetCohortWindow(
+            startDay = 0,
+            endDay = 9999,
+            targetAnchor = "cohortStart"
+          )
+        )
+      )
+    )
+
+    addSubsetDefinition(connection,
+                        config,
+                        cohortSubsetDefinition,
+                        subsetTargetId,
+                        exposure = TRUE)
 
     referenceZipFile <- tempfile(fileext = ".zip")
     on.exit(unlink(referenceZipFile), add = TRUE)
