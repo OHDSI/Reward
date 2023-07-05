@@ -37,7 +37,10 @@ saveAtlasCohortRefs <- function(config,
     acr.sql_definition,
     cd.short_name as cohort_name
   FROM @schema.atlas_cohort_reference acr
-  INNER JOIN @schema.cohort_definition cd ON cd.cohort_definition_id = acr.cohort_definition_id"
+  INNER JOIN @schema.cohort_definition cd ON cd.cohort_definition_id = acr.cohort_definition_id
+  LEFT JOIN @schema.cohort_subset_target ccs ON cd.cohort_definition_id = ccs.subset_cohort_definition_id
+  WHERE ccs.subset_cohort_definition_id IS NULL
+  "
 
   data <- DatabaseConnector::renderTranslateQuerySql(connection,
                                                      csql,
