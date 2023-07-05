@@ -76,12 +76,12 @@ saveAtlasCohortRefs <- function(config,
                                                            csql,
                                                            schema = config$resultsSchema,
                                                            snakeCaseToCamelCase = TRUE)
-
   for (i in 1:nrow(subsetData)) {
     row <- subsetData[i,]
     json <- rawToChar(base64enc::base64decode(row$json))
     jsonFileName <- file.path(exportPath, "subset_definitions", paste0(row$subsetDefinitionId, ".json"))
     write(json, file = jsonFileName)
+    files <- c(files, jsonFileName)
   }
 
   files <- c(files, cohortInfoFile)

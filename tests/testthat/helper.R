@@ -90,7 +90,7 @@ createTestReferences <- function(configPath = file.path(withTestsRoot(), "config
     cohortDefinition <- RJSONIO::readJSONStream(withTestsRoot("cohorts", "atlasCohort1.json"))
     sqlDefinition <- readChar(withTestsRoot("cohorts", "atlasCohort1.sql"),
                               file.info(withTestsRoot("cohorts", "atlasCohort1.sql"))$size)
-    insertAtlasCohortRef(connection,
+    toId <- insertAtlasCohortRef(connection,
                          config,
                          100,
                          webApiUrl = "test_url.com",
@@ -108,6 +108,36 @@ createTestReferences <- function(configPath = file.path(withTestsRoot(), "config
                          cohortDefinition = cohortDefinition,
                          sqlDefinition = sqlDefinition,
                          exposure = TRUE)
+
+    # Add test subset definition that subsets an exposure by an outcome
+    cohortSubsetDefinition <- CohortGenerator::createCohortSubsetDefinition(
+      name = "Subset Test 1",
+      definitionId = 1,
+      subsetOperators = list(
+        CohortGenerator::createCohortSubset(
+          name = "Test subset op",
+          cohortIds = toId,
+          cohortCombinationOperator = "any",
+          negate = FALSE,
+          startWindow = CohortGenerator::createSubsetCohortWindow(
+            startDay = -9999,
+            endDay = 0,
+            targetAnchor = "cohortStart"
+          ),
+          endWindow = CohortGenerator::createSubsetCohortWindow(
+            startDay = 0,
+            endDay = 9999,
+            targetAnchor = "cohortStart"
+          )
+        )
+      )
+    )
+
+    addSubsetDefinition(connection,
+                        config,
+                        cohortSubsetDefinition,
+                        1310149000, # Warfrin
+                        exposure = TRUE)
 
     exportReferenceTables(config, connection, exportZipFile = outputFile)
   })

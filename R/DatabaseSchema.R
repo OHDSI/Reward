@@ -61,6 +61,15 @@ createRewardSchema <- function(configFilePath,
   addAnalysisSettingsJson(connection, config, settingsFilePath = settingsFilePath)
 }
 
+
+#' Migrate database model
+#' @export
+#' @inheritParams createRewardSchema
+migrateDatabase <- function(configFilePath) {
+  config <- loadGlobalConfiguration(configFilePath)
+  RewardExecutionPackage::migrateDatabaseModel(config, schema = config$resultsSchema)
+}
+
 addAnalysisSetting <- function(connection, config, name, typeId, description, options) {
   jsonStr <- jsonlite::toJSON(options)
   optionsEnc <- base64enc::base64encode(charToRaw(jsonStr))
@@ -381,20 +390,21 @@ addSubsetDefinition <- function(connection,
                                           target,
                                           name,
                                           paste("SUBSET DEF - ", definitionId),
-                                          "",
-                                          "",
+                                          base64enc::base64encode(charToRaw("{}")),
+                                          base64enc::base64encode(charToRaw("SELECT NULL")),
                                           exposure,
                                           isSubset = TRUE,
                                           subsetParent = target)
 
     sql <- "INSERT INTO @reward_schema.cohort_subset_target
-      (subset_definition_id, cohort_definition_id)
-      VALUES (@subset_definition_id, @cohort_definition_id);"
+      (subset_definition_id, cohort_definition_id, subset_cohort_definition_id)
+      VALUES (@subset_definition_id, @cohort_definition_id, @subset_cohort_definition_id);"
     DatabaseConnector::renderTranslateExecuteSql(connection,
                                                  sql,
                                                  reward_schema = config$resultsSchema,
                                                  subset_definition_id = definitionId,
-                                                 cohort_definition_id = subsetCohortId)
+                                                 subset_cohort_definition_id = subsetCohortId,
+                                                 cohort_definition_id = target)
 
     sql <- "
     INSERT INTO @reward_schema.cohort_concept_set
