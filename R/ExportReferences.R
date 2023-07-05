@@ -138,6 +138,10 @@ exportReferenceTables <- function(config,
       data <- data %>% dplyr::select(-"SQL_DEFINITION", -"DEFINITION")
     }
 
+    if (table == "cohort_subset_definition") {
+      data <- data %>% dplyr::select(-"JSON")
+    }
+
     file <- file.path(exportPath, paste0(table, ".csv"))
     suppressWarnings({ write.csv(data, file, na = "", row.names = FALSE, fileEncoding = "UTF-8") })
     meta$hashList[[basename(file)]] <- tools::md5sum(file)[[1]]
