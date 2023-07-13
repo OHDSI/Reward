@@ -137,7 +137,9 @@ copyResults <- function(connection, targetConnection, config, dashboardConfig, r
       params$sql <- tParams$subQuery
       result <- do.call(DatabaseConnector::renderTranslateQuerySql, c(params, tParams$params))
       # Repeat upload if meta-analysis is just for a single data source
-      if (table == "scc_result" && length(dashboardConfig$dataSources) == 1 && nrow(result) > 0) {
+      if (table == "scc_result" &&
+        length(dashboardConfig$dataSources) == 1 &&
+        nrow(result) > 0) {
         result2 <- result
         result2$SOURCE_ID <- -99
         result <- rbind(result, result2)
@@ -193,10 +195,10 @@ addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, d
 
   if (nrow(controlConcepts)) {
     controlConcepts <- controlConcepts %>%
-        dplyr::select("cohortDefinitionId",
-                      negativeControlConceptId = conceptId,
-                      negativeControlCohortId = .data[[cohortVar]]) %>%
-        dplyr::mutate(isOutcomeControl = isOutcomeControl)
+      dplyr::select("cohortDefinitionId",
+                    negativeControlConceptId = conceptId,
+                    negativeControlCohortId = .data[[cohortVar]]) %>%
+      dplyr::mutate(isOutcomeControl = isOutcomeControl)
 
     # Map concepts to outcomes/exposure cohorts
     DatabaseConnector::insertTable(
@@ -233,7 +235,7 @@ addNegativeControls <- function(model, targetConnection, resultDatabaseSchema, d
                     cCases = sum(table$cCases),
                     rr = exp(results$TE.random),
                     logRr = results$TE.random,
-                    seLogRr =  results$seTE.random,
+                    seLogRr = results$seTE.random,
                     lb95 = exp(results$lower.random),
                     ub95 = exp(results$upper.random),
                     pValue = results$pval.random,
@@ -366,10 +368,19 @@ calibrate <- function(x, nullDist) {
 
 
 .applyOutcomeCalibration <- function(x, nulls) {
-  null <- nulls %>% dplyr::filter(sourceId == x %>% dplyr::pull(sourceId) %>% unique(),
-                                  targetCohortId == x %>% dplyr::pull(targetCohortId) %>% unique(),
-                                  outcomeType == x %>% dplyr::pull(outcomeType) %>% unique(),
-                                  analysisId == x %>% dplyr::pull(analysisId) %>% unique())
+  null <- nulls %>% dplyr::filter(.data$sourceId == x %>% dplyr::pull(sourceId) %>% unique(),
+                                  .data$targetCohortId == x %>% dplyr::pull(targetCohortId) %>% unique(),
+                                  .data$outcomeType == x %>% dplyr::pull(outcomeType) %>% unique(),
+                                  .data$analysisId == x %>% dplyr::pull(analysisId) %>% unique())
+
+  if (nrow(null) == 0) {
+    warningStr <- sprintf("Combination s: %s, t: %s, ot:%s, aid:%s, has no null distribution",
+                          x %>% dplyr::pull(sourceId) %>% unique(),
+                          x %>% dplyr::pull(targetCohortId) %>% unique(),
+                          x %>% dplyr::pull(outcomeType) %>% unique(),
+                          x %>% dplyr::pull(analysisId) %>% unique())
+    return(data.frame())
+  }
 
   nullDist <- createNullDist(null$mean[1], null$sd[1])
   res <- calibrate(x, nullDist)
@@ -407,7 +418,6 @@ computeCalibratedEstimates <- function(dashboardConfig, targetConnection, result
                                                         "SELECT * FROM @schema.outcome_null_distribution",
                                                         schema = resultDatabaseSchema,
                                                         snakeCaseToCamelCase = TRUE)
-
     # Apply empirical calibration as transformation to grouped entries
     calibratedEstimates <- fullResults %>%
       dplyr::group_by(sourceId,
@@ -514,6 +524,15 @@ createDashboardDatabase <- function(configPath,
                                            include_constraints = dbms != "sqlite")
   DatabaseConnector::executeSql(targetConnection, sql)
 
+  mm <- RewardExecutionPackage:::RewardMigrationManager$new(
+    connectionDetails = targetConnectionDetails,
+    databaseSchema = resultDatabaseSchema,
+    tablePrefix = "",
+    migrationPath = "migrations",
+    packageName = "RewardExecutionPackage"
+  )
+
+  mm$executeMigrations()
   message("creating reward result schema")
   sql <- SqlRender::loadRenderTranslateSql(file.path("create", "resultsSchema.sql"),
                                            packageName = utils::packageName(),
