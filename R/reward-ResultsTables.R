@@ -41,8 +41,8 @@ metaAnalysisTableServer <- function(id, model, selectedExposureOutcome) {
       }
 
       if (nrow(table3) >= 1) {
-        table3$cPt <- formatC(table3$cPt, digits = 0, format = "f")
-        table3$cPt <- formatC(table3$cPt, digits = 0, format = "f")
+        table3$unexposedCases <- formatC(table3$cCases, digits = 0, format = "f")
+        table3$exposedCases <- formatC(table3$tCases, digits = 0, format = "f")
         table3$rr <- formatC(table3$rr, digits = 2, format = "f")
         table3$lb95 <- formatC(table3$lb95, digits = 2, format = "f")
         table3$ub95 <- formatC(table3$ub95, digits = 2, format = "f")
@@ -53,6 +53,7 @@ metaAnalysisTableServer <- function(id, model, selectedExposureOutcome) {
         table3$calibratedUb95 <- formatC(table3$calibratedUb95, digits = 2, format = "f")
         table3$calibratedPValue <- formatC(table3$calibratedPValue, digits = 2, format = "f")
 
+
         table3 <- table3 %>% dplyr::select(
           sourceName,
           rr,
@@ -60,7 +61,9 @@ metaAnalysisTableServer <- function(id, model, selectedExposureOutcome) {
           pValue,
           calibratedRr,
           calibratedCi95,
-          calibratedPValue
+          calibratedPValue,
+          unexposedCases,
+          exposedCases
         )
 
         colnames(table3) <- SqlRender::camelCaseToTitleCase(colnames(table3))
