@@ -475,7 +475,6 @@ computeCalibratedEstimates <- function(dashboardConfig, targetConnection, result
 createDashboardDatabase <- function(configPath,
                                     dashboardConfigPath,
                                     targetConnectionDetails = NULL,
-                                    resultDatabaseSchema = NULL,
                                     overwrite = FALSE) {
 
   stopifnot("Must specify either database schema or sqlite file " = !is.null(targetConnectionDetails) | !is.null(resultDatabaseSchema))
@@ -497,6 +496,7 @@ createDashboardDatabase <- function(configPath,
     on.exit(DatabaseConnector::disconnect(targetConnection))
     copyData <- TRUE
   } else {
+    resultDatabaseSchema <- dashboardConfig$shortName
     message("Creating database schema ", resultDatabaseSchema)
     targetConnection <- connection
     targetConnectionDetails <- config$connectionDetails
@@ -505,12 +505,13 @@ createDashboardDatabase <- function(configPath,
   }
 
   if (dbms != "sqlite") {
-    # TODO: check if schema exists/overwrite before running drop
-    sql <- "DROP SCHEMA IF EXISTS @results_schema CASCADE;
+    sql <- "
+    {@overwrite} ? {DROP SCHEMA IF EXISTS @results_schema CASCADE;}
     CREATE SCHEMA @results_schema;"
 
     DatabaseConnector::renderTranslateExecuteSql(connection,
                                                  sql = sql,
+                                                 overwrite = overwrite,
                                                  results_schema = resultDatabaseSchema)
   }
 
@@ -576,4 +577,45 @@ createDashboardDatabase <- function(configPath,
   computeNullDistributions(targetConnection, dashboardConfig, resultDatabaseSchema)
   # 6. Compute calibrated effect estimates
   computeCalibratedEstimates(dashboardConfig, targetConnection, resultDatabaseSchema)
+
+  deployDashboard(configPath, dashboardConfigPath)
+}
+
+#' Deploy Dashboard
+#' @description
+#' Create an rconnect dashboard
+#' @inheritParams createDashboardDatabase
+deployDashboard <- function(configPath, dashboardConfigPath) {
+  config <- loadGlobalConfiguration(configPath)
+  dashboardConfig <- loadDashboardConfiguration(dashboardConfigPath)
+
+  if ("rsconnectPlatform" %in% names(config)) {
+    appDir <- dashboardConfig$shortName
+
+    if (!dir.exists(appDir)) {
+      dir.create(appDir)
+    }
+
+    # copy files
+    file.copy(configPath, file.path(appDir, "reward-cfg.yml"), overwrite = TRUE)
+    file.copy(dashboardConfigPath, file.path(appDir, "dashboard-config.yml"), overwrite = TRUE)
+
+    shinyAppCode <- gsub(pattern = "APP_NAME",
+                         replacement = dashboardConfig$shortName,
+                         SqlRender::readSql(system.file(file.path("shiny", "app.R"), package = "Reward")))
+
+    writeLines(shinyAppCode, con = file.path(appDir, "app.R"))
+
+    rsconnect::deployApp(appName = dashboardConfig$shortName,
+                         appDir = appDir,
+                         envVars = c(DATABASECONNECTOR_JAR_FOLDER = "./"),
+                         account = config$rsconnectPlatform$account,
+                         server = config$rsconnectPlatform$server)
+  } else {
+    warning("
+    rsconnect not configured for this configuration, please add to config
+    rsconnectPlatform:
+        account:
+        server")
+  }
 }

@@ -371,17 +371,17 @@ launchDashboard <- function(dashboardConfigPath,
 
   .GlobalEnv$dashboardConfigPath <- normalizePath(dashboardConfigPath)
 
+  dashboardConfig <- loadDashboardConfiguration(dashboardConfigPath)
   if (is.null(connectionDetails)) {
     config <- loadGlobalConfiguration(configPath)
     connectionDetails <- config$connectionDetails
   }
 
-
   if (!is.null(connectionDetails) && connectionDetails$dbms == "sqlite") {
     resultDatabaseSchema <- "main"
     vocabularyDatabaseSchema <- "main"
   } else if (is.null(resultDatabaseSchema)) {
-    stop("must specify result schema")
+    resultDatabaseSchema <- dashboardConfig$shortName
   } else {
     vocabularyDatabaseSchema <- config$vocabularySchema
   }
