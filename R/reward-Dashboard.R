@@ -382,6 +382,7 @@ launchDashboard <- function(dashboardConfigPath,
     vocabularyDatabaseSchema <- "main"
   } else if (is.null(resultDatabaseSchema)) {
     resultDatabaseSchema <- dashboardConfig$shortName
+    vocabularyDatabaseSchema <- config$vocabularySchema
   } else {
     vocabularyDatabaseSchema <- config$vocabularySchema
   }
