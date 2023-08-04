@@ -477,7 +477,6 @@ createDashboardDatabase <- function(configPath,
                                     targetConnectionDetails = NULL,
                                     overwrite = FALSE) {
 
-  stopifnot("Must specify either database schema or sqlite file " = !is.null(targetConnectionDetails) | !is.null(resultDatabaseSchema))
   checkmate::assertFileExists(configPath)
   checkmate::assertFileExists(dashboardConfigPath)
   config <- loadGlobalConfiguration(configPath)
@@ -505,13 +504,9 @@ createDashboardDatabase <- function(configPath,
   }
 
   if (dbms != "sqlite") {
-    sql <- "
-    {@overwrite} ? {DROP SCHEMA IF EXISTS @results_schema CASCADE;}
-    CREATE SCHEMA @results_schema;"
-
+    sql <- "CREATE SCHEMA IF NOT EXISTS @results_schema;"
     DatabaseConnector::renderTranslateExecuteSql(connection,
                                                  sql = sql,
-                                                 overwrite = overwrite,
                                                  results_schema = resultDatabaseSchema)
   }
 

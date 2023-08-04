@@ -59,7 +59,8 @@ Suggests:
     httpuv,
     withr,
     callr,
-    aws.s3
+    aws.s3,
+    rsconnect
 Remotes:
   ohdsi/RewardExecutionPackage,
   ohdsi/CohortGenerator,

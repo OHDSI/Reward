@@ -1,3 +1,5 @@
+
+DROP TABLE IF EXISTS @schema.cohort_exposure_class CASCADE;
 SELECT DISTINCT
     t.cohort_definition_id as cohort_definition_id,
     c.concept_id as exposure_class_id
@@ -7,6 +9,8 @@ FROM @vocabulary_schema.concept_ancestor ca
     INNER JOIN @schema.exposure_cohort t ON (t.referent_concept_id = ca.descendant_concept_id)
 ;
 
+
+DROP TABLE IF EXISTS @schema.exposure_class CASCADE;
 SELECT
     tec.exposure_class_id,
     c.concept_name as exposure_class_name
