@@ -578,6 +578,7 @@ createDashboardDatabase <- function(configPath,
 
 #' Deploy Dashboard
 #' @description
+#' @export
 #' Create an rconnect dashboard
 #' @inheritParams createDashboardDatabase
 deployDashboard <- function(configPath, dashboardConfigPath) {
