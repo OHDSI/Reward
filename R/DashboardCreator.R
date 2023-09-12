@@ -393,6 +393,14 @@ calibrate <- function(x, nullDist) {
                                   outcomeCohortId == x %>% dplyr::pull(outcomeCohortId) %>% unique(),
                                   analysisId == x %>% dplyr::pull(analysisId) %>% unique())
 
+  if (nrow(null) == 0) {
+    warningStr <- sprintf("Combination s: %s, o: %s, aid:%s, has no null distribution",
+                          x %>% dplyr::pull(sourceId) %>% unique(),
+                          x %>% dplyr::pull(outcomeCohortId) %>% unique(),
+                          x %>% dplyr::pull(analysisId) %>% unique())
+    return(data.frame())
+  }
+
   nullDist <- createNullDist(null$mean[1], null$sd[1])
   res <- calibrate(x, nullDist)
   res$targetCohortId <- x$targetCohortId
