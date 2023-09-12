@@ -155,17 +155,30 @@ rewardUi <- function(id = "Reward",
     )
   )
 
+
+  tabs <- list(
+    shinydashboard::tabItem(tabName = "about", aboutTab),
+    shinydashboard::tabItem(tabName = "results", shiny::fluidRow(filterBox, mainResults, rPanel))
+  )
+
+  if (isTRUE(appConfig$showCohortDiagnostics)) {
+    tabs[[3]] <- shinydashboard::tabItem(tabName = "cohortDiagnostics",
+                                         OhdsiShinyModules::cohortDiagnosticsView(id = ns("cohortDiagnostics")))
+  }
+
   body <- shinydashboard::dashboardBody(
-    shinydashboard::tabItems(
-      shinydashboard::tabItem(tabName = "about", aboutTab),
-      shinydashboard::tabItem(tabName = "results", shiny::fluidRow(filterBox, mainResults, rPanel))
-    )
+    do.call(shinydashboard::tabItems, tabs)
   )
 
   sidebar <- shinydashboard::dashboardSidebar(
     shinydashboard::sidebarMenu(
       shinydashboard::menuItem("About", tabName = "about", icon = icon("rectangle-list")),
       shinydashboard::menuItem("Results", tabName = "results", icon = icon("table")),
+      if (isTRUE(appConfig$showCohortDiagnostics)) {
+        shinydashboard::menuItem("Cohort Diagnostics", tabName = "cohortDiagnostics", icon = icon("users"))
+      } else {
+        shiny::p()
+      },
       shiny::sliderInput(ns("cutrange1"), "Benefit Threshold:", min = 0.1, max = 0.9, step = 0.1, value = 0.5),
       shiny::sliderInput(ns("cutrange2"), "Risk Threshold:", min = 1.1, max = 2.5, step = 0.1, value = 2),
       shiny::sliderInput(ns("pCut"), "P-value cut off:", min = 0.0, max = 1.0, step = 0.01, value = 0.05),

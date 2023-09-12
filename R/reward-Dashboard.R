@@ -325,6 +325,24 @@ rewardModule <- function(id = "Reward",
       }
     )
 
+    # Add cohort diagnostics module if options present
+    if (isTRUE(appConfig$showCohortDiagnostics)) {
+
+      shiny::withProgress({
+        cdSettings <- list(
+          schema = model$resultsSchema,
+          vocabularyDatabaseSchema = model$resultsSchema,
+          cdTablePrefix = model$config$cdTablePrefix,
+          cgTable = "cohort",
+          databaseTable = "database"
+        )
+
+        OhdsiShinyModules::cohortDiagnosticsServer(id = "cohortDiagnostics",
+                                                   connectionHandler = model$connection,
+                                                   resultDatabaseSettings = cdSettings)
+      }, message = "loading cohort diagnostics")
+    }
+
     # Add cem panel if option is present
     if (!is.null(model$getCemConnection())) {
       message("loading cem api")
