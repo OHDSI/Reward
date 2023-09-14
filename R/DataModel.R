@@ -423,6 +423,8 @@ DashboardDataModel <- R6::R6Class(
     #' Shiny Dashboard - main query
     #'
     #' @param benefitThreshold thereshold to consider a benefit
+    #' @param lowerBenefitThereshold thereshold to consider a benefit
+    #'        (lower bounds, e.g. exclude benefits below 0.1 to rule out potential indications)
     #' @param riskThreshold threshold to consider effect estimate a risk
     #' @param pValueCut pvalue hacking
     #' @param requiredBenefitSources required sources to be in results
@@ -439,6 +441,7 @@ DashboardDataModel <- R6::R6Class(
     #' @param limit Row limit
     #' @param offset Row Offset
     getFilteredTableResultsQuery = function(benefitThreshold = 0.5,
+                                            lowerBenefitThereshold = 0.0,
                                             riskThreshold = 2.0,
                                             pValueCut = 0.05,
                                             requiredBenefitSources = NULL,
@@ -462,6 +465,7 @@ DashboardDataModel <- R6::R6Class(
         sqlFilename = file.path("dashboard", "mainTable.sql"),
         packageName = "Reward",
         risk = riskThreshold,
+        lower_benefit = lowerBenefitThereshold,
         benefit = benefitThreshold,
         p_cut_value = pValueCut,
         filter_outcome_types = filterOutcomes,

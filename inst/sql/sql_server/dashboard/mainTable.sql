@@ -9,6 +9,7 @@ WITH benefit_t AS(
     SELECT TARGET_COHORT_ID, OUTCOME_COHORT_ID, COUNT(DISTINCT(SOURCE_ID)) AS THRESH_COUNT
     FROM @schema.scc_result
     WHERE RR <= @benefit
+        AND RR >= @lower_benefit
         AND P_VALUE < @p_cut_value
         AND calibrated = @calibrated
         AND SOURCE_ID >= 0 -- NEGATIVE SOURCE IDS are reserved for meta analysis
@@ -30,6 +31,7 @@ req_benefit_sources AS (
     SELECT TARGET_COHORT_ID, OUTCOME_COHORT_ID, COUNT(DISTINCT(SOURCE_ID)) AS required_count
     FROM @schema.scc_result
     WHERE RR <= @benefit
+        AND RR >= @lower_benefit
         AND P_VALUE < @p_cut_value
         AND calibrated = @calibrated
         AND SOURCE_ID IN (@required_benefit_sources)
@@ -99,7 +101,7 @@ FROM @schema.scc_result fr
     {@show_exposure_classes & @exposure_classes != ''} ? {AND ec.EXPOSURE_CLASS_NAME IN (@exposure_classes)}
 
        {@filter_by_meta_analysis} ? {
-       AND mr.RR <= @benefit AND mr.P_VALUE < @p_cut_value
+       AND mr.RR <= @benefit AND mr.RR >= @lower_benefit AND mr.P_VALUE < @p_cut_value
     } : {
     AND 1 = CASE
         WHEN benefit_t.THRESH_COUNT IS NULL AND @benefit_count = 0 THEN 1

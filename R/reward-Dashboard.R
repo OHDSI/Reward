@@ -68,7 +68,8 @@ rewardModule <- function(id = "Reward",
       exposureClassNames <- if (!appConfig$exposureDashboard & length(input$exposureClass)) strQueryWrap(input$exposureClass) else NULL
       outcomeTypes <- input$outcomeCohortTypes
 
-      params <- list(benefitThreshold = input$cutrange1,
+      params <- list(benefitThreshold = input$cutrange1[2],
+                     lowerBenefitThereshold = input$cutrange1[1],
                      riskThreshold = input$cutrange2,
                      pValueCut = input$pCut,
                      requiredBenefitSources = requiredBenefitSources(),
@@ -253,7 +254,8 @@ rewardModule <- function(id = "Reward",
     shiny::appendTab(inputId = "outcomeResultsTabs", tabPanelTimeToOutcome)
 
     fullDataDownload <- shiny::reactive({
-      model$getFilteredTableResults(benefitThreshold = input$cutrange1,
+      model$getFilteredTableResults(benefitThreshold = input$cutrange1[2],
+                                    lowerBenefitThereshold = input$cutrange1[1],
                                     riskThreshold = input$cutrange2,
                                     pValueCut = input$pCut,
                                     filterByMeta = input$filterThreshold == "Meta analysis",
@@ -269,7 +271,7 @@ rewardModule <- function(id = "Reward",
 
     output$downloadData <- shiny::downloadHandler(
       filename = function() {
-        paste0(appConfig$short_name, '-full_results', input$cutrange1, '-', input$cutrange2, '.csv')
+        paste0(appConfig$short_name, '-full_results', input$cutrange1[2], '-', input$cutrange2, '.csv')
       },
       content = function(file) {
         write.csv(fullDataDownload(), file, row.names = FALSE)
@@ -318,29 +320,35 @@ rewardModule <- function(id = "Reward",
 
     output$downloadFullTable <- shiny::downloadHandler(
       filename = function() {
-        paste0(appConfig$short_name, '-filtered-', input$cutrange1, '-', input$cutrange2, '.csv')
+        paste0(appConfig$short_name, '-filtered-', input$cutrange1[2], '-', input$cutrange2, '.csv')
       },
       content = function(file) {
         write.csv(mainTableDownload(), file, row.names = FALSE)
       }
     )
 
+
     # Add cohort diagnostics module if options present
     if (isTRUE(appConfig$showCohortDiagnostics)) {
+      cdModuleVal <- shiny::reactiveVal(0)
+      shiny::observeEvent(input$sidebarMenu, {
+        if (input$sidebarMenu == "cohortDiagnostics" & cdModuleVal() == 0) {
+          cdModuleVal(1)
+          shiny::withProgress({
+            cdSettings <- list(
+              schema = model$resultsSchema,
+              vocabularyDatabaseSchema = model$resultsSchema,
+              cdTablePrefix = model$config$cdTablePrefix,
+              cgTable = "cohort",
+              databaseTable = "database"
+            )
 
-      shiny::withProgress({
-        cdSettings <- list(
-          schema = model$resultsSchema,
-          vocabularyDatabaseSchema = model$resultsSchema,
-          cdTablePrefix = model$config$cdTablePrefix,
-          cgTable = "cohort",
-          databaseTable = "database"
-        )
-
-        OhdsiShinyModules::cohortDiagnosticsServer(id = "cohortDiagnostics",
-                                                   connectionHandler = model$connection,
-                                                   resultDatabaseSettings = cdSettings)
-      }, message = "loading cohort diagnostics")
+            OhdsiShinyModules::cohortDiagnosticsServer(id = "cohortDiagnostics",
+                                                       connectionHandler = model$connection,
+                                                       resultDatabaseSettings = cdSettings)
+          }, message = "loading cohort diagnostics")
+        }
+      })
     }
 
     # Add cem panel if option is present
