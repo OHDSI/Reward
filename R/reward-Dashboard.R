@@ -271,7 +271,7 @@ rewardModule <- function(id = "Reward",
 
     output$downloadData <- shiny::downloadHandler(
       filename = function() {
-        paste0(appConfig$short_name, '-full_results', input$cutrange1[2], '-', input$cutrange2, '.csv')
+        paste0(appConfig$shortName, '-full_results', input$cutrange1[2], '-', input$cutrange2, '.csv')
       },
       content = function(file) {
         write.csv(fullDataDownload(), file, row.names = FALSE)
@@ -280,7 +280,7 @@ rewardModule <- function(id = "Reward",
 
     output$downloadFullData <- shiny::downloadHandler(
       filename = function() {
-        paste0(appConfig$short_name, '-export.csv')
+        paste0(appConfig$shortName, '-export.csv')
       },
       content = function(file) {
         data <- model$getFullDataSet()

@@ -493,6 +493,22 @@ DashboardDataModel <- R6::R6Class(
       return(query)
     },
 
+    #'
+    #' Download full data set of  RR values
+    #'
+    getFullDataSet = function() {
+      sql <- "
+      SELECT t.short_name as target_cohort, o.short_name, ds.source_name, r.*
+
+      FROM @results_schema.scc_result r
+      INNER JOIN @results_schema.cohort_definition t ON t.cohort_definition_id = r.target_cohort_id
+      INNER JOIN @results_schema.cohort_definition o ON o.cohort_definition_id = r.outcome_cohort_id
+      INNER JOIN @results_schema.data_source ds ON ds.source_id = r.source_id
+      WHERE r.RR <= 1.0 -- Hard coded risk threshold required
+      "
+      self$queryDb(sql)
+    },
+
     #' Main table query in dashboard
     #'
     #' @param ...
@@ -517,7 +533,6 @@ DashboardDataModel <- R6::R6Class(
     #'
     #' @param exposureId exposure cohort id
     #' @param outcomeId outcome Cohort id
-
     getMetaAnalysisTable = function(exposureId, outcomeId) {
       sql <- "
         SELECT r.SOURCE_ID,
