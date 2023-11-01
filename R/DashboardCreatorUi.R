@@ -203,6 +203,37 @@ configModule <- function(id, model) {
 }
 
 
+cmStudyUi <- function(id = "cmStudyDesigner") {
+  ns <- shiny::NS(id)
+  shiny::tagList(
+    # Select Target
+
+    # Select Comparator
+
+    # Select Data sources
+
+    # Select Outcomes (all 1 dx code default, all atlas default)
+
+    # input exclusion covariates text area
+
+    # Generate json button
+    shiny::button(inputId = ns("showJsonConfig"), "Create strategus configuration"),
+    shiny::conditionalPanel(
+      conditon = ""
+      ns = ns,
+      shiny::div(
+        shiny::p("Add the following settings object to a strategus study"),
+        shiny::div(
+          shiny::verbatimTextOutput(outputId = "studyJson"),
+          style = "height:500px; overflow:scroll;"
+        ),
+        shiny::downloadButton(outputId = "downloadStudyJson")
+      )
+    )
+  )
+}
+
+
 configDashboardUi <- function() {
   shinydashboard::dashboardPage(
     header = shinydashboard::dashboardHeader(title = "Reward Config Creator"),
@@ -211,12 +242,17 @@ configDashboardUi <- function() {
         shinydashboard::menuItem(
           "Calibration Explorer",
           tabName = "calibrationExplorer",
-           icon = icon("gears", verify_fa = FALSE)
+          icon = icon("gears", verify_fa = FALSE)
         ),
         shinydashboard::menuItem(
           "Create Config",
           tabName = "configCreator",
           icon = icon("dashboard", verify_fa = FALSE)
+        ),
+        shinydashboard::menuItem(
+          "Create Cohort Method study",
+          tabName = "cmStudyCreator",
+          icon = icon("users", verify_fa = FALSE)
         )
       )
     ),
@@ -229,6 +265,10 @@ configDashboardUi <- function() {
         shinydashboard::tabItem(
           "calibrationExplorer",
           shinydashboard::box(width = NULL, calibrationExplorerUi("calibrationExplorer"))
+        ),
+        shiny::dashboard::tabItem(
+          "cmStudyCreator",
+          shinydashboard::box(width = NULL, cmStudyUi())
         )
       )
     )
