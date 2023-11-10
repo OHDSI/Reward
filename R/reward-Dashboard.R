@@ -418,7 +418,7 @@ launchDashboard <- function(dashboardConfigPath,
                                               cemConnectionDetails = config$cemConnectionDetails,
                                               resultDatabaseSchema = resultDatabaseSchema,
                                               vocabularyDatabaseSchema = vocabularyDatabaseSchema,
-                                              usePooledConnection = FALSE)
+                                              usePooledConnection = TRUE)
 
   shiny::shinyApp(server = dashboardInstance, dashboardUi, enableBookmarking = "url")
 }
