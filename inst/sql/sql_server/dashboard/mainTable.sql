@@ -56,7 +56,8 @@ SELECT
     END AS benefit_count,
     mr2.I2 as I2,
     {@show_exposure_classes}?{STRING_AGG(distinct ec.EXPOSURE_CLASS_NAME, ';') as ECN,}
-    ROUND(mr.RR, 2) as meta_RR
+    ROUND(mr.RR, 2) as meta_RR,
+    ROUND(mr.P_VALUE) as p
 FROM @schema.scc_result fr
 
     LEFT JOIN benefit_t ON benefit_t.TARGET_COHORT_ID = fr.TARGET_COHORT_ID AND benefit_t.OUTCOME_COHORT_ID = fr.OUTCOME_COHORT_ID
@@ -116,6 +117,6 @@ FROM @schema.scc_result fr
     END
     {@required_benefit_sources != ''} ? {AND rbs.required_count >= @required_benefit_count}
     {@filter_outcome_types} ? {AND oc.outcome_type IN (@outcome_types)}
-    GROUP BY fr.target_cohort_id, fr.outcome_cohort_id, t.short_name, o.short_name, risk_t.THRESH_COUNT, benefit_t.THRESH_COUNT, mr2.I2, mr.RR
+    GROUP BY fr.target_cohort_id, fr.outcome_cohort_id, t.short_name, o.short_name, risk_t.THRESH_COUNT, benefit_t.THRESH_COUNT, mr2.I2, mr.RR, mr.p_value
     {@order_by != ''} ? {ORDER BY @order_by @ascending}
     {@limit != ''} ? {LIMIT @limit {@offset != ''} ? {OFFSET @offset} }
