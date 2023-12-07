@@ -219,7 +219,7 @@ cmStudyUi <- function(id = "cmStudyDesigner") {
     # Generate json button
     shiny::button(inputId = ns("showJsonConfig"), "Create strategus configuration"),
     shiny::conditionalPanel(
-      conditon = ""
+      conditon = "",
       ns = ns,
       shiny::div(
         shiny::p("Add the following settings object to a strategus study"),
@@ -266,7 +266,7 @@ configDashboardUi <- function() {
           "calibrationExplorer",
           shinydashboard::box(width = NULL, calibrationExplorerUi("calibrationExplorer"))
         ),
-        shiny::dashboard::tabItem(
+        shinydashboard::tabItem(
           "cmStudyCreator",
           shinydashboard::box(width = NULL, cmStudyUi())
         )

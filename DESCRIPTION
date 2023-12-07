@@ -1,7 +1,7 @@
 Package: Reward
 Type: Package
 Title: REal World Assessment and Research of Drug (REWARD) performance
-Version: 0.2.0
+Version: 0.3.0
 Author: Jamie Gilbert
 Maintainer: Jamie Gilbert <jpg@azimov.co.uk>
 Description: REWARD base package for managing data and constructing studies.
@@ -21,6 +21,7 @@ Imports:
     EmpiricalCalibration,
     CohortGenerator,
     OhdsiShinyModules,
+    CohortMethod,
     pool,
     DBI,
     yaml,
@@ -64,6 +65,7 @@ Suggests:
     rsconnect
 Remotes:
   ohdsi/RewardExecutionPackage,
+  ohdsi/CohortMethod,
   ohdsi/CohortGenerator,
   ohdsi/CemConnector,
   ohdsi/OhdsiShinyModules@develop,
