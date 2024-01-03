@@ -8,7 +8,6 @@ createDashboardDatabase(
   configPath,
   dashboardConfigPath,
   targetConnectionDetails = NULL,
-  resultDatabaseSchema = NULL,
   overwrite = FALSE
 )
 }

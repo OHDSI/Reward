@@ -17,6 +17,7 @@ An interface to the common evidence model that uses works directly with a databa
 \item \href{#method-DashboardDataModel-getExposureCohorts}{\code{DashboardDataModel$getExposureCohorts()}}
 \item \href{#method-DashboardDataModel-getExposureClassNames}{\code{DashboardDataModel$getExposureClassNames()}}
 \item \href{#method-DashboardDataModel-getFilteredTableResultsQuery}{\code{DashboardDataModel$getFilteredTableResultsQuery()}}
+\item \href{#method-DashboardDataModel-getFullDataSet}{\code{DashboardDataModel$getFullDataSet()}}
 \item \href{#method-DashboardDataModel-getFilteredTableResults}{\code{DashboardDataModel$getFilteredTableResults()}}
 \item \href{#method-DashboardDataModel-getFilteredTableResultsCount}{\code{DashboardDataModel$getFilteredTableResultsCount()}}
 \item \href{#method-DashboardDataModel-getMetaAnalysisTable}{\code{DashboardDataModel$getMetaAnalysisTable()}}
@@ -31,21 +32,21 @@ An interface to the common evidence model that uses works directly with a databa
 \if{html}{\out{
 <details><summary>Inherited methods</summary>
 <ul>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="countQuery"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-countQuery'><code>Reward::RewardDataModel$countQuery()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="finalize"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-finalize'><code>Reward::RewardDataModel$finalize()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getAnalysisSettings"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getAnalysisSettings'><code>Reward::RewardDataModel$getAnalysisSettings()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCemConnection"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCemConnection'><code>Reward::RewardDataModel$getCemConnection()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohort"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCohort'><code>Reward::RewardDataModel$getCohort()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohortConceptSet"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCohortConceptSet'><code>Reward::RewardDataModel$getCohortConceptSet()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohortStats"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCohortStats'><code>Reward::RewardDataModel$getCohortStats()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getDataSources"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getDataSources'><code>Reward::RewardDataModel$getDataSources()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getExposureCohortConceptSets"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getExposureCohortConceptSets'><code>Reward::RewardDataModel$getExposureCohortConceptSets()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getExposureCohortDefinitionSet"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getExposureCohortDefinitionSet'><code>Reward::RewardDataModel$getExposureCohortDefinitionSet()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getNegativeControlConditions"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getNegativeControlConditions'><code>Reward::RewardDataModel$getNegativeControlConditions()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getNegativeControlExposures"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getNegativeControlExposures'><code>Reward::RewardDataModel$getNegativeControlExposures()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getOutcomeCohortConceptSets"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getOutcomeCohortConceptSets'><code>Reward::RewardDataModel$getOutcomeCohortConceptSets()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getOutcomeCohortDefinitionSet"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getOutcomeCohortDefinitionSet'><code>Reward::RewardDataModel$getOutcomeCohortDefinitionSet()</code></a></li>
-<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="queryDb"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-queryDb'><code>Reward::RewardDataModel$queryDb()</code></a></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="countQuery"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-countQuery'><code>Reward::RewardDataModel$countQuery()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="finalize"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-finalize'><code>Reward::RewardDataModel$finalize()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getAnalysisSettings"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getAnalysisSettings'><code>Reward::RewardDataModel$getAnalysisSettings()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCemConnection"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCemConnection'><code>Reward::RewardDataModel$getCemConnection()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohort"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCohort'><code>Reward::RewardDataModel$getCohort()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohortConceptSet"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCohortConceptSet'><code>Reward::RewardDataModel$getCohortConceptSet()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getCohortStats"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getCohortStats'><code>Reward::RewardDataModel$getCohortStats()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getDataSources"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getDataSources'><code>Reward::RewardDataModel$getDataSources()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getExposureCohortConceptSets"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getExposureCohortConceptSets'><code>Reward::RewardDataModel$getExposureCohortConceptSets()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getExposureCohortDefinitionSet"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getExposureCohortDefinitionSet'><code>Reward::RewardDataModel$getExposureCohortDefinitionSet()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getNegativeControlConditions"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getNegativeControlConditions'><code>Reward::RewardDataModel$getNegativeControlConditions()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getNegativeControlExposures"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getNegativeControlExposures'><code>Reward::RewardDataModel$getNegativeControlExposures()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getOutcomeCohortConceptSets"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getOutcomeCohortConceptSets'><code>Reward::RewardDataModel$getOutcomeCohortConceptSets()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="getOutcomeCohortDefinitionSet"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-getOutcomeCohortDefinitionSet'><code>Reward::RewardDataModel$getOutcomeCohortDefinitionSet()</code></a></span></li>
+<li><span class="pkg-link" data-pkg="Reward" data-topic="RewardDataModel" data-id="queryDb"><a href='../../Reward/html/RewardDataModel.html#method-RewardDataModel-queryDb'><code>Reward::RewardDataModel$queryDb()</code></a></span></li>
 </ul>
 </details>
 }}
@@ -74,6 +75,8 @@ An interface to the common evidence model that uses works directly with a databa
 \item{\code{cemConnectionDetails}}{Cem Connection details}
 
 \item{\code{resultDatabaseSchema}}{Results database schema}
+
+\item{\code{vocabularyDatabaseSchema}}{vocab database schema}
 
 \item{\code{usePooledConnection}}{Use a poooled database connection
 Get Outcome Cohorts}
@@ -127,6 +130,7 @@ Shiny Dashboard - main query
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getFilteredTableResultsQuery(
   benefitThreshold = 0.5,
+  lowerBenefitThereshold = 0,
   riskThreshold = 2,
   pValueCut = 0.05,
   requiredBenefitSources = NULL,
@@ -150,6 +154,9 @@ Shiny Dashboard - main query
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{benefitThreshold}}{thereshold to consider a benefit}
+
+\item{\code{lowerBenefitThereshold}}{thereshold to consider a benefit
+(lower bounds, e.g. exclude benefits below 0.1 to rule out potential indications)}
 
 \item{\code{riskThreshold}}{threshold to consider effect estimate a risk}
 
@@ -177,12 +184,27 @@ Shiny Dashboard - main query
 
 \item{\code{ascending}}{ascending order?}
 
+\item{\code{excludedConcepts}}{concept id's to exclude from results
+
+Download full data set of  RR values}
+
 \item{\code{limit}}{Row limit}
 
-\item{\code{offset}}{Row Offset
-Main table query in dashboard}
+\item{\code{offset}}{Row Offset}
 }
 \if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-DashboardDataModel-getFullDataSet"></a>}}
+\if{latex}{\out{\hypertarget{method-DashboardDataModel-getFullDataSet}{}}}
+\subsection{Method \code{getFullDataSet()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{DashboardDataModel$getFullDataSet()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Main table query in dashboard
 }
 }
 \if{html}{\out{<hr>}}

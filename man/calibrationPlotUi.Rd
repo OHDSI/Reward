@@ -7,8 +7,8 @@
 calibrationPlotUi(
   id,
   figureTitle = "Figure 1.",
- 
-    figureText = "Plot of calibration of effect estimates. Blue dots are negative control effect estimates."
+  figureText =
+    "Plot of calibration of effect estimates. Blue dots are negative control effect estimates."
 )
 }
 \description{

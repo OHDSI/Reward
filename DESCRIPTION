@@ -22,6 +22,7 @@ Imports:
     CohortGenerator,
     OhdsiShinyModules,
     CohortMethod,
+    Cyclops,
     pool,
     DBI,
     yaml,
@@ -73,4 +74,4 @@ Remotes:
   ohdsi/ROhdsiWebApi,
   ohdsi/ResultModelManager,
   ohdsi/CirceR
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3

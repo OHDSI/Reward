@@ -1,21 +1,58 @@
-#' @importFrom CohortMethod createTruncateIptwArgs
-#' @importFrom CohortMethod createMatchOnPsArgs
-#' @importFrom CohortMethod createMatchOnPsAndCovariatesArgs
-#' @importFrom CohortMethod createStratifyByPsArgs
-#' @importFrom CohortMethod createStratifyByPsAndCovariatesArgs
-#' @importFrom CohortMethod createComputeCovariateBalanceArgs
-#' @importFrom CohortMethod createFitOutcomeModelArgs
-#' @importFrom CohortMethod createCmAnalysis
-#' @importFrom CohortMethod saveCmAnalysisList
-#' @importFrom CohortMethod loadCmAnalysisList
-#' @importFrom CohortMethod createOutcome
-#' @importFrom CohortMethod createTargetComparatorOutcomes
-#' @importFrom CohortMethod saveTargetComparatorOutcomesList
-#' @importFrom CohortMethod loadTargetComparatorOutcomesList
-#' @importFrom CohortMethod createCmDiagnosticThresholds
+# Remove check int which breaks big int values
+createOutcome <- function(outcomeId, outcomeOfInterest = TRUE, trueEffectSize = NA, priorOutcomeLookback = NULL, riskWindowStart = NULL, startAnchor = NULL, riskWindowEnd = NULL, endAnchor = NULL) {
+  errorMessages <- checkmate::makeAssertCollection()
+  checkmate::assertNumeric(outcomeId, add = errorMessages)
+  checkmate::assertLogical(outcomeOfInterest, add = errorMessages)
+  checkmate::assertNumeric(trueEffectSize, len = 1, null.ok = TRUE, add = errorMessages)
+  checkmate::assertInt(riskWindowStart, null.ok = TRUE, add = errorMessages)
+  checkmate::assertInt(riskWindowEnd, null.ok = TRUE, add = errorMessages)
+  checkmate::reportAssertions(collection = errorMessages)
+  if (!is.null(startAnchor) && !grepl("start$|end$", startAnchor, ignore.case = TRUE)) {
+    stop("startAnchor should have value \'cohort start\' or \'cohort end\'")
+  }
+  if (!is.null(riskWindowEnd) && !grepl("start$|end$", endAnchor, ignore.case = TRUE)) {
+    stop("endAnchor should have value \'cohort start\' or \'cohort end\'")
+  }
+  outcome <- list()
+  for (name in names(formals(createOutcome))) {
+    outcome[[name]] <- get(name)
+  }
+  class(outcome) <- "outcome"
+  return(outcome)
+}
+
+# Remove check int which breaks big int values
+createTargetComparatorOutcomes <- function(targetId, comparatorId, outcomes, excludedCovariateConceptIds = c(), includedCovariateConceptIds = c()) {
+  errorMessages <- checkmate::makeAssertCollection()
+  checkmate::assertNumeric(targetId, add = errorMessages)
+  checkmate::assertNumeric(comparatorId, add = errorMessages)
+  checkmate::assertList(outcomes, min.len = 1, add = errorMessages)
+  for (i in seq_along(outcomes)) {
+    checkmate::assertClass(outcomes[[i]], "outcome", add = errorMessages)
+  }
+  checkmate::assertIntegerish(excludedCovariateConceptIds, null.ok = TRUE, add = errorMessages)
+  checkmate::assertIntegerish(includedCovariateConceptIds, null.ok = TRUE, add = errorMessages)
+  checkmate::reportAssertions(collection = errorMessages)
+  outcomeIds <- rep(0, length(outcomes))
+  for (i in seq_along(outcomes)) {
+    outcomeIds[i] <- outcomes[[i]]$outcomeId
+  }
+  duplicatedIds <- outcomeIds[duplicated(outcomeIds)]
+  if (length(duplicatedIds) > 0) {
+    stop(sprintf("Found duplicate outcome IDs: %s", paste(duplicatedIds, paste = ", ")))
+  }
+  targetComparatorOutcomes <- list()
+  for (name in names(formals(createTargetComparatorOutcomes))) {
+    targetComparatorOutcomes[[name]] <- get(name)
+  }
+  class(targetComparatorOutcomes) <- "targetComparatorOutcomes"
+  return(targetComparatorOutcomes)
+}
+
 
 #' @noRd
 createCohortMethodModuleSpecifications <- function(cmAnalysisList,
+                                                   dataSources,
                                                    targetComparatorOutcomesList,
                                                    analysesToExclude = NULL,
                                                    refitPsForEveryOutcome = FALSE,
@@ -26,10 +63,9 @@ createCohortMethodModuleSpecifications <- function(cmAnalysisList,
     analysis[[name]] <- get(name)
   }
 
-  specifications <- list(module = "CohortMethodModule",
-                         version = "0.x.0",
-                         remoteRepo = "github.com",
-                         remoteUsername = "ohdsi",
+  specifications <- list(module = "RewardCohortMethodSettings",
+                         version = utils::packageVersion(utils::packageName()),
+
                          settings = analysis)
   class(specifications) <- c("CohortMethodModuleSpecifications", "ModuleSpecifications")
   return(specifications)
@@ -40,6 +76,7 @@ createCmDesign <- function(targetId,
                            comparatorId,
                            indicationId,
                            outcomeCohortIds,
+                           dataSources,
                            excludedCovariateConceptIds) {
 
   tcis <- list(
@@ -100,24 +137,24 @@ createCmDesign <- function(targetId,
       excludedCovariateConceptIds = tci$excludedCovariateConceptIds
     )
   }
-  getDbCohortMethodDataArgs <- createGetDbCohortMethodDataArgs(
+  getDbCohortMethodDataArgs <- CohortMethod::createGetDbCohortMethodDataArgs(
     restrictToCommonPeriod = TRUE,
     studyStartDate = studyStartDate,
     studyEndDate = studyEndDate,
     maxCohortSize = 0,
     covariateSettings = covariateSettings
   )
-  createPsArgs = createCreatePsArgs(
+  createPsArgs = CohortMethod::createCreatePsArgs(
     maxCohortSizeForFitting = 250000,
     errorOnHighCorrelation = TRUE,
     stopOnError = FALSE, # Setting to FALSE to allow Strategus complete all CM operations; when we cannot fit a model, the equipoise diagnostic should fail
     estimator = "att",
-    prior = createPrior(
+    prior = Cyclops::createPrior(
       priorType = "laplace",
       exclude = c(0),
       useCrossValidation = TRUE
     ),
-    control = createControl(
+    control = Cyclops::createControl(
       noiseLevel = "silent",
       cvType = "auto",
       seed = 1,
@@ -127,7 +164,7 @@ createCmDesign <- function(targetId,
       startingVariance = 0.01
     )
   )
-  matchOnPsArgs = createMatchOnPsArgs(
+  matchOnPsArgs = CohortMethod::createMatchOnPsArgs(
     maxRatio = psMatchMaxRatio,
     caliper = 0.2,
     caliperScale = "standardized logit",
@@ -139,24 +176,24 @@ createCmDesign <- function(targetId,
   #   stratificationColumns = c(),
   #   baseSelection = "all"
   # )
-  computeSharedCovariateBalanceArgs = createComputeCovariateBalanceArgs(
+  computeSharedCovariateBalanceArgs = CohortMethod::createComputeCovariateBalanceArgs(
     maxCohortSize = 250000,
     covariateFilter = NULL
   )
-  computeCovariateBalanceArgs = createComputeCovariateBalanceArgs(
+  computeCovariateBalanceArgs = CohortMethod::createComputeCovariateBalanceArgs(
     maxCohortSize = 250000,
     covariateFilter = FeatureExtraction::getDefaultTable1Specifications()
   )
-  fitOutcomeModelArgs = createFitOutcomeModelArgs(
+  fitOutcomeModelArgs = CohortMethod::createFitOutcomeModelArgs(
     modelType = "cox",
     stratified = psMatchMaxRatio != 1,
     useCovariates = FALSE,
     inversePtWeighting = FALSE,
-    prior = createPrior(
+    prior = Cyclops::createPrior(
       priorType = "laplace",
       useCrossValidation = TRUE
     ),
-    control = createControl(
+    control = Cyclops::createControl(
       cvType = "auto",
       seed = 1,
       resetCoefficients = TRUE,
@@ -168,7 +205,7 @@ createCmDesign <- function(targetId,
   )
   cmAnalysisList <- list()
   for (i in seq_len(nrow(timeAtRisks))) {
-    createStudyPopArgs <- createCreateStudyPopulationArgs(
+    createStudyPopArgs <- CohortMethod::createCreateStudyPopulationArgs(
       firstExposureOnly = FALSE,
       washoutPeriod = 0,
       removeDuplicateSubjects = "keep first",
@@ -182,7 +219,7 @@ createCmDesign <- function(targetId,
       minDaysAtRisk = 1,
       maxDaysAtRisk = 99999
     )
-    cmAnalysisList[[i]] <- createCmAnalysis(
+    cmAnalysisList[[i]] <- CohortMethod::createCmAnalysis(
       analysisId = i,
       description = sprintf(
         "Cohort method, %s",
@@ -204,13 +241,14 @@ createCmDesign <- function(targetId,
     analysesToExclude = NULL,
     refitPsForEveryOutcome = FALSE,
     refitPsForEveryStudyPopulation = FALSE,
-    cmDiagnosticThresholds = createCmDiagnosticThresholds(
+    cmDiagnosticThresholds = CohortMethod::createCmDiagnosticThresholds(
       mdrrThreshold = Inf,
       easeThreshold = 0.25,
       sdmThreshold = 0.1,
       equipoiseThreshold = 0.2,
-      attritionFractionThreshold = 1
-    )
+      generalizabilitySdmThreshold = 1
+    ),
+    dataSources = dataSources
   )
 
 

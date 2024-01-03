@@ -203,37 +203,6 @@ configModule <- function(id, model) {
 }
 
 
-cmStudyUi <- function(id = "cmStudyDesigner") {
-  ns <- shiny::NS(id)
-  shiny::tagList(
-    # Select Target
-
-    # Select Comparator
-
-    # Select Data sources
-
-    # Select Outcomes (all 1 dx code default, all atlas default)
-
-    # input exclusion covariates text area
-
-    # Generate json button
-    shiny::button(inputId = ns("showJsonConfig"), "Create strategus configuration"),
-    shiny::conditionalPanel(
-      conditon = "",
-      ns = ns,
-      shiny::div(
-        shiny::p("Add the following settings object to a strategus study"),
-        shiny::div(
-          shiny::verbatimTextOutput(outputId = "studyJson"),
-          style = "height:500px; overflow:scroll;"
-        ),
-        shiny::downloadButton(outputId = "downloadStudyJson")
-      )
-    )
-  )
-}
-
-
 configDashboardUi <- function() {
   shinydashboard::dashboardPage(
     header = shinydashboard::dashboardHeader(title = "Reward Config Creator"),
@@ -268,7 +237,7 @@ configDashboardUi <- function() {
         ),
         shinydashboard::tabItem(
           "cmStudyCreator",
-          shinydashboard::box(width = NULL, cmStudyUi())
+          cmStudyUi()
         )
       )
     )
@@ -278,6 +247,7 @@ configDashboardUi <- function() {
 configDashboardServer <- function(input, output, session) {
   configModule(id = "config", model)
   calibrationExplorerModule(id = "calibrationExplorer", model)
+  cmStudyModule(model = model)
 }
 
 #' Shiny app to create stand-alone dashboaard database from reward data

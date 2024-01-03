@@ -360,6 +360,7 @@ DashboardDataModel <- R6::R6Class(
     #' @param connectionDetails       Database Connector connection detils
     #' @param cemConnectionDetails    Cem Connection details
     #' @param resultDatabaseSchema    Results database schema
+    #' @param vocabularyDatabaseSchema vocab database schema
     #' @param usePooledConnection     Use a poooled database connection
     initialize = function(dashboardConfigPath = NULL,
                           connectionDetails,
@@ -440,6 +441,7 @@ DashboardDataModel <- R6::R6Class(
     #' @param ascending ascending order?
     #' @param limit Row limit
     #' @param offset Row Offset
+    #' @param excludedConcepts concept id's to exclude from results
     getFilteredTableResultsQuery = function(benefitThreshold = 0.5,
                                             lowerBenefitThereshold = 0.0,
                                             riskThreshold = 2.0,
@@ -495,7 +497,7 @@ DashboardDataModel <- R6::R6Class(
 
     #'
     #' Download full data set of  RR values
-    #'
+    #' @return
     getFullDataSet = function() {
       sql <- "
       SELECT t.short_name as target_cohort, o.short_name, ds.source_name, r.*

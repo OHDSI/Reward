@@ -50,8 +50,8 @@ calibrationExplorerUi <- function(id) {
 }
 
 calibrationExplorerModule <- function(id, model) {
-  ns <- shiny::NS(id)
   shiny::moduleServer(id, function(input, output, session) {
+    ns <- session$ns
     shiny::shinyOptions(cache = cachem::cache_disk("~/.rewardUiCache"))
     cemConnection <- model$getCemConnection()
 
