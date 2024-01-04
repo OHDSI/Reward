@@ -68,7 +68,7 @@ cmStudyModule <- function(id = "cmStudyDesigner", model) {
         session = session)
     })
 
-    getJson <- shiny::eventReactive(input$showJsonConfig, {
+    getSpec <- shiny::eventReactive(input$showJsonConfig, {
       targetId <- as.numeric(input$target)
       compartatorId <- as.numeric(input$comparator)
       dataSources <- input$dataSources
@@ -87,12 +87,12 @@ cmStudyModule <- function(id = "cmStudyDesigner", model) {
                              dataSources = dataSources,
                              excludedCovariateConceptIds = excludedCovariateConceptIds)
 
-      return(ParallelLogger::convertSettingsToJson(spec))
+      return(spec)
     })
 
 
     output$studyJson <- shiny::renderText({
-      getJson()
+      getSpec() %>% ParallelLogger::convertSettingsToJson()
     })
 
   })

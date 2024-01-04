@@ -52,7 +52,7 @@ createTargetComparatorOutcomes <- function(targetId, comparatorId, outcomes, exc
 
 #' @noRd
 createCohortMethodModuleSpecifications <- function(cmAnalysisList,
-                                                   dataSources,
+                                                   #dataSources,
                                                    targetComparatorOutcomesList,
                                                    analysesToExclude = NULL,
                                                    refitPsForEveryOutcome = FALSE,
@@ -65,7 +65,6 @@ createCohortMethodModuleSpecifications <- function(cmAnalysisList,
 
   specifications <- list(module = "RewardCohortMethodSettings",
                          version = utils::packageVersion(utils::packageName()),
-
                          settings = analysis)
   class(specifications) <- c("CohortMethodModuleSpecifications", "ModuleSpecifications")
   return(specifications)
@@ -247,8 +246,8 @@ createCmDesign <- function(targetId,
       sdmThreshold = 0.1,
       equipoiseThreshold = 0.2,
       generalizabilitySdmThreshold = 1
-    ),
-    dataSources = dataSources
+    )
+    #,dataSources = dataSources
   )
 
 
