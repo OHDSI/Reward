@@ -18,7 +18,7 @@ getMockCohortDefinitionSet <- function(rewardConfig, cohortIds) {
     cd.cohort_definition_id as cohort_id,
     cd.cohort_definition_name as cohort_name,
     COALESCE(ar.sql_definition, '') as sql,
-    COALESCE(ar.definition, '') as json,
+    COALESCE(ar.definition, '{}') as json,
     CASE WHEN ar.definition IS NULL THEN 0 ELSE 1 END as has_json
   FROM @schema.@cohort_definition cd
   LEFT JOIN @schema.@atlas_cohort_reference ar ON cd.cohort_definition_id = ar.cohort_definition_id
@@ -35,9 +35,11 @@ getMockCohortDefinitionSet <- function(rewardConfig, cohortIds) {
 
 
   res <- res %>%
-    dplyr::mutate(json = ifelse(.data$hasJson == 1, .decodeBase64(.data$json), "{}")) %>%
-    dplyr::mutate(sql = ifelse(.data$hasJson == 1, .decodeBase64(.data$sql), "")) %>%
+    dplyr::mutate(json = ifelse(.data$hasJson == 1, .decodeBase64(.data$json), .data$json)) %>%
+    dplyr::mutate(sql = ifelse(.data$hasJson == 1, .decodeBase64(.data$sql), "SELECT NULL")) %>%
     dplyr::select(-"hasJson")
 
+
+  attr(res, "isMockCohortDefinitionSet") <- TRUE
   return(res)
 }
