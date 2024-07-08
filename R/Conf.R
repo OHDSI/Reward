@@ -216,5 +216,5 @@ validateDashboardConfig <- function(dashboardConfig) {
   checkmate::assertLogical(dashboardConfig$exposureDashboard)
   checkmate::assertInteger(dashboardConfig$analysisSettings)
   checkmate::assertInteger(dashboardConfig$dataSources)
-  checkmate::assertCharacter(dashboardConfig$cohortIds, min.len = 1, max.len = 25)
+  checkmate::assertCharacter(dashboardConfig$cohortIds, min.len = 1)
 }
