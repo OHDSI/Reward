@@ -18,7 +18,8 @@ the only things you need to generate results.
 ## Installation
 Inside an RStudio session, run the following:
 ```
-devtools::install_github("OHDSI/Reward")
+install.packages("pak")
+pak::pak("OHDSI/Reward")
 ```
 
 ## Configuring databases

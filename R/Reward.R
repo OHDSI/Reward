@@ -17,18 +17,4 @@
 #' @keywords internal
 "_PACKAGE"
 
-#' @importFrom dplyr `%>%`
 NULL
-
-#' @importFrom RewardExecutionPackage createCdmConfiguration
-#' @export
-RewardExecutionPackage::createCdmConfiguration
-#' @importFrom RewardExecutionPackage importReferenceTables
-#' @export
-RewardExecutionPackage::importReferenceTables
-#' @importFrom RewardExecutionPackage loadCdmConfiguration
-#' @export
-RewardExecutionPackage::loadCdmConfiguration
-#' @importFrom RewardExecutionPackage validateCdmConfigFile
-#' @export
-RewardExecutionPackage::validateCdmConfigFile

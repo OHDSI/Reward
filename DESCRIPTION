@@ -1,9 +1,9 @@
 Package: Reward
 Type: Package
 Title: REal World Assessment and Research of Drug (REWARD) performance
-Version: 0.2.0
+Version: 1.0.0
 Author: Jamie Gilbert
-Maintainer: Jamie Gilbert <jpg@azimov.co.uk>
+Maintainer: Jamie Gilbert <gilbert@ohdsi.org>
 Description: REWARD base package for managing data and constructing studies.
 License: Apache
 Encoding: UTF-8
@@ -12,63 +12,26 @@ Depends:
     R (>= 4.0.0),
     DatabaseConnector (>= 5.1.0),
     ParallelLogger,
-    R6,
     checkmate
 Imports:
-    ResultModelManager,
-    dplyr,
-    CemConnector,
-    EmpiricalCalibration,
-    CohortGenerator,
-    OhdsiShinyModules,
-    pool,
-    DBI,
-    yaml,
-    vroom,
-    RewardExecutionPackage (>= 0.2.0),
-    CirceR,
-    ROhdsiWebApi,
-    jsonlite,
-    RSQLite,
-    keyring,
-    base64enc,
-    bit64,
-    meta,
-    shiny,
-    shinycssloaders,
-    shinyWidgets,
-    gt,
-    shinydashboard,
-    DT,
-    R.utils,
-    RJSONIO,
-    SqlRender,
-    cachem,
-    ggplot2,
-    plotly,
-    reactable,
-    readr,
-    shinyAce,
-    stringi,
-    tibble,
-    tidyr,
-    rsconnect
+    SelfControlledCohort,
+    checkmate,
+    R6,
+    config,
+    CohortGenerator
 Suggests:
-    targets,
     testthat,
     Eunomia,
     httpuv,
     withr,
     callr,
-    aws.s3,
     rsconnect
 Remotes:
   ohdsi/RewardExecutionPackage,
-  ohdsi/CohortGenerator,
+  ohdsi/CohortGenerator@cohort_templates,
   ohdsi/CemConnector,
-  ohdsi/OhdsiShinyModules@develop,
+  ohdsi/SelfControlledCohort@version-2.0.0,
   ohdsi/Eunomia,
   ohdsi/ROhdsiWebApi,
-  ohdsi/ResultModelManager,
   ohdsi/CirceR
-RoxygenNote: 7.2.0
+RoxygenNote: 7.3.1
