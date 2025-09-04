@@ -30,9 +30,7 @@ The databases currently approved for use in reward are:
 * IBM MDCD
 * IBM MDCR
 * Optum
-* Pharmetrics
-
-The UK CPRD is currently under protocol review and results from this cannot be published until it has been accepted. To date, no data have been generated from the CPRD cdm.
+* HealthVerity
 
 # REWARD cohorts
 Most cohorts used in REWARD (particularly those for negative controls) are automatically constructed from the vocabulary using the condition_era, condition_occurence, drug_era and drug_exposure tables from the CDM.

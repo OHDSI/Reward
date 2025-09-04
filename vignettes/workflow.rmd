@@ -1,9 +1,0 @@
----
-title: "Workflow execution"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{data-build}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
