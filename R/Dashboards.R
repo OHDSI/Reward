@@ -332,7 +332,11 @@ deployDashboard <- function(dashboardName, config = config::get()) {
   dashboard <- getDashboardConfig(dashboardName)
   dpath <- file.path("dash_deploy", dashboard$config$databaseSchema)
   dir.create(dpath, showWarnings = FALSE, recursive = TRUE)
-  file.copy(file.path("analysis", "shiny", "app.R"), file.path("dash_deploy", dashboard$config$databaseSchema), overwrite = TRUE)
+  file.copy(
+    system.file("shiny", "app.R", package = utils::packageName()),
+    file.path("dash_deploy", dashboard$config$databaseSchema),
+    overwrite = TRUE
+  )
   file.copy(dashboard$filePath, file.path("dash_deploy", dashboard$config$databaseSchema, "config.yml"), overwrite = TRUE)
   DatabaseConnector::downloadJdbcDrivers("postgresql", dpath)
   envvars <- glue::glue("
