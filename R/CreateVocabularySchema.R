@@ -1,3 +1,25 @@
+#' Create and Load OMOP Vocabulary Tables in Results Schema
+#'
+#' @description
+#' Drops (if exists) and recreates the vocabulary schema in the results database. Then creates all required OMOP vocabulary tables with appropriate indexes and primary keys, and bulk uploads vocabulary data from local CSV files (assumed to be in the directory `"vocabulary_tables"`).
+#'
+#' @param config List. Configuration object including database credentials and schema names, usually from `config::get()`.
+#'
+#' @details
+#' - The function prompts for interactive confirmation before dropping the existing schema; **all tables in the schema will be deleted.**
+#' - All tables (`concept`, `concept_ancestor`, `domain`, `drug_strength`, etc.) are (re)created from scratch with recommended OMOP fields and indexes.
+#' - Vocabulary data is loaded from corresponding local CSVs (e.g. `vocabulary_tables/concept.csv`) using the `ResultModelManager::pyUploadCsv()` utility.
+#' - Uses the schema name provided in `config$resultsVocabularyDatabaseSchema`.
+#'
+#' @return Invisible `NULL`. Called for its side effects (recreates and loads tables).
+#'
+#' @examples
+#' \dontrun{
+#' createVocabularySchema()
+#' }
+#'
+#' @seealso [ResultModelManager::pyUploadCsv()]
+#' @export
 createVocabularySchema <- function(config = config::get()) {
   #  DROP schema
   connectionDetails <- getResultsConnectionDetails(config)
@@ -187,7 +209,27 @@ CREATE INDEX idx_drug_strength_id_2 ON @schema.drug_strength (ingredient_concept
   })
 }
 
-
+#' Create Results Schema and Core Tables for Global Analysis
+#'
+#' @description
+#' Drops and recreates the results schema (for non-vocabulary data) and initializes core results tables for self-controlled cohort and cohort generation packages.
+#'
+#' @param config List. Configuration object including credentials and schema name, usually from `config::get()`.
+#'
+#' @details
+#' - Prompts interactively before dropping any tables; the entire schema will be dropped and rebuilt.
+#' - After creating the schema, templates provided by `SelfControlledCohort` and `CohortGenerator` are used to create all necessary results tables.
+#' - Uses the schema set as `config$resultsDatabaseSchema`.
+#'
+#' @return Invisible `NULL`. Used for its side effects.
+#'
+#' @examples
+#' \dontrun{
+#' createGlobalSchema()
+#' }
+#'
+#' @seealso [SelfControlledCohort::createResultsDataModel()], [CohortGenerator::createResultsDataModel()]
+#' @export
 createGlobalSchema <- function(config = config::get()) {
   connectionDetails <- getResultsConnectionDetails(config)
   connection <- DatabaseConnector::connect(connectionDetails)

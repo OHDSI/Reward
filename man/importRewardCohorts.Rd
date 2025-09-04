@@ -2,12 +2,35 @@
 % Please edit documentation in R/Cohorts.R
 \name{importRewardCohorts}
 \alias{importRewardCohorts}
-\title{Use this function to refresh the library of cohorts in the project.
-If any cohorts have changed since the last time this was run, they should redownload from atlas and re-generate}
+\title{Refresh and Synchronize Reward Cohorts Library}
 \usage{
 importRewardCohorts(config = config::get(), recache = FALSE)
 }
+\arguments{
+\item{config}{List. Configuration object, typically from `config::get()`, containing the WebAPI URL and other WebAPI connection details.}
+
+\item{recache}{Logical. If `TRUE`, forces re-caching and regeneration even if no changes detected. Default is `FALSE`.}
+}
+\value{
+No return value. Used for its side effects. The function updates cohort definition files on disk; use `getCohortDefinitionSet()` to retrieve updated definitions.
+}
 \description{
-Use this function to refresh the library of cohorts in the project.
-If any cohorts have changed since the last time this was run, they should redownload from atlas and re-generate
+Use this function to refresh the project's library of cohorts. It checks if any tracked or phenotype library cohorts have been updated on the Atlas server since the last import or cache. Cohorts that are new or have changed are automatically (re)downloaded and updated local files are regenerated.
+}
+\details{
+The function finds all cohort IDs listed in `rewardAtlasCohorts.csv`, `phenotypeLibraryOutcomesIndications.csv`, and `phenotypeLibraryExposures.csv` in the `"cohorts"` folder.
+It then checks for modifications on the Atlas server using `getAtlasModifiedTimes()`. If any cohort has a newer modified time than what is locally cached, or if any new cohorts are found, the function downloads and replaces the local definition(s) from the server (using `ROhdsiWebApi::exportCohortDefinitionSet`).
+Cohorts are saved in `"cohorts/cohorts.csv"` with associated SQL and JSON in their respective subfolders.
+
+This approach keeps your project's local cohort library synchronized with Atlas.
+}
+\examples{
+\dontrun{
+# Refresh local library if any Atlas cohorts have changed
+importRewardCohorts()
+}
+
+}
+\seealso{
+[getCohortDefinitionSet()], [getAtlasModifiedTimes()], [ROhdsiWebApi::exportCohortDefinitionSet()], [CohortGenerator::saveCohortDefinitionSet()]
 }

@@ -11,7 +11,11 @@ getCemConnection <- function(config = config::get()) {
   return(conn)
 }
 
-
+#' Get negative control pairs for a given dashboard config
+#' @description used for exploring evidence
+#' @export
+#' @family {NegativeControls}
+#' @param config assure configuration
 getNegativeControlPairs <- function(config = config::get(), dashboard) {
   # check if dashboard is exposure or outcome controlled
   # Get negative control exposure/outcome pairs
@@ -54,7 +58,6 @@ getNegativeControlPairs <- function(config = config::get(), dashboard) {
     if (nrow(concepts) == 0)
       cli::cli_alert_warning("Concept - {conceptId} has no mapped controls")
     # List of pairs
-    # TODO: atc unmerged eras
     purrr::map2(conceptId * 1000, concepts$conceptId * 1000, function(x, y) {
       eop <- data.frame(exposureId = ifelse(dashboard$config$dashboardType == "exposure", x, y),
                         outcomeId = ifelse(dashboard$config$dashboardType == "outcome", x, y),

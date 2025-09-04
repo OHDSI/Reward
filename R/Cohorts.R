@@ -1,6 +1,7 @@
-## Utility functions for saving the cohort definitions from the project files
-##
+
 #' Cross platform aut for WebApi
+#'
+#' @param config reward config
 .authWebApi <- function(config = config::get()) {
   params <- list(
     baseUrl = config$webApiUrl,
@@ -17,10 +18,28 @@
 }
 
 
-#' Get atlas modified times
-#' @description
-#' Get the time stamp cohorts have changed on the server
+#' Get Atlas Cohort Modified Timestamps
 #'
+#' @description
+#' Retrieves the last modified (or created, if never modified) timestamps for specified cohorts from a WebAPI/Atlas server.
+#'
+#' @param config List. Atlas/WebAPI configuration, typically obtained using `config::get()`. Must contain at least the `webApiUrl` used for API calls.
+#' @param cohortIds Integer vector. One or more cohort IDs to check for modification date.
+#'
+#' @details
+#' This function authenticates to the WebAPI server, fetches cohort metadata for all cohorts, and then returns the modification timestamp (`modifiedDate`, or `createdDate` if missing) for each specified cohort ID. The result is a data frame containing `cohortId` and the relevant modification date for each cohort of interest.
+#'
+#' @return
+#' A data frame with columns \code{cohortId} and \code{modifiedDate} (ISO 8601 character).
+#'
+#' @examples
+#' \dontrun{
+#' times <- getAtlasModifiedTimes(config = config::get(), cohortIds = c(1, 2, 3))
+#' print(times)
+#' }
+#'
+#' @seealso [ROhdsiWebApi::getCohortDefinitionsMetaData()]
+#' @export
 getAtlasModifiedTimes <- function(config = config::get(), cohortIds) {
   .authWebApi(config)
   cohortMetaData <- ROhdsiWebApi::getCohortDefinitionsMetaData(baseUrl = config$webApiUrl) |>
@@ -60,9 +79,34 @@ getCachedConceptSet <- function(config, conceptSetId) {
   return(conceptSet)
 }
 
+#' Load a Cohort Definition Set from Standard Folders
+#'
+#' @description
+#' Loads cohort definitions using standard folder and file layout in the `"cohorts"` directory within the current working directory.
+#' Returns an empty cohort definition set if the required CSV file does not exist.
+#'
+#' @details
+#' The function looks for a file `"cohorts/cohorts.csv"`. If present, it loads cohort definitions using the `CohortGenerator` package and the recommended folder structure:
+#' * CSV cohort settings (metadata)
+#' * JSON definitions (`cohorts/json`)
+#' * SQL definitions (`cohorts/sql`)
+#' * Subset JSONs (`cohorts/subsets`)
+#' * Templates (`cohorts/templates`)
+#' If the CSV file is absent, an empty cohort set is returned.
+#'
+#' @return
+#' A cohort definition set as a data frame or list as produced by `CohortGenerator::getCohortDefinitionSet()`, or an empty set via `CohortGenerator::createEmptyCohortDefinitionSet()` if no cohorts CSV.
+#'
+#' @examples
+#' \dontrun{
+#' cohortSet <- getCohortDefinitionSet()
+#' }
+#'
+#' @seealso [CohortGenerator::getCohortDefinitionSet()], [CohortGenerator::createEmptyCohortDefinitionSet()]
+#' @export
 getCohortDefinitionSet <- function() {
 
-  if (!file.exists(file.path("cohorts", "cohorts.csv")))
+  if (!file.exists(file.path(getwd(), "cohorts", "cohorts.csv")))
     return(CohortGenerator::createEmptyCohortDefinitionSet())
 
   return(
@@ -161,8 +205,33 @@ addTemplateDefinitions <- function(cohortDefinitionSet) {
   return(cohortDefinitionSet)
 }
 
-#' Use this function to refresh the library of cohorts in the project.
-#' If any cohorts have changed since the last time this was run, they should redownload from atlas and re-generate
+#' Refresh and Synchronize Reward Cohorts Library
+#'
+#' @description
+#' Use this function to refresh the project's library of cohorts. It checks if any tracked or phenotype library cohorts have been updated on the Atlas server since the last import or cache. Cohorts that are new or have changed are automatically (re)downloaded and updated local files are regenerated.
+#'
+#' @param config List. Configuration object, typically from `config::get()`, containing the WebAPI URL and other WebAPI connection details.
+#' @param recache Logical. If `TRUE`, forces re-caching and regeneration even if no changes detected. Default is `FALSE`.
+#'
+#' @details
+#' The function finds all cohort IDs listed in `rewardAtlasCohorts.csv`, `phenotypeLibraryOutcomesIndications.csv`, and `phenotypeLibraryExposures.csv` in the `"cohorts"` folder.
+#' It then checks for modifications on the Atlas server using `getAtlasModifiedTimes()`. If any cohort has a newer modified time than what is locally cached, or if any new cohorts are found, the function downloads and replaces the local definition(s) from the server (using `ROhdsiWebApi::exportCohortDefinitionSet`).
+#' Cohorts are saved in `"cohorts/cohorts.csv"` with associated SQL and JSON in their respective subfolders.
+#'
+#' This approach keeps your project's local cohort library synchronized with Atlas.
+#'
+#' @return
+#' No return value. Used for its side effects. The function updates cohort definition files on disk; use `getCohortDefinitionSet()` to retrieve updated definitions.
+#'
+#' @examples
+#' \dontrun{
+#' # Refresh local library if any Atlas cohorts have changed
+#' importRewardCohorts()
+#' }
+#'
+#' @seealso
+#' [getCohortDefinitionSet()], [getAtlasModifiedTimes()], [ROhdsiWebApi::exportCohortDefinitionSet()], [CohortGenerator::saveCohortDefinitionSet()]
+#' @export
 importRewardCohorts <- function(config = config::get(), recache = FALSE) {
   cohortDefinitionSet <- getCohortDefinitionSet()
 
@@ -301,7 +370,35 @@ extractCirceConceptSets <- function(cohortDefinition) {
   return(conceptSets)
 }
 
-
+#' Extract Unique Concept Sets and Map to Cohorts
+#'
+#' @description
+#' Parses a cohort definition set, extracts all unique concept sets and their mappings to cohorts, and writes them in RDBMS-normalized CSV files for downstream analysis or ETL.
+#' Concept sets are uniquely identified via checksum hashes. Subset cohorts and "templated" cohorts are handled distinctly.
+#'
+#' @param cohortDefinitionSet Data frame or list. A cohort definition set, such as returned by `getCohortDefinitionSet()`.
+#' @param config List. Configuration object with paths and export details, usually from `config::get()`.
+#'
+#' @details
+#' - Unique concept sets (from JSON or templated cohorts) are extracted and assigned hash-based IDs.
+#' - Mappings between cohorts and concept sets, as well as concept set name associations, are recorded.
+#' - Three CSV files are produced in `config$conceptSetExportPath`:
+#'   - `cg_concept_set.csv`: Each row is a concept within a unique concept set.
+#'   - `cg_cohort_concept_set.csv`: Maps concept sets to cohorts.
+#'   - `cg_concept_set_name.csv`: Maps concept set names to their hash keys.
+#'
+#' Files are overwritten on each run.
+#' Subsets are supported; concept sets from parent cohorts propagate as needed.
+#'
+#' @return Invisible `NULL`. Used for its side effects (CSV file export).
+#'
+#' @examples
+#' \dontrun{
+#' extractConceptSets()
+#' }
+#'
+#' @seealso [getCohortDefinitionSet()]
+#' @export
 extractConceptSets <- function(cohortDefinitionSet = getCohortDefinitionSet(), config = config::get()) {
   # Concept sets mapped to uniqiue hashes
   conceptSets <- fastmap::fastmap()
@@ -412,6 +509,30 @@ extractConceptSets <- function(cohortDefinitionSet = getCohortDefinitionSet(), c
   })
 }
 
+#' Upload Extracted Concept Sets to Database
+#'
+#' @description
+#' Creates tables and bulk uploads CSV files for concept sets, cohort-concept set mappings, and concept set names into results database.
+#' Use after running `extractConceptSets()` to transfer concept sets to a database backend.
+#'
+#' @param config List. Configuration object; must specify export and database schema paths. Usually from `config::get()`.
+#'
+#' @details
+#' Drops (deletes) and recreates three results tables:
+#' - `cg_concept_set`
+#' - `cg_concept_set_name`
+#' - `cg_cohort_concept_set`
+#' Then uploads their respective CSVs constructed by `extractConceptSets()`.
+#'
+#' @return Invisible `NULL`. Used for its side effects (populating results tables in the database).
+#'
+#' @examples
+#' \dontrun{
+#' uploadConceptSets()
+#' }
+#'
+#' @seealso [extractConceptSets()]
+#' @export
 uploadConceptSets <- function(config = config::get()) {
   # Note - quick hack until cohort generator branch is properly implemented
   connection <- DatabaseConnector::connect(getResultsConnectionDetails(config::get()))

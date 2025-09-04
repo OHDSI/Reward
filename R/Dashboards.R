@@ -1,7 +1,32 @@
+
+#' Get Results Connection Details
+#'
+#' @description
+#' Returns a set of connection details suitable for use with DatabaseConnector, based on the configuration’s `resultsConnectionDetails`.
+#'
+#' @param config List. Configuration object containing a results connection details list, typically from `config::get()`.
+#'
+#' @return A `DatabaseConnector::connectionDetails` object for use with functions requiring DB connections.
+#'
+#' @seealso [DatabaseConnector::createConnectionDetails()]
+#' @export
 getResultsConnectionDetails <- function(config = config::get()) {
   do.call(DatabaseConnector::createConnectionDetails, config$resultsConnectionDetails)
 }
 
+#' Create Dashboard Results (Run SCC Analyses)
+#'
+#' @description
+#' Runs self-controlled cohort analyses for all data sources defined in the configuration and stores the results for the specified dashboard.
+#'
+#' @param config Configuration list, usually from `config::get()`, containing database and data source details.
+#' @param dashboard Dashboard configuration object, as created by `getDashboardConfig()`.
+#'
+#' @details
+#' Determines SCC analysis settings and runs the analyses for each configured datasource, passing the appropriate exposure/outcome/target cohorts, controls, and dashboard configuration.
+#'
+#' @seealso [execSccAnalyses()], [getNegativeControlPairs()]
+#' @export
 createDashboardResults <- function(config = config::get(), dashboard) {
   # Get negative control pairs:
   negatives <- getNegativeControlPairs(config, dashboard)
@@ -44,7 +69,19 @@ createDashboardResults <- function(config = config::get(), dashboard) {
   })
 }
 
-
+#' Upload Dashboard Data to Results Schema
+#'
+#' @description
+#' Uploads SelfControlledCohort and CohortGenerator results for all SCC analyses and all datsources to the dashboard’s results schema in the database.
+#'
+#' @param config List. Project configuration from `config::get()`.
+#' @param dashboard Dashboard config object holding database schema details.
+#'
+#' @details
+#' Prompts before dropping and recreating the dashboard results schema. Then uploads analytic results for each SCC analysis for each datasource.
+#'
+#' @seealso [SelfControlledCohort::uploadResults()]
+#' @export
 uploadDashboardData <- function(config = config::get(), dashboard) {
   # Cohort Generator results files for each db
   connectionDetails <- getResultsConnectionDetails(config)
@@ -85,7 +122,19 @@ uploadDashboardData <- function(config = config::get(), dashboard) {
   cli::cli_alert_success("Upload for scc data complete")
 }
 
-
+#' Copy Cohort Generator Tables to Dashboard Schema
+#'
+#' @description
+#' Copies all required CohortGenerator results tables and concept set tables to the dashboard’s results schema, filtering cohorts as necessary.
+#'
+#' @param config Project configuration (`config::get()`).
+#' @param dashboard Dashboard config object.
+#'
+#' @details
+#' Copies only results tables relevant to cohorts included in the dashboard.
+#'
+#' @seealso [CohortGenerator::getResultsDataModelSpecifications()]
+#' @export
 copyCgTables <- function(config = config::get(), dashboard) {
   connectionDetails <- getResultsConnectionDetails(config)
   connection <- DatabaseConnector::connect(connectionDetails)
@@ -150,6 +199,16 @@ copyCgTables <- function(config = config::get(), dashboard) {
   invisible()
 }
 
+#' Create Database Meta Information Table for Dashboard
+#'
+#' @description
+#' Extracts source metadata for all configured datasources and creates a `database_meta_data` table in the dashboard’s results schema.
+#'
+#' @param config Project config.
+#' @param dashboard Dashboard config.
+#'
+#' @seealso [DatabaseConnector::insertTable()]
+#' @export
 createDatabaseMetaInfo <- function(config = config::get(), dashboard) {
 
   datasources <- config$datasources
@@ -198,6 +257,19 @@ createDatabaseMetaInfo <- function(config = config::get(), dashboard) {
                                  camelCaseToSnakeCase = TRUE)
 }
 
+#' Create And Upload a Full Dashboard Dataset
+#'
+#' @description
+#' Orchestrates the creation and population of all required datasets/tables for a dashboard from SCC output and meta information, then calibrates meta-analysis results.
+#'
+#' @param dashboardName Character. Name of dashboard (must exist in your config).
+#' @param config Configuration list.
+#'
+#' @details
+#' Calls all required functions to generate analysis, upload results, copy tables, add meta info, and calibrate results.
+#'
+#' @seealso [getDashboardConfig()], [createDashboardResults()], [uploadDashboardData()]
+#' @export
 
 createDashboard <- function(dashboardName, config = config::get()) {
   dashboard <- getDashboardConfig(dashboardName)
@@ -212,13 +284,33 @@ createDashboard <- function(dashboardName, config = config::get()) {
   cli::cli_alert_success("dashboard dataset sucessfully created at {dashboard$config$databaseSchema}")
 }
 
+#' Launch the Shiny Dashboard Application
+#'
+#' @description
+#' Loads the SelfControlledCohort package and launches the dashboard Shiny app for the given dashboard name.
+#'
+#' @param dashboardName Character. Name of dashboard to launch.
+#' @param config Project configuration object.
+#'
+#' @seealso [SelfControlledCohort::launchDashboard()]
+#' @export
 launchShiny <- function(dashboardName, config = config::get()) {
-  devtools::load_all("../SelfControlledCohort")
   dashboard <- getDashboardConfig(dashboardName)
-  SelfControlledCohort::launchDashboard(getResultsConnectionDetails(config = config),
-                                        dashboardConfig = dashboard$getShinyConfig())
+  launchDashboard(getResultsConnectionDetails(config = config), dashboardConfig = dashboard$getShinyConfig())
 }
 
+#' Get Dashboard Data Model
+#'
+#' @description
+#' Retrieves an SccDataModel instance for a given dashboard, enabling access to results and summary statistics for that dashboard.
+#'
+#' @param dashboardName Character. Name of the dashboard.
+#' @param config Configuration list.
+#'
+#' @return An `SccDataModel` object, ready for dashboard data operations.
+#'
+#' @seealso [SelfControlledCohort:::SccDataModel]
+#' @export
 getDashboardDataModel <- function(dashboardName, config = config::get()) {
   dashboard <- getDashboardConfig(dashboardName)
   connectionHandler <- ResultModelManager::ConnectionHandler$new(getResultsConnectionDetails(config = config))
@@ -226,7 +318,16 @@ getDashboardDataModel <- function(dashboardName, config = config::get()) {
   return(model)
 }
 
-
+#' Deploy a Dashboard to RStudio Connect or Shiny Server
+#'
+#' @description
+#' Copies all necessary files, writes deployment environment variables, and deploys the dashboard app to the selected app directory using `rsconnect::deployApp`.
+#'
+#' @param dashboardName Character. Dashboard name.
+#' @param config Project config.
+#'
+#' @seealso [rsconnect::deployApp()]
+#' @export
 deployDashboard <- function(dashboardName, config = config::get()) {
   dashboard <- getDashboardConfig(dashboardName)
   dpath <- file.path("dash_deploy", dashboard$config$databaseSchema)
