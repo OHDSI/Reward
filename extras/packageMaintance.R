@@ -17,13 +17,12 @@
 # limitations under the License.
 
 # Format and check code
-devtools::spell_check()
+#devtools::spell_check()
 
-OhdsiRTools::formatRFolder()
+#OhdsiRTools::formatRFolder()
 OhdsiRTools::checkUsagePackage("CemConnector")
 OhdsiRTools::findNonAsciiStringsInFolder()
 
 pkgdown::build_site()
 OhdsiRTools::fixHadesLogo()
 
-styler::style_pkg()

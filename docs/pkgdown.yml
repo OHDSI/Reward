@@ -1,0 +1,10 @@
+pandoc: '3.2'
+pkgdown: 2.0.9
+pkgdown_sha: ~
+articles:
+  configuring-databases: configuring-databases.html
+  dashboards: dashboards.html
+  methods: methods.html
+  system-design: system-design.html
+last_built: 2025-09-04T19:44Z
+
