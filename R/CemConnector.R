@@ -4,10 +4,11 @@
 #' @family {NegativeControls}
 #' @param config assure configuration
 getCemConnection <- function(config = config::get()) {
-  tryCatch(
-    conn <- do.call(CemConnector::createCemConnection, config$cemConnectionDetails),
-    error = function(err) cli::cli_abort("unable to connect to Cem API")
-  )
+  if (is.null(config$cemConnectionDetails$apiUrl)) {
+    config$cemConnectionDetails$connectionDetails <- do.call(DatabaseConnector::createConnectionDetails, config$cemConnectionDetails$connectionDetails)
+  }
+
+  conn <- do.call(CemConnector::createCemConnection, config$cemConnectionDetails)
   return(conn)
 }
 
