@@ -24,6 +24,7 @@ strQueryWrap <- function(vec) {
 #' @description
 #' Requires a server appConfig instance to be loaded in environment see scoping of launchDashboard
 #' This can be obtained with rewardb::loadappConfig(...)
+#' @export
 #' @param input shiny input object
 #' @param output shiny output object
 #' @param session shiny session

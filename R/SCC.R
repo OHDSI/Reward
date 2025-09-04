@@ -1,5 +1,28 @@
-# Interface to the SCC package
-
+#' Generate a List of Self-Controlled Cohort Analysis Configurations
+#'
+#' Returns a predefined list of analysis settings for self-controlled cohort (SCC) studies, targeting default, pediatric, adult, and elderly populations.
+#'
+#' @details
+#' This function constructs and returns a list of five SCC analyses. Each analysis is created using `SelfControlledCohort::createSccAnalysis()`, with variations in age strata. The run arguments for each include settings for exposure and outcome timing, age restrictions, and risk windows.
+#'
+#' The analyses returned cover:
+#' - All ages, unstratified (default)
+#' - Aged 18-30
+#' - Pediatric (under 18)
+#' - Aged 18-64
+#' - Elderly (65+)
+#'
+#' Use this list to supply a set of population-specific SCC analyses when running functions like `execSccAnalyses()`.
+#'
+#' @return
+#' A list of `SccAnalysis` objects, each containing an `analysisId`, `description`, and `runSelfControlledCohortArgs`.
+#'
+#' @examples
+#' analyses <- getSccAnalysisList()
+#' print(analyses[[1]]$description)  # "Default unstratified settings"
+#'
+#' @seealso [SelfControlledCohort::createSccAnalysis()], [execSccAnalyses()]
+#' @export
 getSccAnalysisList <- function() {
   list(
     SelfControlledCohort::createSccAnalysis(
@@ -103,6 +126,46 @@ getSccAnalysisList <- function() {
   )
 }
 
+#' Execute Scc analysis
+#
+#' @param connectionDetails An object containing details for connecting to the database, typically created using `DatabaseConnector::createConnectionDetails()`.
+#' @param executionSettings A list containing execution environment metadata such as database ID, CDM schema, and work schema.
+#' @param dashboard Optional dashboard configuration (default: NULL). Should contain settings and paths required for analysis.
+#' @param analysisSettings A list of analysis settings as created by `getSccAnalysisList()`. Each element should include analysis parameters such as `runSelfControlledCohortArgs` and an `analysisId`.
+#' @param config A configuration object, typically read from the global config using `config::get()`. Contains settings such as computeThreads.
+#' @param exposureCohortIds Cohort IDs representing the exposures of interest. Defaults to all IDs returned by `getExposureCohortIds()`.
+#' @param outcomeCohortIds Cohort IDs for outcomes of interest. Defaults to all IDs from `getOutcomeCohortIds()`.
+#' @param negativeControls A table or data.frame of negative control pairs (`exposureId`, `outcomeId`). Optional. If not supplied or empty, results will not be calibrated.
+#' @param controlType The type of controls to use when calibrating results. Default is `"outcome"`.
+#'
+#' @details
+#' This function orchestrates running multiple SCC analyses in a specified environment. For each specified analysis, it:
+#' - Checks for pre-existing results to avoid redundant computation.
+#' - Assembles all required arguments including connection, cohort, and configuration information.
+#' - Invokes `SelfControlledCohort::runSelfControlledCohort` for each set of analysis parameters.
+#' - Issues CLI alerts to inform the user of progress and warnings (e.g., absence of negative controls).
+#'
+#' Results are stored to subfolders based on analysis identifiers and execution environment.
+#'
+#' @return This function is called for its side effects. Analytic results are exported to disk in result directories as determined by the supplied settings.
+#'
+#' @examples
+#' \dontrun{
+#' execSccAnalyses(
+#'   connectionDetails = connectionDetailsObject,
+#'   executionSettings = list(
+#'     databaseId = "CDM_DB",
+#'     cdmDatabaseSchema = "cdm_schema",
+#'     workDatabaseSchema = "work_schema",
+#'     cohortTable = "cohort"
+#'   ),
+#'   negativeControls = data.frame(exposureId = 1:5, outcomeId = 6:10),
+#'   controlType = "outcome"
+#' )
+#' }
+#'
+#' @seealso [SelfControlledCohort::runSelfControlledCohort()]
+#' @export
 execSccAnalyses <- function(connectionDetails,
                             executionSettings,
                             dashboard = NULL,

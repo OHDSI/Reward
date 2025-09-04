@@ -18,7 +18,9 @@ Imports:
     checkmate,
     R6,
     config,
-    CohortGenerator
+    CohortGenerator,
+    ROhdsiWebApi,
+    CirceR
 Suggests:
     testthat,
     Eunomia,
@@ -27,7 +29,6 @@ Suggests:
     callr,
     rsconnect
 Remotes:
-  ohdsi/RewardExecutionPackage,
   ohdsi/CohortGenerator@cohort_templates,
   ohdsi/CemConnector,
   ohdsi/SelfControlledCohort@version-2.0.0,
