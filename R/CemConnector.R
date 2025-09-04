@@ -21,9 +21,7 @@ getNegativeControlPairs <- function(config = config::get(), dashboard) {
   # check if dashboard is exposure or outcome controlled
   # Get negative control exposure/outcome pairs
   cemConn <- getCemConnection(config = config)
-  on.exit(cemConn$finalize())
   # list cohort concepts for each cohort
-
   pairs <- data.frame()
   purrr::map(dashboard$config$cohortConceptIds, function(cohortConcept) {
     # Control conceptset is manually defined - don't use cem, use atlas
