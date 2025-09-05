@@ -20,7 +20,8 @@ Imports:
     config,
     CohortGenerator,
     ROhdsiWebApi,
-    CirceR
+    CirceR,
+    fs
 Suggests:
     testthat,
     Eunomia,

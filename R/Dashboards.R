@@ -31,12 +31,6 @@ createDashboardResults <- function(config = config::get(), dashboard) {
   # Get negative control pairs:
   negatives <- getNegativeControlPairs(config, dashboard)
 
-  connectionDetails <- DatabaseConnector::createConnectionDetails(
-    dbms = config::get("dbms"),
-    user = config::get("user"),
-    password = config::get("password"),
-    connectionString = config::get("connectionString")
-  )
   # Run SCC for dashboard
   targetCohortIds <- purrr::map(dashboard$config$cohortConceptIds, function(cohort) {
     cohort$cohortId
@@ -55,9 +49,8 @@ createDashboardResults <- function(config = config::get(), dashboard) {
   }
   datasources <- config$datasources
   purrr::walk(datasources, function(datasource) {
-    executionSettings <- config::get(config = datasource) |>
-      purrr::discard_at(c("dbms", "user", "password", "connectionString"))
-
+    executionSettings <- config::get(config = datasource)
+    connectionDetails <- do.call(DatabaseConnector::createConnectionDetails, executionSettings$cdmConnectionDetails)
     execSccAnalyses(connectionDetails,
                     executionSettings,
                     dashboard = dashboard,

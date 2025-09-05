@@ -1,16 +1,51 @@
-webApiUrl: "https://myAtlasUrl.com:8443/WebAPI" # Atlas url for loading custom cohorts
-exportPath: "export" # folder to find intermediate results
+# Config File for real-world assessment and research of drug performance
+default:
+  projectName: reward
+  webApiUrl: "https://atlas.ohdsi.org/WebAPI"
+   # Change to use multi-threading in meta-analysis computations
+  futurePlanningComittee: !expr future::multisession
+  computeThreads: 1
 
-# Database connector connection details for connecting to main reward database
-connectionDetails:
-  dbms: "sqlite"
-  server: "testSqliteDb.sqlite"
+  conceptSetExportPath: !expr file.path(getwd(), "cohorts", "concept_sets")
 
-# Schema where reward will exist
-resultsSchema: "main"
-# Schema where vocabulary exists (ideally the same as the reward schema, for consistency)
-vocabularySchema: "main"
+  # These will need setting
+  cdmConnectionDetails:
+    dbms: ''
+    user: ''
+    password: ''
+    connectionString:  ''
 
-# Change this only if you're hosting an internal solution for getting negative control outcomes and exposures
-cemConnectionDetails:
-  apiUrl: https://cem.ohdsi.org
+  tempEmulationSchema: !expr Sys.getenv('DATABRICKS_SCRATCH_SCHEMA')
+  vocabularyDatabaseSchema: 'vocabulary' # Set to what your vocab schema is
+  resultsVocabularyDatabaseSchema: 'vocabulary' # vocab on results server
+
+  resultsConnectionDetails:
+    # Set these accordingly - sqlite and duckdb can also be used
+    dbms: "postgresql"
+    server: !expr Sys.getenv('REWARD_DB_SERVER')
+    user: !expr Sys.getenv('REWARD_DB_USER')
+    password: !expr Sys.getenv('REWARD_DB_PASSWORD')
+
+  resultsDatabaseSchema: "reward"
+
+  cemConnectionDetails:
+    apiUrl: "cem.ohdsi.org"
+
+  # Add your cdm name here - datasources can be added and not used by removing them from this list
+  datasources:
+    - my_cdm
+# should match list above
+my_cdm:
+  #  uncomment and set if you require per-cdm connection details
+  #  cdmConnectionDetails:
+  #    dbms: ''
+  #    user: ''
+  #    password: ''
+  #    connectionString:  ''
+  databaseName: 'my_cdm'
+  databaseId: 'my_cdm_v1'
+  cohortTable: 'cohort_reward'
+  cdmDatabaseSchema: 'cdm'
+  vocabularyDatabaseSchema: 'cdm'
+  workDatabaseSchema: 'scratch'
+
