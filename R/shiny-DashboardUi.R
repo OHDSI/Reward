@@ -24,12 +24,12 @@ sccUi <- function(id = "scc-module", dashboardConfig) {
   metaDisplayCondtion <- "typeof input.mainTable_rows_selected  !== 'undefined' && input.mainTable_rows_selected.length > 0"
 
   paramUi <- shinydashboard::box(
-
+    shiny::tags$p(message = "Adjust relative risk ranges (set what levels you consider a benefit and what level you consider a risk)"),
     shiny::column(
       width = 4,
-      shiny::sliderInput(inputId = ns("cutrange1"), "Benefit Threshold:", min = 0.1, max = 0.9, step = 0.1, value = c(0.2, 0.5)),
-      shiny::sliderInput(inputId = ns("cutrange2"), "Risk Threshold:", min = 1.1, max = 2.5, step = 0.1, value = 2),
-      shiny::sliderInput(inputId = ns("pCut"), "P-value cut off:", min = 0.0, max = 1.0, step = 0.01, value = 0.05),
+      shiny::sliderInput(inputId = ns("cutrange1"), "Benefit Threshold:", min = 0.0, max = 1.0, step = 0.1, value = c(0.2, 0.7)),
+      shiny::sliderInput(inputId = ns("cutrange2"), "Risk Threshold:", min = 1.0, max = 10, step = 0.1, value = 2),
+      shiny::sliderInput(inputId = ns("pCut"), "P-value cut off:", min = 0.0, max = 1.0, step = 0.01, value = 0.05)
     ),
     shiny::column(
       width = 4,
