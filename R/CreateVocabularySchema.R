@@ -176,31 +176,25 @@ CREATE INDEX idx_drug_strength_id_2 ON @schema.drug_strength (ingredient_concept
                    "vocabulary")
 
 
-  connectionDetails <- DatabaseConnector::createConnectionDetails(
-    dbms = config::get("dbms"),
-    user = config::get("user"),
-    password = config::get("password"),
-    connectionString = config::get("connectionString")
-  )
+  connectionDetails <- do.call(DatabaseConnector::createConnectionDetails, config$cdmConnectionDetails)
+  cdmConnection <- DatabaseConnector::connect(connectionDetails)
+  on.exit(DatabaseConnector::disconnect(cdmConnection), add = TRUE)
+  dir.create("vocabulary_tables", showWarnings = FALSE)
+  # Extract tables in batches and insert them into the results schema
+  purrr::walk(vocabTables, function(table) {
+    cli::cli_alert_info("Downloading vocabulary table {table}")
 
-  # cdmConnection <- DatabaseConnector::connect(connectionDetails)
-  # on.exit(DatabaseConnector::disconnect(cdmConnection), add = TRUE)
-  # dir.create("vocabulary_tables", showWarnings = FALSE)
-  # # Extract tables in batches and insert them into the results schema
-  # purrr::walk(vocabTables, function(table) {
-  #   cli::cli_alert_info("Downloading vocabulary table {table}")
-  #
-  #   filepath <- file.path("vocabulary_tables", paste0(table, ".csv"))
-  #   DatabaseConnector::renderTranslateQueryApplyBatched(
-  #     cdmConnection,
-  #     "SELECT * FROM @vocabulary_schema.@table",
-  #     table = table,
-  #     vocabulary_schema = config$vocabularyDatabaseSchema,
-  #     fun = function(rows, pos) {
-  #       readr::write_csv(rows, filepath, append = pos != 1)
-  #       invisible()
-  #     })
-  # })
+    filepath <- file.path("vocabulary_tables", paste0(table, ".csv"))
+    DatabaseConnector::renderTranslateQueryApplyBatched(
+      cdmConnection,
+      "SELECT * FROM @vocabulary_schema.@table",
+      table = table,
+      vocabulary_schema = config$vocabularyDatabaseSchema,
+      fun = function(rows, pos) {
+        readr::write_csv(rows, filepath, append = pos != 1)
+        invisible()
+      })
+  })
 
    purrr::walk(vocabTables, function(table) {
     filepath <- file.path("vocabulary_tables", paste0(table, ".csv"))
