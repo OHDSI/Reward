@@ -30,7 +30,7 @@ createVocabularySchema <- function(config = config::get()) {
     return(invisible())
 
   cli::cli_alert_info("Creating schema and indexes")
-sql <- SqlRender::render(
+  sql <- SqlRender::render(
     "DROP SCHEMA IF EXISTS @schema CASCADE;
 CREATE SCHEMA @schema;
 
@@ -157,7 +157,7 @@ CREATE INDEX idx_drug_strength_id_2 ON @schema.drug_strength (ingredient_concept
 
     ", schema = config$resultsVocabularyDatabaseSchema)
 
-    DatabaseConnector::executeSql(connection, sql)
+  DatabaseConnector::executeSql(connection, sql)
 
   # Copy tables from databricks
   vocabTables <- c("concept",
@@ -168,11 +168,8 @@ CREATE INDEX idx_drug_strength_id_2 ON @schema.drug_strength (ingredient_concept
                    "concept_synonym",
                    "domain",
                    "drug_strength",
-                   "ingredient_level",
                    "relationship",
                    "source_to_concept_map",
-                   "source_to_source",
-                   "source_to_standard",
                    "vocabulary")
 
 
@@ -185,18 +182,23 @@ CREATE INDEX idx_drug_strength_id_2 ON @schema.drug_strength (ingredient_concept
     cli::cli_alert_info("Downloading vocabulary table {table}")
 
     filepath <- file.path("vocabulary_tables", paste0(table, ".csv"))
-    DatabaseConnector::renderTranslateQueryApplyBatched(
-      cdmConnection,
-      "SELECT * FROM @vocabulary_schema.@table",
-      table = table,
-      vocabulary_schema = config$vocabularyDatabaseSchema,
-      fun = function(rows, pos) {
-        readr::write_csv(rows, filepath, append = pos != 1)
-        invisible()
-      })
+
+    if (!file.exists(filepath)) {
+      DatabaseConnector::renderTranslateQueryApplyBatched(
+        cdmConnection,
+        "SELECT * FROM @vocabulary_schema.@table",
+        table = table,
+        vocabulary_schema = config$vocabularyDatabaseSchema,
+        fun = function(rows, pos) {
+          readr::write_csv(rows, filepath, append = pos != 1)
+          invisible()
+        })
+    } else {
+      cli::cli_alert_info("Skipping file {filepath} as it already exists")
+    }
   })
 
-   purrr::walk(vocabTables, function(table) {
+  purrr::walk(vocabTables, function(table) {
     filepath <- file.path("vocabulary_tables", paste0(table, ".csv"))
     ResultModelManager::pyUploadCsv(connection, table = table, filepath = filepath, schema = config$resultsVocabularyDatabaseSchema)
     cli::cli_alert_success("Inserting vocabulary table {table} complete")
