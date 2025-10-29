@@ -30,7 +30,7 @@ Suggests:
     callr,
     rsconnect
 Remotes:
-  ohdsi/CohortGenerator@cohort_templates,
+  ohdsi/CohortGenerator@develop,
   ohdsi/CemConnector,
   ohdsi/SelfControlledCohort@version-2.0.0,
   ohdsi/Eunomia,

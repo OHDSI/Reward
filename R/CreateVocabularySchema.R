@@ -163,7 +163,6 @@ CREATE INDEX idx_drug_strength_id_2 ON @schema.drug_strength (ingredient_concept
   vocabTables <- c("concept",
                    "concept_ancestor",
                    "concept_class",
-                   "concept_recommended",
                    "concept_relationship",
                    "concept_synonym",
                    "domain",
